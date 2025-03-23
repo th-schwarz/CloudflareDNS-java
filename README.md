@@ -27,13 +27,21 @@ BETA
 
 ## Methods Overview
 
-### 1. `zoneListAll`
+The following text focuses on the basic methods. For further information take a look at the [javadoc of the CfDnsClient](docs/apidocs/codes/thischwa/cf/CfDnsClient.html).
+
+### Instantiation of `CfDnsClient`
+
+```java
+CfDnsClient client = new CfDnsClient(
+     "email@example.com", "yourApiKey", "yourApiToken"
+ );
+```
+
+### `zoneListAll`
 
 Retrieve all zones within the Cloudflare account.
 
 - **Returns**: A list of `ZoneEntity` objects.
-
-**Example:**
 
 ```java
 List<ZoneEntity> zones = cfDnsClient.zoneListAll();
@@ -42,15 +50,13 @@ zones.forEach(zone -> System.out.println("Zone: " + zone.getName()));
 
 ---
 
-### 2. `zoneInfo`
+### `zoneInfo`
 
 Get detailed information about a specific zone by its name.
 
 - **Parameters**:
     - `String name` - The zone name (e.g., "example.com").
 - **Returns**: A `ZoneEntity` object.
-
-**Example:**
 
 ```java
 ZoneEntity zone = cfDnsClient.zoneInfo("example.com");
@@ -59,7 +65,7 @@ System.out.println("Zone ID: " + zone.getId());
 
 ---
 
-### 3. `sldListAll`
+### `sldListAll`
 
 Retrieve all records for a specific second-level domain (SLD) under a given zone.
 
@@ -67,8 +73,6 @@ Retrieve all records for a specific second-level domain (SLD) under a given zone
     - `ZoneEntity zone` - The zone object.
     - `String sld` - Second-level domain (e.g., "www" in "www.example.com").
 - **Returns**: A list of `RecordEntity` objects.
-
-**Example:**
 
 ```java
 List<RecordEntity> records = cfDnsClient.sldListAll(zone, "sld");
@@ -79,7 +83,7 @@ records.forEach(record ->
 
 ---
 
-### 4. `sldInfo`
+### `sldInfo`
 
 Retrieve DNS record details for a specific SLD, zone, and record type.
 
@@ -88,8 +92,6 @@ Retrieve DNS record details for a specific SLD, zone, and record type.
     - `String sld` - The second-level domain.
     - `RecordType type` - Record type (e.g., A, CNAME).
 
-**Example:**
-
 ```java
 RecordEntity record = cfDnsClient.sldInfo(zone, "www", RecordType.A);
 System.out.println("Record IP: " + record.getContent());
@@ -97,15 +99,13 @@ System.out.println("Record IP: " + record.getContent());
 
 ---
 
-### 5. `recordCreate`
+### `recordCreate`
 
 Create a new DNS record in a specific zone.
 
 - **Parameters**:
     - `ZoneEntity zone` - DNS zone object.
     - `RecordEntity rec` - Details of the new record (name, type, content).
-
-**Example:**
 
 ```java
 RecordEntity newRecord = new RecordEntity("api.example.com", RecordType.A, "192.168.1.1");
@@ -115,15 +115,13 @@ System.out.println("Created Record ID: " + created.getId());
 
 ---
 
-### 6. `recordUpdate`
+### `recordUpdate`
 
 Update an existing DNS record.
 
 - **Parameters**:
     - `ZoneEntity zone` - The zone that contains the record.
     - `RecordEntity rec` - Updated record data.
-
-**Example:**
 
 ```java
 record.setContent("192.168.1.2");
@@ -133,15 +131,13 @@ System.out.println("Updated Record: " + updated.getContent());
 
 ---
 
-### 7. `recordDelete`
+### `recordDelete`
 
 Delete a DNS record from a zone.
 
 - **Parameters**:
     - `ZoneEntity zone` - The parent zone.
     - `RecordEntity rec` - Record to delete.
-
-**Example:**
 
 ```java
 boolean isDeleted = cfDnsClient.recordDelete(zone, record);
@@ -150,7 +146,7 @@ System.out.println(isDeleted ? "Deletion successful." : "Deletion failed.");
 
 ---
 
-### 8. `recordDeleteTypeIfExists`
+### `recordDeleteTypeIfExists`
 
 Delete a DNS record of a specific type if it exists.
 
@@ -158,8 +154,6 @@ Delete a DNS record of a specific type if it exists.
     - `ZoneEntity zone` - Target zone.
     - `String sld` - Second-level domain.
     - `RecordType type` - Record type.
-
-**Example:**
 
 ```java
 cfDnsClient.recordDeleteTypeIfExists(zone, "api", RecordType.A);

@@ -1,0 +1,24 @@
+-classpath
+'/Users/thilo/.m2/repository/org/apache/httpcomponents/client5/httpclient5/5.4.2/httpclient5-5.4.2.jar:/Users/thilo/.m2/repository/org/apache/httpcomponents/core5/httpcore5/5.3.3/httpcore5-5.3.3.jar:/Users/thilo/.m2/repository/org/apache/httpcomponents/core5/httpcore5-h2/5.3.3/httpcore5-h2-5.3.3.jar:/Users/thilo/.m2/repository/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar:/Users/thilo/.m2/repository/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar:/Users/thilo/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.18.2/jackson-databind-2.18.2.jar:/Users/thilo/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.18.2/jackson-annotations-2.18.2.jar:/Users/thilo/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.18.2/jackson-core-2.18.2.jar:/Users/thilo/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.18.2/jackson-datatype-jsr310-2.18.2.jar:/Users/thilo/.m2/repository/ch/qos/logback/logback-classic/1.5.12/logback-classic-1.5.12.jar:/Users/thilo/.m2/repository/ch/qos/logback/logback-core/1.5.12/logback-core-1.5.12.jar:/Users/thilo/.m2/repository/org/jetbrains/annotations/24.0.0/annotations-24.0.0.jar'
+-encoding
+'UTF-8'
+-protected
+-source
+'17'
+-sourcepath
+'/Users/thilo/development/java/CloudflareDNS-java/src/main/java'
+-author
+-bottom
+'Copyright &#169; 2025. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'/Users/thilo/development/java/CloudflareDNS-java/docs/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'CloudflareDNS-java 0.1.0-SNAPSHOT API'
+-use
+-version
+-windowtitle
+'CloudflareDNS-java 0.1.0-SNAPSHOT API'

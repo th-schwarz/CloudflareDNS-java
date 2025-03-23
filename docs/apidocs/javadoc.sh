@@ -1,0 +1,1 @@
+/Users/thilo/.sdkman/candidates/java/21.0.4-amzn/bin/javadoc @options @packages
