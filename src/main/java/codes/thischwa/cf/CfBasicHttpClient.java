@@ -106,29 +106,29 @@ abstract class CfBasicHttpClient {
   }
 
   /** Sends a GET request to the given endpoint and maps the response. */
-  protected <T extends AbstractResponse> T getRequest(String endpoint, Class<T> responseType)
+  <T extends AbstractResponse> T getRequest(String endpoint, Class<T> responseType)
       throws CloudflareApiException {
     HttpGet request = new HttpGet(buildUrl(endpoint));
     return executeRequest(request, responseType);
   }
 
   /** Sends a DELETE request to the given endpoint and maps the response. */
-  protected <T extends AbstractResponse> T deleteRequest(String endpoint, Class<T> responseType)
+  <T extends AbstractResponse> T deleteRequest(String endpoint)
       throws CloudflareApiException {
     HttpDelete request = new HttpDelete(buildUrl(endpoint));
-    return executeRequest(request, responseType);
+    return executeRequest(request, (Class<T>) codes.thischwa.cf.model.RecordSingleResponse.class);
   }
 
   /** Sends a POST request with a payload to the given endpoint and maps the response. */
-  protected <T extends AbstractResponse, R extends AbstractEntity> T postRequest(
-      String endpoint, R requestPayload, Class<T> responseType) throws CloudflareApiException {
+  <T extends AbstractResponse, R extends AbstractEntity> T postRequest(
+      String endpoint, R requestPayload) throws CloudflareApiException {
     HttpPost request = new HttpPost(buildUrl(endpoint));
     setRequestPayload(request, requestPayload);
-    return executeRequest(request, responseType);
+    return executeRequest(request, (Class<T>) codes.thischwa.cf.model.RecordSingleResponse.class);
   }
 
   /** Sends a PUT request with a payload to the given endpoint and maps the response. */
-  protected <T extends AbstractResponse, R extends AbstractEntity> T putRequest(
+  <T extends AbstractResponse, R extends AbstractEntity> T putRequest(
       String endpoint, R requestPayload, Class<T> responseType) throws CloudflareApiException {
     HttpPut request = new HttpPut(buildUrl(endpoint));
     setRequestPayload(request, requestPayload);
@@ -136,11 +136,11 @@ abstract class CfBasicHttpClient {
   }
 
   /** Sends a PATCH request with a payload to the given endpoint and maps the response. */
-  protected <T extends AbstractResponse, R extends AbstractEntity> T patchRequest(
-      String endpoint, R requestPayload, Class<T> responseType) throws CloudflareApiException {
+  <T extends AbstractResponse, R extends AbstractEntity> T patchRequest(
+      String endpoint, R requestPayload) throws CloudflareApiException {
     HttpPatch request = new HttpPatch(buildUrl(endpoint));
     setRequestPayload(request, requestPayload);
-    return executeRequest(request, responseType);
+    return executeRequest(request, (Class<T>) codes.thischwa.cf.model.RecordSingleResponse.class);
   }
 
   /** Sets the JSON payload for a request. */

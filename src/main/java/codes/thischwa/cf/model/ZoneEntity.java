@@ -37,4 +37,15 @@ public class ZoneEntity extends AbstractEntity {
   private String status;
   private Boolean paused;
   private String type;
+
+  /**
+   * Default no-argument constructor for the ZoneEntity class.
+   *
+   * <p>This constructor initializes a new instance of the ZoneEntity class and invokes the parent
+   * constructor from the AbstractEntity class. The ZoneEntity class represents a domain model for a
+   * DNS zone within the Cloudflare DNS system.
+   */
+  public ZoneEntity() {
+    super();
+  }
 }

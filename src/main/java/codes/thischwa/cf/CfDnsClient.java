@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * deleting DNS records.
  *
  * <p>Example:
+ *
  * <pre><code>
  * // Create a new CfDnsClient instance
  * CfDnsClient client = new CfDnsClient(
@@ -94,9 +95,7 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Retrieves a list of all zones from the Cloudflare API. <br>
-   * This method sends a GET request to the Cloudflare API endpoint for listing zones, processes the
-   * response, and returns the resulting list of ZoneEntity objects.
+   * Retrieves a list of all zones from the Cloudflare API.
    *
    * @return A list of ZoneEntity objects representing the zones retrieved from the Cloudflare API.
    * @throws CloudflareApiException If an error occurs during the API request or response handling.
@@ -106,12 +105,13 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Retrieves a list of all zones from the Cloudflare API. <br>
-   * This method sends a GET request to the Cloudflare API endpoint for listing zones, processes the
-   * response, and returns the resulting list of ZoneEntity objects.
+   * Retrieves a list of all DNS zones using the provided paging request parameters.
    *
-   * @return A list of ZoneEntity objects representing the zones retrieved from the Cloudflare API.
-   * @throws CloudflareApiException If an error occurs during the API request or response handling.
+   * @param pagingRequest the pagination request object containing parameters for paging and
+   *     filtering zone data
+   * @return a list of {@code ZoneEntity} objects representing the DNS zones retrieved from the API
+   * @throws CloudflareApiException if there is an error during the API request or response
+   *     processing
    */
   public List<ZoneEntity> zoneListAll(PagingRequest pagingRequest) throws CloudflareApiException {
     String endpoint = pagingRequest.addQueryString(CfRequest.ZONE_LIST.buildPath());
@@ -200,7 +200,7 @@ public class CfDnsClient extends CfBasicHttpClient {
   public RecordEntity recordCreate(ZoneEntity zone, RecordEntity rec)
       throws CloudflareApiException {
     String endpoint = CfRequest.RECORD_CREATE.buildPath(zone.getId());
-    RecordSingleResponse resp = postRequest(endpoint, rec, RecordSingleResponse.class);
+    RecordSingleResponse resp = postRequest(endpoint, rec);
     checkResponse(resp);
     return resp.getResult();
   }
@@ -235,7 +235,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    */
   public boolean recordDelete(ZoneEntity zone, String id) throws CloudflareApiException {
     String endpoint = CfRequest.RECORD_DELETE.buildPath(zone.getId(), id);
-    RecordSingleResponse resp = deleteRequest(endpoint, RecordSingleResponse.class);
+    RecordSingleResponse resp = deleteRequest(endpoint);
     checkResponse(resp);
     return resp.getResult().getId().equals(id);
   }
@@ -255,7 +255,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     rec.setModifiedOn(null);
     rec.setCreatedOn(null);
     String endpoint = CfRequest.RECORD_UPDATE.buildPath(zone.getId(), rec.getId());
-    RecordSingleResponse resp = patchRequest(endpoint, rec, RecordSingleResponse.class);
+    RecordSingleResponse resp = patchRequest(endpoint, rec);
     checkResponse(resp);
     return resp.getResult();
   }

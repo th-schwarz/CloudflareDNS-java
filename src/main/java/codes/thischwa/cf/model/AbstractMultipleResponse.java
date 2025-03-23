@@ -22,10 +22,24 @@ import lombok.EqualsAndHashCode;
  * </ul>
  *
  * <p>Subclasses can be created by specifying the entity type that the response should handle.
+ *
+ * @param <T> Represents the type of entities contained within the response. For this class, it is
+ *     expected to be {@code ResponseEntity}.
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public abstract class AbstractMultipleResponse<T extends ResponseEntity> extends AbstractResponse {
   private ResultInfo resultInfo;
   private List<T> result;
+
+  /**
+   * Default constructor for the {@code AbstractMultipleResponse} class.
+   *
+   * <p>Initializes a new instance of {@code AbstractMultipleResponse}, invoking the default
+   * constructor of the superclass {@code AbstractResponse}. This constructor is typically used for
+   * deserialization or subclass instantiation.
+   */
+  public AbstractMultipleResponse() {
+    super();
+  }
 }
