@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <pre><code>
  * // Create a new CfDnsClient instance
- * CfDnsClient client = new CfDnsClient(
+ * CfDnsClient cfDnsClient = new CfDnsClient(
  *     "email@example.com",
  *     "yourApiKey",
  *     "yourApiToken"

@@ -8,7 +8,7 @@
 -source
 '17'
 -sourcepath
-'/Users/thilo/development/java/CloudflareDNS-java/src/main/java'
+'/Users/thilo/development/java/CloudflareDNS-java/src/main/java:/Users/thilo/development/java/CloudflareDNS-java/target/generated-sources/annotations'
 -author
 -bottom
 'Copyright &#169; 2025. All rights reserved.'
