@@ -2,6 +2,8 @@
 
 [![Build and Test](https://github.com/th-schwarz/CloudflareDNS-java/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/th-schwarz/CloudflareDNS-java/actions/workflows/build-and-test.yml)
 
+Give it a try ![GitHub Release](https://img.shields.io/github/v/release/th-schwarz/CloudflareDNS-java?include_prereleases)
+
 ## Preface
 
 This project offers minimalistic access to the Cloudflare API, focused on managing DNS settings like creating, updating,
