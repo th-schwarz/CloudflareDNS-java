@@ -27,7 +27,7 @@ BETA
 
 ## Methods Overview
 
-The following text focuses on the basic methods. For further information take a look at the [javadoc of the CfDnsClient](docs/apidocs/codes/thischwa/cf/CfDnsClient.html).
+The following text focuses on the basic methods. For further information take a look at the [javadoc of the CfDnsClient](https://th-schwarz.github.io/CloudflareDNS-java/apidocs/codes/thischwa/cf/CfDnsClient.html).
 
 ### Instantiation of `CfDnsClient`
 
