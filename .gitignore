@@ -9,4 +9,4 @@
 # local files
 /info.txt
 cf.yml
-
+/docs/apidocs/javadoc.sh
