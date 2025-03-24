@@ -1,6 +1,6 @@
 # CloudflareDNS-java
 
-[![Build and Test](https://github.com/th-schwarz/CloudflareDNS-java/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/th-schwarz/CloudflareDNS-java/actions/workflows/build-and-test.yml)
+[![Build and Test](https://github.com/th-schwarz/CloudflareDNS-java/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/th-schwarz/CloudflareDNS-java/actions/workflows/build-and-test.yml)  ![GitHub License](https://img.shields.io/github/license/th-schwarz/CloudflareDNS-java)
 
 Give it a try ![GitHub Release](https://img.shields.io/github/v/release/th-schwarz/CloudflareDNS-java?include_prereleases)
 
@@ -34,7 +34,7 @@ The following text focuses on the basic methods. For further information take a 
 ### Instantiation of `CfDnsClient`
 
 ```java
-CfDnsClient client = new CfDnsClient(
+CfDnsClient cfDnsClient = new CfDnsClient(
      "email@example.com", "yourApiKey", "yourApiToken"
  );
 ```
