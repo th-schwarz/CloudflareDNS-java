@@ -4,7 +4,7 @@
 
     <groupId>codes.thischwa</groupId>
     <artifactId>cloudflaredns</artifactId>
-    <version>0.1.0-beta.1</version>
+    <version>0.2.0-SNAPSHOT</version>
     <name>CloudflareDNS-java</name>
     <inceptionYear>2025</inceptionYear>
     <packaging>jar</packaging>
@@ -17,7 +17,7 @@
     <scm>
         <developerConnection>scm:git:git@github.com:th-schwarz/CloudflareDNS-java</developerConnection>
         <connection>scm:git:git@github.com:th-schwarz/CloudflareDNS-java</connection>
-        <tag>v0.1.0-beta.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
