@@ -8,7 +8,7 @@
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
 
-Give it a try ![GitHub Release](https://img.shields.io/github/v/release/th-schwarz/CloudflareDNS-java?include_prereleases)
+Give it a try! [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/th-schwarz/CloudflareDNS-java?include_prereleases)](https://github.com/th-schwarz/CloudflareDNS-java/releases)
 
 ## Preface
 
