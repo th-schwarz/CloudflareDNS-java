@@ -2,6 +2,12 @@
 
 [![Build and Test](https://github.com/th-schwarz/CloudflareDNS-java/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/th-schwarz/CloudflareDNS-java/actions/workflows/build-and-test.yml)  ![GitHub License](https://img.shields.io/github/license/th-schwarz/CloudflareDNS-java)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=coverage)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
+
 Give it a try ![GitHub Release](https://img.shields.io/github/v/release/th-schwarz/CloudflareDNS-java?include_prereleases)
 
 ## Preface
