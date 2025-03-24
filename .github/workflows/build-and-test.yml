@@ -10,7 +10,7 @@ on:
 
 jobs:
 
-  mvn-test:
+  mvn-sonar:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -33,4 +33,4 @@ jobs:
           API_TOKEN: ${{ secrets.API_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=th-schwarz_CloudflareDNS-jav
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=th-schwarz_CloudflareDNS-java
