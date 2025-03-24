@@ -27,6 +27,12 @@
         <project.build.sourceEncoding>${file.encoding}</project.build.sourceEncoding>
         <project.reporting.outputEncoding>${file.encoding}</project.reporting.outputEncoding>
 
+        <!-- sonarQube cloud  -->
+        <sonar.organization>th-schwarz</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.sourceEncoding>${file.encoding}</sonar.sourceEncoding>
+        <sonar.test.exclusions>src/test/java/**/*</sonar.test.exclusions>
+
         <!-- checkstyle -->
         <checkstyle.version>10.21.3</checkstyle.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
@@ -166,6 +172,31 @@
                         <version>${checkstyle.version}</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+
+            <plugin>
+                <!-- generates the code coverage report for sonar cube -->
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report-code-coverage</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <formats>XML</formats>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
