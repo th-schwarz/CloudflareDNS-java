@@ -39,7 +39,7 @@ public abstract class AbstractMultipleResponse<T extends ResponseEntity> extends
    * constructor of the superclass {@code AbstractResponse}. This constructor is typically used for
    * deserialization or subclass instantiation.
    */
-  public AbstractMultipleResponse() {
+  AbstractMultipleResponse() {
     super();
   }
 }

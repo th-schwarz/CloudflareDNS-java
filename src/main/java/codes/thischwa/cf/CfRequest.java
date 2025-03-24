@@ -52,7 +52,7 @@ public enum CfRequest {
    */
   RECORD_DELETE("/zones/%s/dns_records/%s");
 
-  private static final char varIdentification = '%';
+  private static final char VAR_IDENTIFICATION = '%';
   private final String path;
 
   CfRequest(String path) {
@@ -68,7 +68,7 @@ public enum CfRequest {
    * @return the fully constructed API endpoint path as a string.
    */
   String buildPath(Object... vars) {
-    long varCount = path.chars().filter(c -> c == varIdentification).count();
+    long varCount = path.chars().filter(c -> c == VAR_IDENTIFICATION).count();
     if (varCount != vars.length) {
       throw new IllegalArgumentException(
           String.format(
