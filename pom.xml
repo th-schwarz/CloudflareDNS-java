@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>codes.thischwa</groupId>
@@ -13,12 +14,6 @@
         <url>https://github.com/th-schwarz/CloudflareDNS-java/issues</url>
         <system>GitHub Issues</system>
     </issueManagement>
-
-    <scm>
-        <developerConnection>scm:git:git@github.com:th-schwarz/CloudflareDNS-java</developerConnection>
-        <connection>scm:git:git@github.com:th-schwarz/CloudflareDNS-java</connection>
-        <tag>HEAD</tag>
-    </scm>
 
     <properties>
         <java.version>17</java.version>
@@ -35,7 +30,8 @@
         <!-- checkstyle -->
         <checkstyle.version>10.21.3</checkstyle.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
-        <checkstyle.config.location>${project.basedir}/src/checkstyle/google_custom_checks.xml</checkstyle.config.location>
+        <checkstyle.config.location>${project.basedir}/src/checkstyle/google_custom_checks.xml
+        </checkstyle.config.location>
         <checkstyle.includeTestResources>false</checkstyle.includeTestResources>
         <checkstyle.violationSeverity>warning</checkstyle.violationSeverity>
         <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
@@ -49,6 +45,25 @@
         <logback-classic.version>1.5.12</logback-classic.version>
         <junit5.version>5.11.4</junit5.version>
     </properties>
+
+    <scm>
+        <developerConnection>scm:git:git@github.com:th-schwarz/CloudflareDNS-java</developerConnection>
+        <connection>scm:git:git@github.com:th-schwarz/CloudflareDNS-java</connection>
+        <tag>HEAD</tag>
+    </scm>
+    <distributionManagement>
+        <repository>
+            <id>github-cloudflaredns</id>
+            <name>GitHub Maven Packages</name>
+            <url>https://maven.pkg.github.com/th-schwarz/CloudflareDNS-java</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
         <dependency>
@@ -131,15 +146,6 @@
                 <configuration>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                     <arguments>-DskipTests</arguments>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <!-- deploy isn't desired, currently no repo available -->
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.3</version>
-                <configuration>
-                    <skip>true</skip>
                 </configuration>
             </plugin>
 
