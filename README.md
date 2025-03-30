@@ -12,7 +12,7 @@ Give it a try! [![GitHub release (latest by date including pre-releases)](https:
 
 ## Preface
 
-This project provides a “java client” for minimalistic access to the Cloudflare API, which is mainly used for managing DNS settings such as creating, updating and deleting DNS records. Supported types are A, CNAME, MX, TXT and more.
+This project provides a java client for minimalistic access to the Cloudflare API, which is mainly used for managing DNS settings such as creating, updating and deleting DnNS records. Supported types are A, CNAME, MX, TXT and more.
 
 If you encounter any bugs or find missing features, feel free to report them on
 the [GitHub Issues page](https://github.com/th-schwarz/CloudflareDNS-java/issues).
