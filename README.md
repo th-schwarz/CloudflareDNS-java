@@ -12,8 +12,7 @@ Give it a try! [![GitHub release (latest by date including pre-releases)](https:
 
 ## Preface
 
-This project offers minimalistic access to the Cloudflare API, focused on managing DNS settings like creating, updating,
-and deleting DNS records. Supported types include A, CNAME, MX, TXT, and more.
+This project provides a “java client” for minimalistic access to the Cloudflare API, which is mainly used for managing DNS settings such as creating, updating and deleting DNS records. Supported types are A, CNAME, MX, TXT and more.
 
 If you encounter any bugs or find missing features, feel free to report them on
 the [GitHub Issues page](https://github.com/th-schwarz/CloudflareDNS-java/issues).
@@ -22,8 +21,7 @@ the [GitHub Issues page](https://github.com/th-schwarz/CloudflareDNS-java/issues
 
 ## Disclaimer
 
-This guide comes without any warranty. Use at your own risk. The author is not responsible for potential data loss,
-hardware damage, or keyboard mishaps!
+This guide comes without any warranty. Use at your own risk. The author is not responsible for potential data loss, hardware damage or keyboard mishaps!
 
 ---
 
@@ -32,6 +30,29 @@ hardware damage, or keyboard mishaps!
 BETA
 
 ---
+
+## Get It
+
+The project has its own maven repository. To use it the repository must be added to the `pom.xml`:
+
+```xml
+<repositories>
+    <repository>
+        <id>github-cloudflaredns</id>
+        <name>GitHub Maven Packages</name>
+        <url>https://maven.pkg.github.com/th-schwarz/CloudflareDNS-java</url>
+    </repository>
+</repositories>
+```
+
+At next the dependency must be added:
+```xml
+<dependency>
+    <groupId>codes.thischwa</groupId>
+    <artifactId>cloudflaredns</artifactId>
+    <version>0.1.0-beta.1</version>
+</dependency>
+```
 
 ## Methods Overview
 

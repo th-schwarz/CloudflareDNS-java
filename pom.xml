@@ -51,6 +51,7 @@
         <connection>scm:git:git@github.com:th-schwarz/CloudflareDNS-java</connection>
         <tag>HEAD</tag>
     </scm>
+
     <distributionManagement>
         <repository>
             <id>github-cloudflaredns</id>
