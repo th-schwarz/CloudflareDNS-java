@@ -1,14 +1,14 @@
+stages:
+  - pull
+
 variables:
-  GIT_STRATEGY: none
+  GITLAB_CLONE_DIR: "cloudflaredns-java"
 
-# Define job to clone GitHub repository
-clone_source_daily:
-  # Use an appropriate GitLab runner image
-  image: alpine/git
+pull_source:
+  stage: pull
   script:
-    - echo "Cloning source from GitHub..."
-    - git clone https://th-schwarz:$GITHUB_PERSONAL_ACCESS_TOKEN@github.com/th-schwarz/CloudflareDNS-java.git synced-repo
-    - echo "Repository cloned successfully from GitHub."
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-
+    - echo "Cloning GitHub repository..."
+    - git clone --depth 1 https://oauth2:${GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/th-schwarz/CloudflareDNS-java.git ${GITLAB_CLONE_DIR}
+    - echo "Repository cloned successfully."
+  only:
+    - schedules
