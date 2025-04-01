@@ -1,0 +1,18 @@
+stages:
+  - sync
+
+variables:
+  GIT_STRATEGY: none
+
+# Define job to clone GitHub repository
+clone_source:
+  stage: sync
+  # Use an appropriate GitLab runner image
+  image: alpine/git
+  script:
+    - echo "Cloning source from GitHub..."
+    - git clone https://th-schwarz:$GITHUB_PERSONAL_ACCESS_TOKEN@github.com/th-schwarz/CloudflareDNS-java.git synced-repo
+    - echo "Repository cloned successfully from GitHub."
+  rules:
+    - cron: "*/daily"
+
