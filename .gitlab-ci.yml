@@ -1,8 +1,18 @@
+default:
+  image: maven:3.8.6-corretto-17
+
 stages:
   - pull
+  - on_commit
+  - sonarcloud_scan
 
 variables:
   GITLAB_CLONE_DIR: "cloudflaredns-java"
+  SONAR_HOST_URL: "https://sonarcloud.io"
+  SONAR_PROJECT_KEY: "th-schwarz_DynDRest"
+  SONAR_ORGANIZATION: "th-schwarz"
+  SONAR_TOKEN: "${SONAR_TOKEN_ENV_VAR}"
+
 
 pull_source:
   stage: pull
@@ -12,3 +22,27 @@ pull_source:
     - echo "Repository cloned successfully."
   only:
     - schedules
+
+
+on_commits:
+  stage: on_commit
+  script:
+    - echo "Running tests..."
+    - cd ${GITLAB_CLONE_DIR}
+    - mvn clean test
+  only:
+    - /^feature.*$/
+    - develop
+
+sonarcloud_scan:
+  stage: sonarcloud_scan
+  script:
+    - echo "Setting up SonarCloud scan..."
+    - cd ${GITLAB_CLONE_DIR}
+    - mvn sonar:sonar \
+      -Dsonar.host.url=${SONAR_HOST_URL} \
+      -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+      -Dsonar.organization=${SONAR_ORGANIZATION} \
+      -Dsonar.login=${SONAR_TOKEN}
+  only:
+    - develop
