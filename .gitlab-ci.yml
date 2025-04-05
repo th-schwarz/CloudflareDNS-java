@@ -7,7 +7,8 @@ stages:
   - sonarcloud_scan
 
 variables:
-  GITLAB_CLONE_DIR: "cloudflaredns-java"
+  GITLAB_CLONE_DIR: "/builds/thischwa/CloudflareDNS-java"
+# GITLAB_CLONE_DIR: "cloudflaredns-java"
   SONAR_HOST_URL: "https://sonarcloud.io"
   SONAR_PROJECT_KEY: "th-schwarz_DynDRest"
   SONAR_ORGANIZATION: "th-schwarz"
