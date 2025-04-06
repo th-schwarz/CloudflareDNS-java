@@ -32,6 +32,10 @@ on_commits:
     - echo "Running tests..."
     - cd ${GITLAB_CLONE_DIR}
     - mvn clean test
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .maven-cache
   only:
     - /^feature.*$/
     - merge_request
@@ -45,7 +49,7 @@ sonarcloud_scan:
   cache:
     key: "${CI_JOB_NAME}"
     paths:
-      - .sonar/cache
+      - .maven-cache
   script:
     - sonar-scanner -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.organization=${SONAR_ORGANIZATION} -Dsonar.token=${SONAR_TOKEN}
   only:
