@@ -40,10 +40,12 @@ sonarcloud_scan:
   script:
     - echo "Setting up SonarCloud scan..."
     - cd ${GITLAB_CLONE_DIR}
-    - mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+    - |
+      mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
       -Dsonar.host.url=${SONAR_HOST_URL} \
       -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
       -Dsonar.organization=${SONAR_ORGANIZATION} \
       -Dsonar.login=${SONAR_TOKEN}
+
   only:
     - develop
