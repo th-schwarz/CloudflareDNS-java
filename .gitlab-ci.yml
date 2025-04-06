@@ -47,7 +47,7 @@ sonarcloud_scan:
     paths:
       - .sonar/cache
   script:
-    - sonar-scanner
+    - sonar-scanner -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.organization=${SONAR_ORGANIZATION} -Dsonar.token=${SONAR_TOKEN}
   only:
     - merge_requests
     - develop
