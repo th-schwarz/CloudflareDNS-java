@@ -13,7 +13,7 @@ variables:
   SONAR_HOST_URL: "https://sonarcloud.io"
   SONAR_PROJECT_KEY: "th-schwarz_DynDRest"
   SONAR_ORGANIZATION: "th-schwarz"
-  SONAR_TOKEN: "${SONAR_TOKEN_ENV_VAR}"
+  SONAR_TOKEN: $SONAR_TOKEN  # Ensure this token is correctly set in GitLab CI/CD variables
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
 
