@@ -28,6 +28,7 @@ variables:
 #    - schedules
 
 build:
+  stage: build
   script:
     - mvn clean package -DskipTests
   artifacts:
