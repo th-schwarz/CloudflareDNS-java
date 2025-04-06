@@ -3,6 +3,7 @@ default:
 
 stages:
   #- pull
+  - build
   - on_commit
   - sonarcloud_scan
 
