@@ -13,6 +13,8 @@ variables:
   SONAR_PROJECT_KEY: "th-schwarz_DynDRest"
   SONAR_ORGANIZATION: "th-schwarz"
   SONAR_TOKEN: "${SONAR_TOKEN_ENV_VAR}"
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+  GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
 
 
 pull_source:
@@ -24,7 +26,6 @@ pull_source:
   only:
     - schedules
 
-
 on_commits:
   stage: on_commit
   script:
@@ -33,19 +34,20 @@ on_commits:
     - mvn clean test
   only:
     - /^feature.*$/
+    - merge_request
     - develop
 
 sonarcloud_scan:
   stage: sonarcloud_scan
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
   script:
-    - echo "Setting up SonarCloud scan..."
-    - cd ${GITLAB_CLONE_DIR}
-    - |
-      mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-      -Dsonar.host.url=${SONAR_HOST_URL} \
-      -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-      -Dsonar.organization=${SONAR_ORGANIZATION} \
-      -Dsonar.login=${SONAR_TOKEN}
-
+    - sonar-scanner
   only:
+    - merge_requests
     - develop
