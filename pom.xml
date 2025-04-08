@@ -25,7 +25,7 @@
         <sonar.organization>th-schwarz</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.sourceEncoding>${file.encoding}</sonar.sourceEncoding>
-        <sonar.exclusions>src/docs/**/*</sonar.exclusions>
+        <sonar.exclusions>docs/**</sonar.exclusions>
         <sonar.test.exclusions>src/test/java/**/*</sonar.test.exclusions>
 
         <!-- checkstyle -->
