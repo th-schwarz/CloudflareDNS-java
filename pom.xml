@@ -41,10 +41,12 @@
     </properties>
 
     <scm>
-        <developerConnection>scm:git:git@github.com:th-schwarz/CloudflareDNS-java</developerConnection>
-        <connection>scm:git:git@github.com:th-schwarz/CloudflareDNS-java</connection>
+        <developerConnection>scm:git:git@gitlab.com:thischwa/CloudflareDNS-java.git</developerConnection>
+        <connection>scm:git:git@gitlab.com:thischwa/CloudflareDNS-java.git</connection>
+        <url>https://gitlab.com/thischwa/CloudflareDNS-java</url>
         <tag>HEAD</tag>
     </scm>
+
 
     <distributionManagement>
         <repository>
