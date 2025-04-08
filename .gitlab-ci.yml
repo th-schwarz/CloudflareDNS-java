@@ -64,7 +64,7 @@ sonarcloud_scan:
     paths:
       - .maven-cache
   script:
-    - sonar-scanner -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.organization=${SONAR_ORGANIZATION} -Dsonar.token=${SONAR_TOKEN} -Dsonar.java.binaries=target/classes
+    - sonar-scanner -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.organization=${SONAR_ORGANIZATION} -Dsonar.token=${SONAR_TOKEN} -Dsonar.exclusions=docs/** -Dsonar.java.binaries=target/classes
   only:
     - merge_requests
     - develop

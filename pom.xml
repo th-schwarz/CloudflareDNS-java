@@ -11,8 +11,8 @@
     <packaging>jar</packaging>
 
     <issueManagement>
-        <url>https://github.com/th-schwarz/CloudflareDNS-java/issues</url>
-        <system>GitHub Issues</system>
+        <url>https://gitlab.com/thischwa/CloudflareDNS-java/-/issues</url>
+        <system>GitLab Issues</system>
     </issueManagement>
 
     <properties>
@@ -22,11 +22,11 @@
         <project.reporting.outputEncoding>${file.encoding}</project.reporting.outputEncoding>
 
         <!-- sonarQube cloud  -->
-        <sonar.organization>th-schwarz</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.sourceEncoding>${file.encoding}</sonar.sourceEncoding>
-        <sonar.exclusions>docs/**/*</sonar.exclusions>
-        <sonar.test.exclusions>src/test/java/**/*</sonar.test.exclusions>
+<!--        <sonar.organization>th-schwarz</sonar.organization>-->
+<!--        <sonar.host.url>https://sonarcloud.io</sonar.host.url>-->
+<!--        <sonar.sourceEncoding>${file.encoding}</sonar.sourceEncoding>-->
+<!--        <sonar.exclusions>docs/**/*</sonar.exclusions>-->
+<!--        <sonar.test.exclusions>src/test/java/**/*</sonar.test.exclusions>-->
 
         <!-- checkstyle -->
         <checkstyle.version>10.21.3</checkstyle.version>
