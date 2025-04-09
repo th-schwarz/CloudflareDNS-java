@@ -47,7 +47,8 @@ sonarcloud_scan:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [ "" ]
   script:
-    - sonar-scanner \
+    - |
+      sonar-scanner \
         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
         -Dsonar.organization=${SONAR_ORGANIZATION} \
         -Dsonar.token=${SONAR_TOKEN} \
