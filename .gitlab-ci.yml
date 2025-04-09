@@ -46,13 +46,12 @@ sonarcloud_scan:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [ "" ]
   script:
-    - |
-      sonar-scanner
-        -Dsonar.projectKey=${SONAR_PROJECT_KEY}
-        -Dsonar.organization=${SONAR_ORGANIZATION}
-        -Dsonar.token=${SONAR_TOKEN}
-        -Dsonar.test.exclusions=src/test/java/**/*
-        -Dsonar.exclusions=docs/**
+    - sonar-scanner \
+        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+        -Dsonar.organization=${SONAR_ORGANIZATION} \
+        -Dsonar.token=${SONAR_TOKEN} \
+        -Dsonar.test.exclusions=src/test/java/**/* \
+        -Dsonar.exclusions=docs/** \
         -Dsonar.java.binaries=target/classes
   only:
     - merge_requests
