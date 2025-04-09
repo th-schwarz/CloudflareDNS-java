@@ -10,22 +10,12 @@ stages:
 variables:
   GITLAB_CLONE_DIR: "/builds/thischwa/CloudflareDNS-java"
   # GITLAB_CLONE_DIR: "cloudflaredns-java"
-  SONAR_HOST_URL: "https://sonarcloud.io"
+  SONAR_HOST_URL: $SONAR_HOST
   SONAR_PROJECT_KEY: "thischwa_CloudflareDNS-java"
   SONAR_ORGANIZATION: "thischwa"
   SONAR_TOKEN: $SONAR_TOKEN  # Ensure this token is correctly set in GitLab CI/CD variables
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
-
-
-#pull_source:
-#  stage: pull
-#  script:
-#    - echo "Cloning GitHub repository..."
-#    - git clone --depth 1 https://oauth2:${GITHUB_PERSONAL_ACCESS_TOKEN}@github.com/th-schwarz/CloudflareDNS-java.git ${GITLAB_CLONE_DIR}
-#    - echo "Repository cloned successfully."
-#  only:
-#    - schedules
 
 build:
   stage: build
@@ -56,7 +46,14 @@ sonarcloud_scan:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [ "" ]
   script:
-    - sonar-scanner -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.organization=${SONAR_ORGANIZATION} -Dsonar.token=${SONAR_TOKEN} -Dsonar.test.exclusions=src/test/java/**/* -Dsonar.exclusions=docs/** -Dsonar.java.binaries=target/classes
+    - |
+      sonar-scanner
+        -Dsonar.projectKey=${SONAR_PROJECT_KEY}
+        -Dsonar.organization=${SONAR_ORGANIZATION}
+        -Dsonar.token=${SONAR_TOKEN}
+        -Dsonar.test.exclusions=src/test/java/**/*
+        -Dsonar.exclusions=docs/**
+        -Dsonar.java.binaries=target/classes
   only:
     - merge_requests
     - develop
