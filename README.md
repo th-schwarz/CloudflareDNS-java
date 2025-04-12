@@ -49,7 +49,7 @@ The dependency is:
 <dependency>
   <groupId>codes.thischwa</groupId>
   <artifactId>cloudflaredns</artifactId>
-  <version>0.1.0.beta-2</version>
+  <version>0.1.0-beta.1</version>
 </dependency>
 ```
 
