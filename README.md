@@ -37,20 +37,19 @@ The project has its own maven repository. It can be added to the `pom.xml`:
 
 ```xml
 <repositories>
-    <repository>
-        <id>github-cloudflaredns</id>
-        <name>GitHub Maven Packages</name>
-        <url>https://maven.pkg.github.com/th-schwarz/CloudflareDNS-java</url>
-    </repository>
+  <repository>
+    <id>gitlab-cloudflare</id>
+    <url>https://gitlab.com/api/v4/projects/68509751/packages/maven</url>
+  </repository>
 </repositories>
 ```
 
 The dependency is:
 ```xml
 <dependency>
-    <groupId>codes.thischwa</groupId>
-    <artifactId>cloudflaredns</artifactId>
-    <version>0.1.0-beta.1</version>
+  <groupId>codes.thischwa</groupId>
+  <artifactId>cloudflaredns</artifactId>
+  <version>0.1.0.beta-2</version>
 </dependency>
 ```
 
