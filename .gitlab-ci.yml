@@ -35,7 +35,7 @@ on_commits:
   dependencies:
     - build
   script:
-    - echo "DONE"
+    - echo "on_commit DONE"
   only:
     - /^feature.*$/
     - merge_request
