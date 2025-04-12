@@ -1,14 +1,12 @@
 # CloudflareDNS-java
 
-[![Build and Test](https://github.com/th-schwarz/CloudflareDNS-java/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/th-schwarz/CloudflareDNS-java/actions/workflows/build-and-test.yml)  ![GitHub License](https://img.shields.io/github/license/th-schwarz/CloudflareDNS-java)
+![GitLab Pipeline Status](https://gitlab.com/thischwa/CloudflareDNS-java/badges/develop/pipeline.svg)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=alert_status&token=1e0791f87b2eb3b9783c2ae7de08dbf724ea15f5)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=security_rating&token=1e0791f87b2eb3b9783c2ae7de08dbf724ea15f5)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=coverage&token=1e0791f87b2eb3b9783c2ae7de08dbf724ea15f5)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=ncloc&token=1e0791f87b2eb3b9783c2ae7de08dbf724ea15f5)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=code_smells&token=1e0791f87b2eb3b9783c2ae7de08dbf724ea15f5)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
-
-Give it a try! [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/th-schwarz/CloudflareDNS-java?include_prereleases)](https://github.com/th-schwarz/CloudflareDNS-java/releases)
 
 ## Preface
 
