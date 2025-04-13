@@ -38,14 +38,18 @@ abstract class CfBasicHttpClient {
 
   private final ObjectMapper objectMapper;
 
-  CfBasicHttpClient(String baseUrl, String authEmail, String authKey) {
-    if (baseUrl == null || baseUrl.isBlank()) {
+  CfBasicHttpClient(String baseUrl, String authEmail, String authKey) throws IllegalArgumentException
+  {
+    if (baseUrl == null || baseUrl.isBlank())
+    {
       throw new IllegalArgumentException("Base URL must not be null or blank!");
     }
-    if (authEmail == null || authEmail.isBlank()) {
+    if (authEmail == null || authEmail.isBlank())
+    {
       throw new IllegalArgumentException("Authentication email must not be null or blank!");
     }
-    if (authKey == null || authKey.isBlank()) {
+    if (authKey == null || authKey.isBlank())
+    {
       throw new IllegalArgumentException("Authentication key must not be null or blank!");
     }
     this.baseUrl = baseUrl;
