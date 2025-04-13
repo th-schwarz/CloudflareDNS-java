@@ -21,9 +21,8 @@ public class CfClientTest {
 
   private final String email = System.getenv("API_EMAIL");
   private final String apiKey = System.getenv("API_KEY");
-  private final String apiToken = System.getenv("API_TOKEN");
 
-  private final CfDnsClient client = new CfDnsClient(email, apiKey, apiToken);
+  private final CfDnsClient client = new CfDnsClient(email, apiKey);
 
   @Test
   void testList() throws Exception {

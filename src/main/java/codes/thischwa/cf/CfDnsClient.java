@@ -53,10 +53,9 @@ public class CfDnsClient extends CfBasicHttpClient {
    *     authentication.
    * @param authKey The API key of the Cloudflare account, used as part of the authentication
    *     process.
-   * @param authToken The API token for accessing specific resources within the Cloudflare account.
    */
-  public CfDnsClient(String authEmail, String authKey, String authToken) {
-    this(DEFAULT_BASEURL, authEmail, authKey, authToken);
+  public CfDnsClient(String authEmail, String authKey) {
+    this(DEFAULT_BASEURL, authEmail, authKey);
   }
 
   /**
@@ -67,10 +66,9 @@ public class CfDnsClient extends CfBasicHttpClient {
    *     authentication.
    * @param authKey The API key of the Cloudflare account, used as part of the authentication
    *     process.
-   * @param authToken The API token for accessing specific resources within the Cloudflare account.
    */
-  public CfDnsClient(String baseUrl, String authEmail, String authKey, String authToken) {
-    this(true, baseUrl, authEmail, authKey, authToken);
+  public CfDnsClient(String baseUrl, String authEmail, String authKey) {
+    this(true, baseUrl, authEmail, authKey);
   }
 
   /**
@@ -82,15 +80,13 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @param baseUrl The base URL for the Cloudflare API endpoint.
    * @param authEmail The email associated with the Cloudflare account for authentication.
    * @param authKey The API key for authenticating the client with Cloudflare services.
-   * @param authToken The authentication token used for authorized access to Cloudflare API.
    */
   public CfDnsClient(
       boolean emptyResultThrowsException,
       String baseUrl,
       String authEmail,
-      String authKey,
-      String authToken) {
-    super(baseUrl, authEmail, authKey, authToken);
+      String authKey) {
+    super(baseUrl, authEmail, authKey);
     this.emptyResultThrowsException = emptyResultThrowsException;
   }
 

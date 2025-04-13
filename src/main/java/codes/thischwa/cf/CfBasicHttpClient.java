@@ -35,15 +35,22 @@ abstract class CfBasicHttpClient {
   private final String baseUrl;
   private final String authEmail;
   private final String authKey;
-  private final String authToken;
 
   private final ObjectMapper objectMapper;
 
-  CfBasicHttpClient(String baseUrl, String authEmail, String authKey, String authToken) {
+  CfBasicHttpClient(String baseUrl, String authEmail, String authKey) {
+    if (baseUrl == null || baseUrl.isBlank()) {
+      throw new IllegalArgumentException("Base URL must not be null or blank!");
+    }
+    if (authEmail == null || authEmail.isBlank()) {
+      throw new IllegalArgumentException("Authentication email must not be null or blank!");
+    }
+    if (authKey == null || authKey.isBlank()) {
+      throw new IllegalArgumentException("Authentication key must not be null or blank!");
+    }
     this.baseUrl = baseUrl;
     this.authEmail = authEmail;
     this.authKey = authKey;
-    this.authToken = authToken;
     this.objectMapper = initObjectMapper();
   }
 
@@ -67,7 +74,6 @@ abstract class CfBasicHttpClient {
                   HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
               request.addHeader("X-Auth-Email", authEmail);
               request.addHeader("X-Auth-Key", authKey);
-              request.addHeader("X-Auth-Token", authToken);
             })
         .build();
   }
