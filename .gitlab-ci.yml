@@ -60,3 +60,15 @@ sonarcloud_scan:
   only:
     - merge_requests
     - develop
+
+pages:
+  stage: on_commit
+  script:
+    - echo "Deploying GitLab Pages from docs/"
+    - mkdir public
+    - cp -r docs/* public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - develop
