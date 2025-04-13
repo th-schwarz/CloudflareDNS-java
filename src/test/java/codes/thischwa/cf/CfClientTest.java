@@ -89,4 +89,10 @@ public class CfClientTest {
     client.recordDeleteTypeIfExists(z, sldStr, RecordType.A);
     assertThrows(CloudflareNotFoundException.class, () -> client.sldInfo(z, sldStr, RecordType.A));
   }
+
+  @Test
+  void testException() {
+   assertThrows(IllegalArgumentException.class, () -> new CfDnsClient(null, "key"));
+   assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("email", null));
+  }
 }
