@@ -24,8 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * // Create a new CfDnsClient instance
  * CfDnsClient cfDnsClient = new CfDnsClient(
  *     "email@example.com",
- *     "yourApiKey",
- *     "yourApiToken"
+ *     "yourApiKey"
  * );
  *
  * // Retrieve a zone

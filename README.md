@@ -59,7 +59,7 @@ The following text focuses on the basic methods. For further information take a 
 
 ```java
 CfDnsClient cfDnsClient = new CfDnsClient(
-     "email@example.com", "yourApiKey", "yourApiToken"
+     "email@example.com", "yourApiKey"
  );
 ```
 
