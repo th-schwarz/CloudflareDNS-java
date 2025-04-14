@@ -82,10 +82,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @param authKey The API key for authenticating the client with Cloudflare services.
    */
   public CfDnsClient(
-      boolean emptyResultThrowsException,
-      String baseUrl,
-      String authEmail,
-      String authKey) {
+      boolean emptyResultThrowsException, String baseUrl, String authEmail, String authKey) {
     super(baseUrl, authEmail, authKey);
     this.emptyResultThrowsException = emptyResultThrowsException;
   }

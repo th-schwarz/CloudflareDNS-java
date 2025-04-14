@@ -21,8 +21,10 @@ public class CloudflareApiException extends Exception {
   /**
    * Constructs a new CloudflareApiException with the specified detail message and cause.
    *
-   * @param message the detail message, which provides additional context or information about the exception.
-   * @param cause the cause of this exception, which is the underlying throwable that triggered this exception.
+   * @param message the detail message, which provides additional context or information about the
+   *     exception.
+   * @param cause the cause of this exception, which is the underlying throwable that triggered this
+   *     exception.
    */
   public CloudflareApiException(String message, Throwable cause) {
     super(message, cause);
@@ -31,8 +33,8 @@ public class CloudflareApiException extends Exception {
   /**
    * Constructs a new CloudflareApiException with the specified cause.
    *
-   * @param cause the cause of this exception, which is the underlying throwable
-   *              that triggered this exception.
+   * @param cause the cause of this exception, which is the underlying throwable that triggered this
+   *     exception.
    */
   public CloudflareApiException(Throwable cause) {
     super(cause);

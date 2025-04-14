@@ -125,6 +125,7 @@ public enum RecordType {
    * encrypted or signed email exchanges.
    *
    * <p>Key features include:
+   *
    * <ul>
    *   <li>Use in Secure/Multipurpose Internet Mail Extensions (S/MIME)-based messaging.
    *   <li>Facilitating secure email communications by publishing certificates in DNS.

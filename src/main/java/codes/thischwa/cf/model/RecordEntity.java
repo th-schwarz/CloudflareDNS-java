@@ -40,10 +40,10 @@ public class RecordEntity extends AbstractEntity {
   @Nullable private LocalDateTime createdOn;
 
   /**
-   * Initializes a new instance of the RecordEntity class and invokes the parent constructor
-   * from the AbstractEntity class. The RecordEntity class represents a DNS record entity
-   * within a specific zone, encapsulating attributes such as type, name, content, TTL,
-   * and other related metadata.
+   * Initializes a new instance of the RecordEntity class and invokes the parent constructor from
+   * the AbstractEntity class. The RecordEntity class represents a DNS record entity within a
+   * specific zone, encapsulating attributes such as type, name, content, TTL, and other related
+   * metadata.
    */
   public RecordEntity() {
     super();
