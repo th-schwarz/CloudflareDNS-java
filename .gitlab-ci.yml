@@ -7,10 +7,10 @@ stages:
   - sonarcloud_scan
 
 variables:
-  GITLAB_CLONE_DIR: "/builds/ths6435116/CloudflareDNS-java"
+  GITLAB_CLONE_DIR: "/builds/ths/CloudflareDNS-java"
   # GITLAB_CLONE_DIR: "cloudflaredns-java"
   SONAR_HOST_URL: $SONAR_HOST_URL
-  SONAR_PROJECT_KEY: "ths6435116_CloudflareDNS-java"
+  SONAR_PROJECT_KEY: "ths_CloudflareDNS-java"
   SONAR_ORGANIZATION: "ths6435116"
   SONAR_TOKEN: $SONAR_TOKEN
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
