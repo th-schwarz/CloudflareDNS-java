@@ -7,7 +7,7 @@ stages:
   - sonarcloud_scan
 
 variables:
-  GITLAB_CLONE_DIR: "/builds/ths/CloudflareDNS-java"
+  GITLAB_CLONE_DIR: "/builds/ths6435116/CloudflareDNS-java"
   # GITLAB_CLONE_DIR: "cloudflaredns-java"
   SONAR_HOST_URL: $SONAR_HOST_URL
   SONAR_PROJECT_KEY: "ths_CloudflareDNS-java"
@@ -23,6 +23,7 @@ build:
   stage: build
   script:
     - echo "Running package..."
+#    - mkdir -p ${GITLAB_CLONE_DIR}
     - cd ${GITLAB_CLONE_DIR}
     - mvn clean package
   artifacts:
