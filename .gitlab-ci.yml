@@ -54,6 +54,7 @@ sonarcloud_scan:
         -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
         -Dsonar.organization=${SONAR_ORGANIZATION} \
         -Dsonar.token=${SONAR_TOKEN} \
+        -Dsonar.branch.name=develop \
         -Dsonar.test.exclusions=src/test/java/**/* \
         -Dsonar.exclusions=docs/** \
         -Dsonar.java.binaries=target/classes
