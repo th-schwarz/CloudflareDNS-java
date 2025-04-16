@@ -2,11 +2,11 @@
 
 ![GitLab Pipeline Status](https://gitlab.com/thischwa/CloudflareDNS-java/badges/develop/pipeline.svg)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=alert_status&token=1e0791f87b2eb3b9783c2ae7de08dbf724ea15f5)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=security_rating&token=1e0791f87b2eb3b9783c2ae7de08dbf724ea15f5)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=coverage&token=1e0791f87b2eb3b9783c2ae7de08dbf724ea15f5)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=ncloc&token=1e0791f87b2eb3b9783c2ae7de08dbf724ea15f5)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=code_smells&token=1e0791f87b2eb3b9783c2ae7de08dbf724ea15f5)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=ths6435116_CloudflareDNS-java&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=ths6435116_CloudflareDNS-java)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ths6435116_CloudflareDNS-java&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ths6435116_CloudflareDNS-java)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ths6435116_CloudflareDNS-java&metric=coverage)](https://sonarcloud.io/summary/new_code?id=ths6435116_CloudflareDNS-java)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=ths6435116_CloudflareDNS-java&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=ths6435116_CloudflareDNS-java)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=ths6435116_CloudflareDNS-java&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=ths6435116_CloudflareDNS-java)
 
 ## Preface
 
