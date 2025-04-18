@@ -217,6 +217,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     String endpoint = CfRequest.RECORD_CREATE.buildPath(zone.getId());
     RecordSingleResponse resp = postRequest(endpoint, rec);
     checkResponse(resp);
+    log.info("Record {} of type {} successful created.", rec.getName(), rec.getType());
     return resp.getResult();
   }
 
@@ -252,6 +253,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     String endpoint = CfRequest.RECORD_DELETE.buildPath(zone.getId(), id);
     RecordSingleResponse resp = deleteRequest(endpoint);
     checkResponse(resp);
+    log.debug("Record {} successful deleted.", id);
     return resp.getResult().getId().equals(id);
   }
 
@@ -272,6 +274,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     String endpoint = CfRequest.RECORD_UPDATE.buildPath(zone.getId(), rec.getId());
     RecordSingleResponse resp = patchRequest(endpoint, rec);
     checkResponse(resp);
+    log.info("Record {} of type {} successful updated.", rec.getName(), rec.getType());
     return resp.getResult();
   }
 
@@ -280,7 +283,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    * (SLD), if it exists.
    *
    * @param zone The zone in which the DNS record resides. It provides information about the domain.
-   * @param sld The second-level domain (SLD) of the fully qualified domain name (FQDN) for which
+   * @param sld Th.apache.hc.client5.http.impl.e second-level domain (SLD) of the fully qualified domain name (FQDN) for which
    *     the record is being deleted.
    * @param recordTypes The type of the DNS record to be deleted (e.g., A, CNAME, TXT).
    * @throws CloudflareApiException If an error occurs while interacting with the Cloudflare API.
@@ -292,7 +295,7 @@ public class CfDnsClient extends CfBasicHttpClient {
       try {
         RecordEntity rec = sldInfo(zone, sld, recordType);
         recordDelete(zone, rec);
-        log.debug("Record {} of type {} successful deleted.", fqdn, recordTypes);
+        log.info("Record {} of type {} successful deleted.", fqdn, recordTypes);
       } catch (CloudflareNotFoundException e) {
         log.debug("Record {} of type {} does not exist.", fqdn, recordTypes);
       }

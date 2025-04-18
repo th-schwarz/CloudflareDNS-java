@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>codes.thischwa</groupId>
@@ -33,16 +34,17 @@
 
         <!-- 3rd party dependencies -->
         <jackson.version>2.18.2</jackson.version>
-        <httpclient5.version>5.4.2</httpclient5.version>
+        <httpclient5.version>5.4.3</httpclient5.version>
         <lombok.version>1.18.36</lombok.version>
-        <logback-classic.version>1.5.12</logback-classic.version>
+        <slf4j.version>2.0.17</slf4j.version>
+        <logback-classic.version>1.5.18</logback-classic.version>
         <junit5.version>5.11.4</junit5.version>
     </properties>
 
     <scm>
-        <developerConnection>scm:git:git@gitlab.com:thischwa/CloudflareDNS-java.git</developerConnection>
-        <connection>scm:git:git@gitlab.com:thischwa/CloudflareDNS-java.git</connection>
-        <url>https://gitlab.com/thischwa/CloudflareDNS-java</url>
+        <developerConnection>scm:git:git@gitlab.com:ths6435116/CloudflareDNS-java.git</developerConnection>
+        <connection>scm:git:git@gitlab.com:ths6435116/CloudflareDNS-java.git</connection>
+        <url>https://gitlab.com/ths6435116/CloudflareDNS-java</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -65,6 +67,18 @@
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
             <version>${httpclient5.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -83,11 +97,6 @@
             <version>${jackson.version}</version>
         </dependency>
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback-classic.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>24.0.0</version>
@@ -98,6 +107,12 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit5.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback-classic.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
