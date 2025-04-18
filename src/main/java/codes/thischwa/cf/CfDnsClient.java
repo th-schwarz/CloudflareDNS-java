@@ -86,6 +86,10 @@ public class CfDnsClient extends CfBasicHttpClient {
     this.emptyResultThrowsException = emptyResultThrowsException;
   }
 
+  private static String buildFqdn(ZoneEntity zone, String sld) {
+    return sld + "." + zone.getName();
+  }
+
   /**
    * Retrieves a list of all zones from the Cloudflare API.
    *
@@ -152,7 +156,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    */
   public List<RecordEntity> sldListAll(ZoneEntity zone, String sld, PagingRequest pagingRequest)
       throws CloudflareApiException {
-    String fqdn = sld + "." + zone.getName();
+    String fqdn = buildFqdn(zone, sld);
     String endpoint =
         pagingRequest.addQueryString(CfRequest.RECORD_INFO_NAME.buildPath(zone.getId(), fqdn));
     RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
@@ -173,11 +177,30 @@ public class CfDnsClient extends CfBasicHttpClient {
    */
   public RecordEntity sldInfo(ZoneEntity zone, String sld, RecordType type)
       throws CloudflareApiException {
-    String fqdn = sld + "." + zone.getName();
+    String fqdn = buildFqdn(zone, sld);
     String endpoint = CfRequest.RECORD_INFO_NAME_TYPE.buildPath(zone.getId(), fqdn, type);
     RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
     checkResponse(resp, true);
     return resp.getResult().get(0);
+  }
+
+  /**
+   * Creates a DNS record in the specified DNS zone with the provided details.
+   *
+   * @param zone    the DNS zone in which the record will be created
+   * @param sld     the second-level domain (SLD) used for constructing the fully qualified domain name (FQDN)
+   * @param ttl     the time-to-live (TTL) value for the DNS record
+   * @param type    the type of the DNS record (e.g., A, AAAA, CNAME)
+   * @param content the content or value of the DNS record
+   * @return the created DNS record as a {@link RecordEntity} object
+   * @throws CloudflareApiException if an error occurs while interacting with the Cloudflare API
+   */
+  public RecordEntity recordCreate(
+      ZoneEntity zone, String sld, int ttl, RecordType type, String content)
+      throws CloudflareApiException {
+    String fqdn = buildFqdn(zone, sld);
+    RecordEntity rec = RecordEntity.build(fqdn, type, ttl, content);
+    return recordCreate(zone, rec);
   }
 
   /**
@@ -259,18 +282,20 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @param zone The zone in which the DNS record resides. It provides information about the domain.
    * @param sld The second-level domain (SLD) of the fully qualified domain name (FQDN) for which
    *     the record is being deleted.
-   * @param type The type of the DNS record to be deleted (e.g., A, CNAME, TXT).
+   * @param recordTypes The type of the DNS record to be deleted (e.g., A, CNAME, TXT).
    * @throws CloudflareApiException If an error occurs while interacting with the Cloudflare API.
    */
-  public void recordDeleteTypeIfExists(ZoneEntity zone, String sld, RecordType type)
+  public void recordDeleteTypeIfExists(ZoneEntity zone, String sld, RecordType... recordTypes)
       throws CloudflareApiException {
-    String fqdn = sld + "." + zone.getName();
-    try {
-      RecordEntity rec = sldInfo(zone, sld, type);
-      recordDelete(zone, rec);
-      log.debug("Record {} of type {} successful deleted.", fqdn, type);
-    } catch (CloudflareNotFoundException e) {
-      log.debug("Record {} of type {} does not exist.", fqdn, type);
+    String fqdn = buildFqdn(zone, sld);
+    for (RecordType recordType : recordTypes) {
+      try {
+        RecordEntity rec = sldInfo(zone, sld, recordType);
+        recordDelete(zone, rec);
+        log.debug("Record {} of type {} successful deleted.", fqdn, recordTypes);
+      } catch (CloudflareNotFoundException e) {
+        log.debug("Record {} of type {} does not exist.", fqdn, recordTypes);
+      }
     }
   }
 
