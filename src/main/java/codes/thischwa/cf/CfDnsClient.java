@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * System.out.println("Zone ID: " + zone.getId());
  *
  * // Retrieve records of a zone
- * List<RecordEntity> records = cfDnsClient.sldListAll(zone, "sld");
+ * List&lt;{@link RecordEntity}&gt; records = cfDnsClient.sldListAll(zone, "sld");
  * records.forEach(record ->
  *     System.out.println("Record Type: " + record.getType() + ", Value: " + record.getContent())
  * );
@@ -279,14 +279,13 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Attempts to delete a DNS record of a specific type for a given zone and second-level domain
-   * (SLD), if it exists.
+   * Deletes DNS records of a specific type within a given zone if they exist.
+   * If no record of the specified type exists, it logs this occurrence without throwing an exception.
    *
-   * @param zone The zone in which the DNS record resides. It provides information about the domain.
-   * @param sld Th.apache.hc.client5.http.impl.e second-level domain (SLD) of the fully qualified domain name (FQDN) for which
-   *     the record is being deleted.
-   * @param recordTypes The type of the DNS record to be deleted (e.g., A, CNAME, TXT).
-   * @throws CloudflareApiException If an error occurs while interacting with the Cloudflare API.
+   * @param zone        The DNS zone entity in which the record exists.
+   * @param sld         The second-level domain for which the record is being checked.
+   * @param recordTypes The types of DNS records that should be deleted, if they exist.
+   * @throws CloudflareApiException If an error occurs during API communication.
    */
   public void recordDeleteTypeIfExists(ZoneEntity zone, String sld, RecordType... recordTypes)
       throws CloudflareApiException {
