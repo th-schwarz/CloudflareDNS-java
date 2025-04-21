@@ -215,4 +215,4 @@ try {
 ### Summary
 
 `CfDnsClient` offers a simple interface for managing DNS entries via Cloudflare's public API, allowing seamless CRUD
-operations and automation-friendly workflows. 
+operations and automation-friendly workflows.  
