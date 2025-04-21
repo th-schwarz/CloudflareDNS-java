@@ -1,14 +1,17 @@
 package codes.thischwa.cf;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ZoneEntity;
-
 import java.time.LocalDate;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 
 @Slf4j
@@ -18,8 +21,8 @@ public class CfClientTest {
   private static final String SLD_STR = "devsld";
   private static final int TTL = 60;
 
-  private final String API_EMAIL = System.getenv("API_EMAIL");
-  private final String API_KEY = System.getenv("API_KEY");
+  private static final String API_EMAIL = System.getenv("API_EMAIL");
+  private static final String API_KEY = System.getenv("API_KEY");
 
   private final CfDnsClient client = new CfDnsClient(API_EMAIL, API_KEY);
 

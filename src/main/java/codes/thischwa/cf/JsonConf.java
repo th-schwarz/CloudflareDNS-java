@@ -12,6 +12,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  */
 class JsonConf {
 
+  private JsonConf() {
+  }
+
   static ObjectMapper initObjectMapper() {
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(new JavaTimeModule());
