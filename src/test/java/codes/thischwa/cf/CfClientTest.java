@@ -34,8 +34,8 @@ public class CfClientTest {
     List<RecordEntity> rList = client.sldListAll(zList.get(0), "test");
     assertFalse(rList.isEmpty());
 
-    assertThrows(
-        CloudflareNotFoundException.class, () -> client.sldListAll(zList.get(0), "not-existing"));
+    assertThrows(CloudflareNotFoundException.class,
+      () -> client.sldListAll(zList.get(0), "not-existing"));
 
     client.setEmptyResultThrowsException(false);
     rList = client.sldListAll(zList.get(0), "not-existing");
@@ -72,8 +72,7 @@ public class CfClientTest {
     String domain = SLD_STR + "." + ZONE_STR;
     client.recordDeleteTypeIfExists(z, SLD_STR, RecordType.A, RecordType.AAAA);
     RecordEntity createdRe1 =
-        client.recordCreate(
-            z, RecordEntity.build(domain, RecordType.A, TTL, "130.0.0.3"));
+      client.recordCreate(z, RecordEntity.build(domain, RecordType.A, TTL, "130.0.0.3"));
     assertNotNull(createdRe1.getId());
     assertEquals(domain, createdRe1.getName());
     assertEquals(RecordType.A.getType(), createdRe1.getType());
@@ -85,8 +84,7 @@ public class CfClientTest {
     r = client.sldInfo(z, SLD_STR, RecordType.A);
     assertEquals("130.0.0.3", r.getContent());
     RecordEntity createdRe2 =
-        client.recordCreate(
-            z, SLD_STR, TTL, RecordType.AAAA, "2a0a:4cc0:c0:2e4::1");
+      client.recordCreate(z, SLD_STR, TTL, RecordType.AAAA, "2a0a:4cc0:c0:2e4::1");
     r = client.sldInfo(z, SLD_STR, RecordType.AAAA);
     assertEquals("2a0a:4cc0:c0:2e4::1", r.getContent());
     assertEquals(RecordType.AAAA.getType(), r.getType());
@@ -99,8 +97,8 @@ public class CfClientTest {
     r = client.sldInfo(z, SLD_STR, RecordType.A);
     assertEquals("130.0.0.3", r.getContent());
     assertTrue(client.recordDelete(z, createdRe2));
-    assertThrows(
-        CloudflareNotFoundException.class, () -> client.sldInfo(z, SLD_STR, RecordType.AAAA));
+    assertThrows(CloudflareNotFoundException.class,
+      () -> client.sldInfo(z, SLD_STR, RecordType.AAAA));
 
     client.recordDeleteTypeIfExists(z, SLD_STR, RecordType.A);
     assertThrows(CloudflareNotFoundException.class, () -> client.sldInfo(z, SLD_STR, RecordType.A));
@@ -108,7 +106,9 @@ public class CfClientTest {
 
   @Test
   void testException() {
-   assertThrows(IllegalArgumentException.class, () -> new CfDnsClient(null, "key"));
-   assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("email", null));
+    assertThrows(IllegalArgumentException.class, () -> new CfDnsClient(null, "key"));
+    assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("email", null));
+    assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("email", ""));
+    assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("", "key"));
   }
 }
