@@ -56,6 +56,7 @@ sonarcloud_scan:
         -Dsonar.token=${SONAR_TOKEN} \
         -Dsonar.branch.name=develop \
         -Dsonar.projectBaseDir=${CI_PROJECT_DIR} \
+        -Dsonar.tests=src/test/java \
         -Dsonar.test.exclusions=src/test/**,src/test/**/*,src/test/java/**/*,src/test/resources/**/* \
         -Dsonar.exclusions=docs/** \
         -Dsonar.java.binaries=target/classes
