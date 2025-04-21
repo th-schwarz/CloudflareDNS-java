@@ -1,6 +1,6 @@
 package codes.thischwa.cf.model;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.Data;
 
 /**
@@ -22,7 +22,7 @@ import lombok.Data;
  */
 @Data
 public abstract class AbstractResponse {
-  private boolean success;
-  private List<String> errors;
-  private List<String> messages;
+
+  @JsonUnwrapped
+  private ResponseResultInfo responseResultInfo;
 }

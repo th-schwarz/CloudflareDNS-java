@@ -6,6 +6,7 @@ import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordMultipleResponse;
 import codes.thischwa.cf.model.RecordSingleResponse;
 import codes.thischwa.cf.model.RecordType;
+import codes.thischwa.cf.model.ResponseResultInfo;
 import codes.thischwa.cf.model.ZoneEntity;
 import codes.thischwa.cf.model.ZoneMultipleResponse;
 import java.util.List;
@@ -307,9 +308,10 @@ public class CfDnsClient extends CfBasicHttpClient {
 
   private void checkResponse(AbstractResponse resp, boolean singleResultExpected)
       throws CloudflareApiException {
-    if (!resp.isSuccess()) {
+    ResponseResultInfo resultInfo = resp.getResponseResultInfo();
+    if (!resultInfo.isSuccess()) {
       String errors =
-          resp.getErrors().stream().map(Object::toString).collect(Collectors.joining(", "));
+        resultInfo.getErrors().stream().map(Object::toString).collect(Collectors.joining(", "));
       throw new CloudflareApiException("Error in response: " + errors);
     }
 
