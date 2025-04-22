@@ -47,9 +47,15 @@ The dependency is:
 <dependency>
   <groupId>codes.thischwa</groupId>
   <artifactId>cloudflaredns</artifactId>
-  <version>0.1.0-beta.2</version>
+  <version>0.1.0-beta.3</version>
 </dependency>
 ```
+
+## Changelog
+
+- 0.1.0-beta.1: 1st runnable version
+- 0.1.0-beta.2:
+- 0.1.0-beta.3:
 
 ## Methods Overview
 
