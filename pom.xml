@@ -44,7 +44,7 @@
         <sonar.organization>thischwa</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.sourceEncoding>${file.encoding}</sonar.sourceEncoding>
-        <sonar.projectKey>codes.thischwa:cloudflaredns</sonar.projectKey>
+        <sonar.projectKey>thischwa_CloudflareDNS-java</sonar.projectKey>
         <sonar.projectName>CloudflareDNS-java</sonar.projectName>
         <sonar.branch.name>develop</sonar.branch.name>
     </properties>
