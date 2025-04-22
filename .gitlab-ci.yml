@@ -45,20 +45,9 @@ sonarcloud_scan:
   stage: sonarcloud_scan
   dependencies:
     - build
-  image:
-    name: sonarsource/sonar-scanner-cli:latest
-    entrypoint: [ "" ]
   script:
-    - |
-      sonar-scanner \
-        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-        -Dsonar.organization=${SONAR_ORGANIZATION} \
-        -Dsonar.token=${SONAR_TOKEN} \
-        -Dsonar.branch.name=develop \
-        -Dsonar.projectBaseDir=${CI_PROJECT_DIR} \
-        -Dsonar.tests=src/test/java \
-        -Dsonar.exclusions=docs/** \
-        -Dsonar.java.binaries=target/classes
+    - mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+      -Dsonar.projectKey=thischwa_CloudflareDNS-java
   only:
     - merge_requests
     - develop
