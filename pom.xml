@@ -43,12 +43,13 @@
         <!-- sonarqube -->
         <sonar.organization>thischwa</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.sourceEncoding>${file.encoding}</sonar.sourceEncoding>
     </properties>
 
     <scm>
-        <developerConnection>scm:git:git@gitlab.com:ths6435116/CloudflareDNS-java.git</developerConnection>
-        <connection>scm:git:git@gitlab.com:ths6435116/CloudflareDNS-java.git</connection>
-        <url>https://gitlab.com/ths6435116/CloudflareDNS-java</url>
+        <developerConnection>scm:git:git@gitlab.com:thischwa/CloudflareDNS-java.git</developerConnection>
+        <connection>scm:git:git@gitlab.com:thischwa/CloudflareDNS-java.git</connection>
+        <url>https://gitlab.com/thischwa/CloudflareDNS-java</url>
         <tag>HEAD</tag>
     </scm>
 
