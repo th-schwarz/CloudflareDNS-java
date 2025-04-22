@@ -56,6 +56,8 @@ The dependency is:
 - 0.1.0-beta.1: 1st runnable version
 - 0.1.0-beta.2:
 - 0.1.0-beta.3:
+  - fixed json deserialization
+  - added logging of api errors
 
 ## Methods Overview
 
