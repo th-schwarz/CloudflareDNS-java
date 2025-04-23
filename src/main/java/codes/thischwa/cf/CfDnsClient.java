@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
  * CfDnsClient is a client interface to interact with Cloudflare DNS service. It allows managing DNS
  * records and zones within the Cloudflare system, including creating, updating, retrieving, and
  * deleting DNS records.
- *
  * <p>Example:
  * <pre><code>
  * // Create a new CfDnsClient instance
@@ -184,16 +183,17 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Creates a DNS record in the specified DNS zone with the provided details.
+   * Creates a new DNS record for a given second-level domain (SLD) within the specified zone.
    *
-   * @param zone    the DNS zone in which the record will be created
-   * @param sld     the second-level domain (SLD) used for constructing the fully qualified domain
-   *                name (FQDN)
-   * @param ttl     the time-to-live (TTL) value for the DNS record
-   * @param type    the type of the DNS record (e.g., A, AAAA, CNAME)
-   * @param content the content or value of the DNS record
-   * @return the created DNS record as a {@link RecordEntity} object
-   * @throws CloudflareApiException if an error occurs while interacting with the Cloudflare API
+   * @param zone    The ZoneEntity representing the DNS zone where the record is to be created.
+   * @param sld     The second-level domain (SLD) for which the DNS record is being created.
+   * @param ttl     The time-to-live (TTL) value for the DNS record in seconds.
+   * @param type    The RecordType specifying the type of the DNS record (e.g., A, AAAA, CNAME).
+   * @param content The content of the DNS record (e.g., IP address for A/AAAA records, target
+   *                domain for CNAME).
+   * @return The created RecordEntity object containing details of the newly created DNS record.
+   * @throws CloudflareApiException If an error occurs while communicating with the Cloudflare API
+   *                                or creating the record.
    */
   public RecordEntity recordCreateSld(ZoneEntity zone, String sld, int ttl, RecordType type,
       String content) throws CloudflareApiException {
