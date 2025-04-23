@@ -84,7 +84,7 @@ public class CfClientTest {
     r = client.sldInfo(z, SLD_STR, RecordType.A);
     assertEquals("130.0.0.3", r.getContent());
     RecordEntity createdRe2 =
-      client.recordCreate(z, SLD_STR, TTL, RecordType.AAAA, "2a0a:4cc0:c0:2e4::1");
+        client.recordCreateSld(z, SLD_STR, TTL, RecordType.AAAA, "2a0a:4cc0:c0:2e4::1");
     r = client.sldInfo(z, SLD_STR, RecordType.AAAA);
     assertEquals("2a0a:4cc0:c0:2e4::1", r.getContent());
     assertEquals(RecordType.AAAA.getType(), r.getType());
