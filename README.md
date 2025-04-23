@@ -139,11 +139,11 @@ Create a new DNS record in a specific zone.
 
 - **Parameters**:
     - `ZoneEntity zone` - DNS zone object.
-    - `RecordEntity rec` - Details of the new record (name, type, content).
+  - `String sld` - The sub-tld of the new record.
+  - `int ttl` - The time-to-live in seconds of the new rcord.
 
 ```java
-RecordEntity newRecord = new RecordEntity("api.example.com", RecordType.A, "192.168.1.1");
-RecordEntity created = cfDnsClient.recordCreate(zone, newRecord);
+RecordEntity created = client.recordCreateSld(zone, "api", 60, RecordType.A, "192.168.1.1");
 System.out.println("Created Record ID: " + created.getId());
 ```
 

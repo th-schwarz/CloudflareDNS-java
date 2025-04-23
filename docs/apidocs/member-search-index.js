@@ -126,6 +126,11 @@ memberSearchIndex = [{"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "A
 }, {
     "p": "codes.thischwa.cf",
     "c": "CfDnsClient",
+    "l": "recordCreateSld(ZoneEntity, String, int, RecordType, String)",
+    "u": "recordCreateSld(codes.thischwa.cf.model.ZoneEntity,java.lang.String,int,codes.thischwa.cf.model.RecordType,java.lang.String)"
+}, {
+    "p": "codes.thischwa.cf",
+    "c": "CfDnsClient",
     "l": "recordDelete(ZoneEntity, RecordEntity)",
     "u": "recordDelete(codes.thischwa.cf.model.ZoneEntity,codes.thischwa.cf.model.RecordEntity)"
 }, {
