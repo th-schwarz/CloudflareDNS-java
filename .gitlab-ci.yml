@@ -23,12 +23,13 @@ build:
   stage: build
   script:
     - echo "Running package..."
-#    - mkdir -p ${GITLAB_CLONE_DIR}
     - cd ${GITLAB_CLONE_DIR}
     - mvn clean package
   artifacts:
     paths:
       - target/
+  except:
+    - tags
 
 on_commits:
   stage: on_commit
