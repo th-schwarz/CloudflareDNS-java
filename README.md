@@ -10,7 +10,8 @@
 
 ## Preface
 
-This project provides a java client for minimalistic access to the Cloudflare API, which is mainly used for managing DNS settings such as creating, updating and deleting DNS records. 
+This project provides a java client for minimalistic access to the Cloudflare API version 4, which is mainly used for
+managing DNS settings such as creating, updating and deleting DNS records.
 
 If you encounter any bugs or find missing features, feel free to report them on
 the [GitLab Issues page](https://gitlab.com/thischwa/CloudflareDNS-java/-/issues).
@@ -61,7 +62,13 @@ The dependency is:
 
 ## Methods Overview
 
-The following text focuses on the basic methods. For further information take a look at the [javadoc of the CfDnsClient](https://cloudflaredns-java-f4ee3a.gitlab.io/apidocs/codes/thischwa/cf/CfDnsClient.html).
+The methods can be categorized as follows:
+
+- `Zone`: list, info
+- `Record`: list, info, create, update, delete
+
+The following text focuses on the basic methods. For further information, take a look at
+the [javadoc of the CfDnsClient](https://cloudflaredns-java-f4ee3a.gitlab.io/apidocs/codes/thischwa/cf/CfDnsClient.html).
 
 ### Instantiation of `CfDnsClient`
 
