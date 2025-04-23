@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * records and zones within the Cloudflare system, including creating, updating, retrieving, and
  * deleting DNS records.
  *
- *  <p>Example:
+ * <p>Example:
  * <pre><code>
  * // Create a new CfDnsClient instance
  * CfDnsClient cfDnsClient = new CfDnsClient(
