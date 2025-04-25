@@ -36,11 +36,14 @@ public class CfClientTest {
 
     assertThrows(CloudflareNotFoundException.class,
       () -> client.sldListAll(zList.get(0), "not-existing"));
+  }
 
-    client.setEmptyResultThrowsException(false);
-    rList = client.sldListAll(zList.get(0), "not-existing");
-    assertTrue(rList.isEmpty());
-    client.setEmptyResultThrowsException(true);
+  @Test
+  void testEmptyResultThrowsException() throws Exception {
+    List<ZoneEntity> zList = client.zoneListAll();
+    CfDnsClient client = new CfDnsClient(true, API_EMAIL, API_KEY);
+    assertThrows(CloudflareNotFoundException.class,
+        () -> client.sldListAll(zList.get(0), "not-existing"));
   }
 
   @Test

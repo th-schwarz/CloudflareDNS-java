@@ -6,11 +6,9 @@ import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordMultipleResponse;
 import codes.thischwa.cf.model.RecordSingleResponse;
 import codes.thischwa.cf.model.RecordType;
-import codes.thischwa.cf.model.ResponseResultInfo;
 import codes.thischwa.cf.model.ZoneEntity;
 import codes.thischwa.cf.model.ZoneMultipleResponse;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * CfDnsClient is a client interface to interact with Cloudflare DNS service. It allows managing DNS
  * records and zones within the Cloudflare system, including creating, updating, retrieving, and
  * deleting DNS records.
+ *
  * <p>Example:
  * <pre><code>
  * // Create a new CfDnsClient instance
@@ -40,10 +39,10 @@ import lombok.extern.slf4j.Slf4j;
 public class CfDnsClient extends CfBasicHttpClient {
   private static final String DEFAULT_BASEURL = "https://api.cloudflare.com/client/v4";
 
-  private boolean emptyResultThrowsException;
+  private final ResponseValidator responseValidator;
 
   /**
-   * Constructs a CfDnsClient instance for interacting with the Cloudflare DNS API.
+   * Constructs a new instance of {@code CfDnsClient}.
    *
    * @param authEmail The email address associated with the Cloudflare account, used for
    *                  authentication.
@@ -55,7 +54,7 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Constructs a CfDnsClient instance for interacting with the Cloudflare DNS API.
+   * Constructs a new instance of {@code CfDnsClient}.
    *
    * @param baseUrl   The base URL of the Cloudflare API to be used for requests.
    * @param authEmail The email address associated with the Cloudflare account, used for
@@ -68,8 +67,19 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Constructs a new instance of {@code CfDnsClient}, which facilitates interactions with the
-   * Cloudflare DNS API.
+   * Constructs a new instance of {@code CfDnsClient}.
+   *
+   * @param emptyResultThrowsException a boolean value indicating whether an exception should be
+   *                                   thrown when the result is empty
+   * @param authEmail                  the authentication email required for API access
+   * @param authKey                    the authentication key required for API access
+   */
+  public CfDnsClient(boolean emptyResultThrowsException, String authEmail, String authKey) {
+    this(emptyResultThrowsException, DEFAULT_BASEURL, authEmail, authKey);
+  }
+
+  /**
+   * Constructs a new instance of {@code CfDnsClient}.
    *
    * @param emptyResultThrowsException Specifies if an exception should be thrown when the API
    *                                   response is empty. Default is true.
@@ -82,11 +92,7 @@ public class CfDnsClient extends CfBasicHttpClient {
   public CfDnsClient(boolean emptyResultThrowsException, String baseUrl, String authEmail,
       String authKey) {
     super(baseUrl, authEmail, authKey);
-    this.emptyResultThrowsException = emptyResultThrowsException;
-  }
-
-  private static String buildFqdn(ZoneEntity zone, String sld) {
-    return sld + "." + zone.getName();
+    this.responseValidator = new ResponseValidator(emptyResultThrowsException);
   }
 
   /**
@@ -317,27 +323,16 @@ public class CfDnsClient extends CfBasicHttpClient {
     }
   }
 
+  private static String buildFqdn(ZoneEntity zone, String sld) {
+    return sld + "." + zone.getName();
+  }
+
   private void checkResponse(AbstractResponse resp) throws CloudflareApiException {
     checkResponse(resp, false);
   }
 
   private void checkResponse(AbstractResponse resp, boolean singleResultExpected)
       throws CloudflareApiException {
-    ResponseResultInfo resultInfo = resp.getResponseResultInfo();
-    if (!resultInfo.isSuccess()) {
-      String errors =
-          resultInfo.getErrors().stream().map(Object::toString).collect(Collectors.joining(", "));
-      throw new CloudflareApiException("Error in response: " + errors);
-    }
-
-    if (resp instanceof RecordMultipleResponse respMulti) {
-      if (singleResultExpected && respMulti.getResultInfo().getTotalCount() > 1) {
-        throw new CloudflareApiException(
-            "Unexpected result count: " + respMulti.getResultInfo().getTotalCount());
-      }
-      if (emptyResultThrowsException && respMulti.getResultInfo().getTotalCount() == 0) {
-        throw new CloudflareNotFoundException("No result found");
-      }
-    }
+    responseValidator.validate(resp, singleResultExpected);
   }
 }
