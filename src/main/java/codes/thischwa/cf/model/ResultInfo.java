@@ -1,7 +1,5 @@
 package codes.thischwa.cf.model;
 
-import lombok.Data;
-
 /**
  * Represents metadata for paginated results.
  *
@@ -16,11 +14,16 @@ import lombok.Data;
  *   <li><b>totalCount:</b> The total number of results across all pages.
  * </ul>
  */
-@Data
-public class ResultInfo {
-  private int page;
-  private int perPage;
-  private int totalPages;
-  private int count;
-  private int totalCount;
+
+public record ResultInfo(int page, int perPage, int totalPages, int count, int totalCount) {
+
+  /**
+   * Constructs a ResultInfo instance with the specified total count and default values for other
+   * fields. Just to use in tests!
+   *
+   * @param totalCount the total number of results across all pages
+   */
+  public ResultInfo(int totalCount) {
+    this(0, 0, 0, 0, totalCount);
+  }
 }

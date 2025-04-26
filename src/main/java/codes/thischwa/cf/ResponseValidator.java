@@ -43,11 +43,11 @@ class ResponseValidator {
   private void validateResultCount(AbstractResponse resp, boolean singleResultExpected)
       throws CloudflareApiException {
     if (resp instanceof RecordMultipleResponse respMulti) {
-      if (singleResultExpected && respMulti.getResultInfo().getTotalCount() > 1) {
+      if (singleResultExpected && respMulti.getResultInfo().totalCount() > 1) {
         throw new CloudflareApiException(
-            "Unexpected result count: " + respMulti.getResultInfo().getTotalCount());
+            "Unexpected result count: " + respMulti.getResultInfo().totalCount());
       }
-      if (emptyResultThrowsException && respMulti.getResultInfo().getTotalCount() == 0) {
+      if (emptyResultThrowsException && respMulti.getResultInfo().totalCount() == 0) {
         throw new CloudflareNotFoundException("No result found");
       }
     }

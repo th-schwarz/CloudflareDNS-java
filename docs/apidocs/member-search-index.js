@@ -83,30 +83,43 @@ memberSearchIndex = [{"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "A
     "u": "%3Cinit%3E(java.lang.Throwable)"
 }, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "CNAME"}, {
     "p": "codes.thischwa.cf.model",
-    "c": "PagingRequest",
-    "l": "defaultPaging()"
-}, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "DNSKEY"}, {
+    "c": "ResultInfo",
+    "l": "count()"
+}, {"p": "codes.thischwa.cf.model", "c": "PagingRequest", "l": "defaultPaging()"}, {
     "p": "codes.thischwa.cf.model",
     "c": "RecordType",
-    "l": "DS"
+    "l": "DNSKEY"
+}, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "DS"}, {
+    "p": "codes.thischwa.cf.model",
+    "c": "ResultInfo",
+    "l": "equals(Object)",
+    "u": "equals(java.lang.Object)"
 }, {"p": "codes.thischwa.cf.model", "c": "ResponseEntity", "l": "getId()"}, {
     "p": "codes.thischwa.cf.model",
     "c": "PagingRequest",
     "l": "getPagingParams()"
-}, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "HTTPS"}, {
+}, {"p": "codes.thischwa.cf.model", "c": "ResultInfo", "l": "hashCode()"}, {
     "p": "codes.thischwa.cf.model",
     "c": "RecordType",
-    "l": "LOC"
-}, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "MX"}, {
+    "l": "HTTPS"
+}, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "LOC"}, {
     "p": "codes.thischwa.cf.model",
     "c": "RecordType",
-    "l": "NAPTR"
-}, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "NS"}, {
+    "l": "MX"
+}, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "NAPTR"}, {
+    "p": "codes.thischwa.cf.model",
+    "c": "RecordType",
+    "l": "NS"
+}, {
     "p": "codes.thischwa.cf.model",
     "c": "PagingRequest",
     "l": "of(int, int)",
     "u": "of(int,int)"
 }, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "OPENPGPKEY"}, {
+    "p": "codes.thischwa.cf.model",
+    "c": "ResultInfo",
+    "l": "page()"
+}, {"p": "codes.thischwa.cf.model", "c": "ResultInfo", "l": "perPage()"}, {
     "p": "codes.thischwa.cf.model",
     "c": "RecordType",
     "l": "PTR"
@@ -176,8 +189,13 @@ memberSearchIndex = [{"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "A
 }, {
     "p": "codes.thischwa.cf.model",
     "c": "ResultInfo",
-    "l": "ResultInfo()",
-    "u": "%3Cinit%3E()"
+    "l": "ResultInfo(int)",
+    "u": "%3Cinit%3E(int)"
+}, {
+    "p": "codes.thischwa.cf.model",
+    "c": "ResultInfo",
+    "l": "ResultInfo(int, int, int, int, int)",
+    "u": "%3Cinit%3E(int,int,int,int,int)"
 }, {
     "p": "codes.thischwa.cf",
     "c": "CfDnsClient",
@@ -205,11 +223,15 @@ memberSearchIndex = [{"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "A
     "p": "codes.thischwa.cf.model",
     "c": "RecordType",
     "l": "toString()"
-}, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "TXT"}, {
+}, {"p": "codes.thischwa.cf.model", "c": "ResultInfo", "l": "toString()"}, {
+    "p": "codes.thischwa.cf.model",
+    "c": "ResultInfo",
+    "l": "totalCount()"
+}, {"p": "codes.thischwa.cf.model", "c": "ResultInfo", "l": "totalPages()"}, {
     "p": "codes.thischwa.cf.model",
     "c": "RecordType",
-    "l": "URI"
-}, {
+    "l": "TXT"
+}, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "URI"}, {
     "p": "codes.thischwa.cf",
     "c": "CfRequest",
     "l": "valueOf(String)",

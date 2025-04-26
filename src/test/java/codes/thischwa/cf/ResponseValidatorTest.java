@@ -62,7 +62,7 @@ class ResponseValidatorTest {
   void validateSingleResultExpectedButMultipleFound() {
     when(mockMultipleResponse.getResponseResultInfo()).thenReturn(mockResultInfo);
     when(mockResultInfo.isSuccess()).thenReturn(true);
-    when(mockMultipleResponse.getResultInfo()).thenReturn(new TestResultInfo(2));
+    when(mockMultipleResponse.getResultInfo()).thenReturn(new ResultInfo(2));
 
     CloudflareApiException exception = assertThrows(CloudflareApiException.class,
         () -> validatorWithException.validate(mockMultipleResponse, true));
@@ -73,7 +73,7 @@ class ResponseValidatorTest {
   void validateEmptyResultWithExceptionEnabled() {
     when(mockMultipleResponse.getResponseResultInfo()).thenReturn(mockResultInfo);
     when(mockResultInfo.isSuccess()).thenReturn(true);
-    when(mockMultipleResponse.getResultInfo()).thenReturn(new TestResultInfo(0));
+    when(mockMultipleResponse.getResultInfo()).thenReturn(new ResultInfo(0));
 
     assertThrows(CloudflareNotFoundException.class,
         () -> validatorWithException.validate(mockMultipleResponse, false));
@@ -83,17 +83,8 @@ class ResponseValidatorTest {
   void validateEmptyResultWithExceptionDisabled() {
     when(mockMultipleResponse.getResponseResultInfo()).thenReturn(mockResultInfo);
     when(mockResultInfo.isSuccess()).thenReturn(true);
-    when(mockMultipleResponse.getResultInfo()).thenReturn(new TestResultInfo(0));
+    when(mockMultipleResponse.getResultInfo()).thenReturn(new ResultInfo(0));
 
     assertDoesNotThrow(() -> validatorWithoutException.validate(mockMultipleResponse, true));
-  }
-
-  @Getter
-  private static class TestResultInfo extends ResultInfo {
-    private final int totalCount;
-
-    TestResultInfo(int totalCount) {
-      this.totalCount = totalCount;
-    }
   }
 }
