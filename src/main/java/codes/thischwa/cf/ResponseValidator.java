@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
  * <li>It checks whether the API response was successful by analyzing the associated response
  * metadata. If the response indicates failure, an exception is thrown with descriptive error
  * messages.
- * <li>It validates the number of results in the API response payload to detect unexpected counts.
- * Depending on the configuration, discrepancies in result count or an empty result may trigger
- * exceptions.
+ * <li>If a {@link RecordMultipleResponse} is used, it validates the number of results in the API
+ * response payload to detect unexpected counts. Depending on the configuration,
+ * discrepancies in the result count or an empty result may trigger exceptions.
  * </ul>
  */
 class ResponseValidator {
