@@ -29,14 +29,4 @@ public class CloudflareApiException extends Exception {
   public CloudflareApiException(String message, Throwable cause) {
     super(message, cause);
   }
-
-  /**
-   * Constructs a new CloudflareApiException with the specified cause.
-   *
-   * @param cause the cause of this exception, which is the underlying throwable that triggered this
-   *     exception.
-   */
-  public CloudflareApiException(Throwable cause) {
-    super(cause);
-  }
 }

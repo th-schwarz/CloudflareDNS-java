@@ -31,13 +31,4 @@ public class CloudflareNotFoundException extends CloudflareApiException {
     super(message, cause);
   }
 
-  /**
-   * Constructs a new CloudflareNotFoundException with the specified cause.
-   *
-   * @param cause the cause of this exception, which is the underlying throwable that triggered this
-   *     exception.
-   */
-  public CloudflareNotFoundException(Throwable cause) {
-    super(cause);
-  }
 }

@@ -63,11 +63,6 @@ memberSearchIndex = [{"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "A
     "u": "%3Cinit%3E(java.lang.String,java.lang.Throwable)"
 }, {
     "p": "codes.thischwa.cf",
-    "c": "CloudflareApiException",
-    "l": "CloudflareApiException(Throwable)",
-    "u": "%3Cinit%3E(java.lang.Throwable)"
-}, {
-    "p": "codes.thischwa.cf",
     "c": "CloudflareNotFoundException",
     "l": "CloudflareNotFoundException(String)",
     "u": "%3Cinit%3E(java.lang.String)"
@@ -76,11 +71,6 @@ memberSearchIndex = [{"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "A
     "c": "CloudflareNotFoundException",
     "l": "CloudflareNotFoundException(String, Throwable)",
     "u": "%3Cinit%3E(java.lang.String,java.lang.Throwable)"
-}, {
-    "p": "codes.thischwa.cf",
-    "c": "CloudflareNotFoundException",
-    "l": "CloudflareNotFoundException(Throwable)",
-    "u": "%3Cinit%3E(java.lang.Throwable)"
 }, {"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "CNAME"}, {
     "p": "codes.thischwa.cf.model",
     "c": "ResultInfo",
