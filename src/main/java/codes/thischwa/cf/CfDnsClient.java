@@ -69,10 +69,13 @@ public class CfDnsClient extends CfBasicHttpClient {
   /**
    * Constructs a new instance of {@code CfDnsClient}.
    *
-   * @param emptyResultThrowsException a boolean value indicating whether an exception should be
-   *                                   thrown when the result is empty
-   * @param authEmail                  the authentication email required for API access
-   * @param authKey                    the authentication key required for API access
+   * @param emptyResultThrowsException A boolean value indicating whether an exception should be
+   *                                   thrown when the result is empty, it's valid for 'list
+   *                                   requests' only. Default is true.
+   * @param authEmail                  The email address associated with the Cloudflare account,
+   *                                   used for authentication.
+   * @param authKey                    The API key of the Cloudflare account, used as part of the
+   *                                   authentication process.
    */
   public CfDnsClient(boolean emptyResultThrowsException, String authEmail, String authKey) {
     this(emptyResultThrowsException, DEFAULT_BASEURL, authEmail, authKey);
@@ -81,8 +84,9 @@ public class CfDnsClient extends CfBasicHttpClient {
   /**
    * Constructs a new instance of {@code CfDnsClient}.
    *
-   * @param emptyResultThrowsException Specifies if an exception should be thrown when the API
-   *                                   response is empty. Default is true.
+   * @param emptyResultThrowsException A boolean value indicating whether an exception should be
+   *                                   thrown when the result is empty, it's valid for 'list
+   *                                   requests' only. Default is true.
    * @param baseUrl                    The base URL for the Cloudflare API endpoint.
    * @param authEmail                  The email associated with the Cloudflare account for
    *                                   authentication.

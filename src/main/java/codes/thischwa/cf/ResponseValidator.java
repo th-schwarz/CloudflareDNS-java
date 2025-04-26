@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
  * metadata. If the response indicates failure, an exception is thrown with descriptive error
  * messages.
  * <li>If a {@link RecordMultipleResponse} is used, it validates the number of results in the API
- * response payload to detect unexpected counts. Depending on the configuration,
- * discrepancies in the result count or an empty result may trigger exceptions.
+ * response payload to detect unexpected counts. Depending on the parameter
+ * 'emptyResultThrowsException', an exception will be triggered or an empty result will be returned.
  * </ul>
  */
 class ResponseValidator {

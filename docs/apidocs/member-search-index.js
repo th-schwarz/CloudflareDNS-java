@@ -34,6 +34,11 @@ memberSearchIndex = [{"p": "codes.thischwa.cf.model", "c": "RecordType", "l": "A
 }, {
     "p": "codes.thischwa.cf",
     "c": "CfDnsClient",
+    "l": "CfDnsClient(boolean, String, String)",
+    "u": "%3Cinit%3E(boolean,java.lang.String,java.lang.String)"
+}, {
+    "p": "codes.thischwa.cf",
+    "c": "CfDnsClient",
     "l": "CfDnsClient(boolean, String, String, String)",
     "u": "%3Cinit%3E(boolean,java.lang.String,java.lang.String,java.lang.String)"
 }, {
