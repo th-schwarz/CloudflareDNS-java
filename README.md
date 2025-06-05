@@ -54,11 +54,10 @@ The dependency is:
 
 ## Changelog
 
-- 0.1.0-beta.1: 1st runnable version
-- 0.1.0-beta.2:
 - 0.1.0-beta.3:
   - fixed json deserialization
   - added logging of api errors
+- 0.1.0-beta.1: 1st runnable version
 
 ## Methods Overview
 
