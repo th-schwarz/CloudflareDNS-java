@@ -27,11 +27,14 @@ import lombok.extern.slf4j.Slf4j;
  * // Retrieve a zone
  * ZoneEntity zone = cfDnsClient.zoneInfo("example.com");
  * System.out.println("Zone ID: " + zone.getId());
- * // Retrieve records of a zone
+ * // Retrieve records of a subdomain
  * List&lt;{@link RecordEntity}&gt; records = cfDnsClient.sldListAll(zone, "sld");
  * records.forEach(record ->
  *     System.out.println("Record Type: " + record.getType() + ", Value: " + record.getContent())
  * );
+ * // Creat a record for the subdomain "api"
+ * RecordEntity created = client.recordCreateSld(zone, "api", 60, RecordType.A, "192.168.1.1");
+ * System.out.println("Created Record ID: " + created.getId());
  * </code></pre>
  */
 @Setter

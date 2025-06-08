@@ -144,7 +144,7 @@ System.out.println("Record IP: " + record.getContent());
 Create a new DNS record in a specific zone.
 
 - **Parameters**:
-    - `ZoneEntity zone` - DNS zone object.
+  - `ZoneEntity zone` - DNS zone object.
   - `String sld` - The sub-tld of the new record.
   - `int ttl` - The time-to-live in seconds of the new rcord.
 
