@@ -5,6 +5,7 @@ stages:
   - build
   - on_commit
   - sonarcloud_scan
+  - deploy_pages
 
 variables:
   GITLAB_CLONE_DIR: "/builds/th-schwarz/CloudflareDNS-java"
@@ -13,7 +14,7 @@ variables:
   SONAR_PROJECT_KEY: "thischwa_CloudflareDNS-java"
   SONAR_ORGANIZATION: "thischwa"
   SONAR_TOKEN: $SONAR_TOKEN
-  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
   API_EMAIL: $API_EMAIL
   API_KEY: $API_KEY
@@ -63,3 +64,17 @@ pages:
       - public
   only:
     - develop
+
+javadoc:
+  stage: deploy_pages
+  script:
+    - rm -rf docs/apidocs
+    - mvn clean javadoc:javadoc -DskipTests -Pjavadoc
+    - git config --global user.name "${GITLAB_USERNAME}"
+    - git config --global user.email "${GITLAB_USEREMAIL}"
+    - git add docs/apidocs
+    - git commit -m "Update Javadocs [skip ci]" || echo "No changes to commit"
+    - git push origin ${CI_COMMIT_REF_NAME}
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "develop"'
