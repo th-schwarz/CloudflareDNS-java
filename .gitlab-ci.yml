@@ -69,11 +69,12 @@ javadoc:
   stage: deploy_pages
   before_script:
     - apk update && apk add git
+    - git config --global user.name "${GITLAB_USERNAME}"
+    - git config --global user.email "${GITLAB_USEREMAIL}"
+    - git checkout -b ${CI_COMMIT_REF_NAME} || git checkout
   script:
     - rm -rf docs/apidocs
     - mvn javadoc:javadoc -DskipTests -Pjavadoc
-    - git config --global user.name "${GITLAB_USERNAME}"
-    - git config --global user.email "${GITLAB_USEREMAIL}"
     - git add docs/apidocs
     - git commit -m "Update Javadocs [skip ci]" || echo "No changes to commit"
     - git push origin ${CI_COMMIT_REF_NAME}
