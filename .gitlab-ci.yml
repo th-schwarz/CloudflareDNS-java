@@ -67,6 +67,8 @@ pages:
 
 javadoc:
   stage: deploy_pages
+  before_script:
+    - apt-get update && apt-get install -y git
   script:
     - rm -rf docs/apidocs
     - mvn javadoc:javadoc -DskipTests -Pjavadoc
