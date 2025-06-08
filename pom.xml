@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <issueManagement>
-        <url>https://gitlab.com/thischwa/CloudflareDNS-java/-/issues</url>
+        <url>https://gitlab.com/th-schwarz/CloudflareDNS-java/-/issues</url>
         <system>GitLab Issues</system>
     </issueManagement>
 
