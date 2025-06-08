@@ -69,7 +69,7 @@ javadoc:
   stage: deploy_pages
   script:
     - rm -rf docs/apidocs
-    - mvn clean javadoc:javadoc -DskipTests -Pjavadoc
+    - mvn javadoc:javadoc -DskipTests -Pjavadoc
     - git config --global user.name "${GITLAB_USERNAME}"
     - git config --global user.email "${GITLAB_USEREMAIL}"
     - git add docs/apidocs
