@@ -59,7 +59,7 @@ pages:
   script:
     - echo "Deploying GitLab Pages from docs/"
     - mkdir public
-    - cp -r target/apidocs; docs/
+    - cp -r target/apidocs/* docs/
     - cp -r docs/* public/
   artifacts:
     paths:
