@@ -79,7 +79,6 @@ javadoc:
     - git add docs/apidocs
     - git commit -m "Update Javadocs [skip ci]" || echo "No changes to commit"
     - git push https://${GITLAB_USERNAME}:${CI_PUSH_TOKEN}@gitlab.com/th-schwarz/CloudflareDNS-java.git ${CI_COMMIT_REF_NAME}
-    #- git push origin ${CI_COMMIT_REF_NAME}
   when: manual
   rules:
     - if: '$CI_COMMIT_REF_NAME == "develop"'
