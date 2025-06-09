@@ -72,7 +72,9 @@ javadoc:
     - apk update && apk add git
     - git config --global user.name "${GITLAB_USERNAME}"
     - git config --global user.email "${GITLAB_USEREMAIL}"
-    - git checkout -b ${CI_COMMIT_REF_NAME} || git checkout
+    - git fetch origin ${CI_COMMIT_REF_NAME}
+    - git checkout ${CI_COMMIT_REF_NAME}
+
   script:
     - rm -rf docs/apidocs
     - mvn javadoc:javadoc -DskipTests -Pjavadoc
