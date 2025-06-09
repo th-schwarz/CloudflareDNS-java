@@ -34,7 +34,7 @@ build:
   artifacts:
     paths:
       - target/
-      - public
+      - public/
   except:
     - tags
 
