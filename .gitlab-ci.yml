@@ -27,9 +27,9 @@ build:
     - echo "Running package..."
     - cd ${GITLAB_CLONE_DIR}
     - mvn clean package
-    - echo "Deploying GitLab Pages from docs/"
+    - echo "Deploying GitLab Pages from docs/ (javadoc)"
     - mkdir public
-    - cp -r target/apidocs/* docs/
+    - cp -r target/apidocs docs/apidocs
     - cp -r docs/* public/
   artifacts:
     paths:
