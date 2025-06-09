@@ -83,7 +83,7 @@ javadoc:
         git commit -m "Update Javadocs [skip ci]"
         git push https://${GITLAB_USERNAME}:${CI_PUSH_TOKEN}@gitlab.com/th-schwarz/CloudflareDNS-java.git ${CI_COMMIT_REF_NAME}
         echo "Commits found and pushed"
-        mkdir public
+        [ ! -d public ] && mkdir public || echo "Directory 'public' already exists"
         cp -r docs/* public/
         echo "Copied javadoc files to public folder"
       else
