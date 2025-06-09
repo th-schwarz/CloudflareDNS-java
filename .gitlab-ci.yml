@@ -80,7 +80,7 @@ javadoc:
     - |
       if ! git diff --quiet -- docs/apidocs; then
         git add docs/apidocs
-        git commit -m "Update Javadocs [skip ci]"
+        git commit -m "Update Javadocs"
         git push https://${GITLAB_USERNAME}:${CI_PUSH_TOKEN}@gitlab.com/th-schwarz/CloudflareDNS-java.git ${CI_COMMIT_REF_NAME}
         echo "Commits found and pushed"
         [ ! -d public ] && mkdir public || echo "Directory 'public' already exists"
@@ -93,5 +93,5 @@ javadoc:
   artifacts:
     paths:
       - public
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "develop"'
+  only:
+    - develop

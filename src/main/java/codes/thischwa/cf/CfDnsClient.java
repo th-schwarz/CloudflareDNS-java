@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  *     System.out.println("Record Type: " + record.getType() + ", Value: " + record.getContent())
  * );
  * // Create a record for the subdomain "api"
- * RecordEntity created = client.recordCreateSld(zone, "api", 60, RecordType.A, "192.168.2);
+ * RecordEntity created = client.recordCreateSld(zone, "api", 60, RecordType.A, "192.168.3);
  * System.out.println("Created Record ID: " + created.getId());
  * </code></pre>
  */
