@@ -29,9 +29,8 @@ build:
     - mvn clean package
     - echo "Deploying GitLab Pages from docs/ (javadoc)"
     - mkdir public
-    - cp -r target/apidocs docs/apidocs
     - cp -r docs/* public/
-    - ls -all public/
+    - cp -r target/apidocs public/apidocs
   artifacts:
     paths:
       - target/
