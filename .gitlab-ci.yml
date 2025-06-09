@@ -27,6 +27,10 @@ build:
     - echo "Running package..."
     - cd ${GITLAB_CLONE_DIR}
     - mvn clean package
+    - echo "Deploying GitLab Pages from docs/"
+    - mkdir public
+    - cp -r target/apidocs/* docs/
+    - cp -r docs/* public/
   artifacts:
     paths:
       - target/
@@ -52,17 +56,4 @@ sonarcloud_scan:
     - mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
   only:
     - merge_requests
-    - develop
-
-pages:
-  stage: on_commit
-  script:
-    - echo "Deploying GitLab Pages from docs/"
-    - mkdir public
-    - cp -r target/apidocs/* docs/
-    - cp -r docs/* public/
-  artifacts:
-    paths:
-      - public
-  only:
     - develop
