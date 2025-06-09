@@ -30,7 +30,7 @@ build:
     - echo "Deploying GitLab Pages from docs/ (javadoc)"
     - mkdir public
     - cp -rv docs/* public/
-    - cp -rv target/apidocs public/apidocs
+    - cp -rv target/apidocs/* public/apidocs/
   artifacts:
     paths:
       - target/
