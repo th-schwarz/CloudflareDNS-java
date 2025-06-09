@@ -90,5 +90,8 @@ javadoc:
         echo "No changes to commit"
       fi
   when: manual
+  artifacts:
+    paths:
+      - public
   rules:
     - if: '$CI_COMMIT_REF_NAME == "develop"'
