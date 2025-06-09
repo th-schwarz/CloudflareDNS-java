@@ -82,7 +82,7 @@ javadoc:
         git add docs/apidocs
         git commit -m "Update Javadocs"
         git push https://${GITLAB_USERNAME}:${CI_PUSH_TOKEN}@gitlab.com/th-schwarz/CloudflareDNS-java.git ${CI_COMMIT_REF_NAME}
-      - echo "Commits found and pushed"
+    - echo "Commits found and pushed"
       else
         echo "No changes to commit"
       fi
