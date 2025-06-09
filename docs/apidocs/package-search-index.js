@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"Alle Packages","u":"allpackages-index.html"},{"l":"codes.thischwa.cf"},{"l":"codes.thischwa.cf.model"}];updateSearchResults();
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"codes.thischwa.cf"},{"l":"codes.thischwa.cf.model"}];updateSearchResults();
