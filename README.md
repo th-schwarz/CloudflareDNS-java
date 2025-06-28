@@ -1,6 +1,7 @@
 # CloudflareDNS-java
 
 ![GitLab Pipeline Status](https://gitlab.com/thischwa/CloudflareDNS-java/badges/develop/pipeline.svg)
+![GitLab License](https://img.shields.io/gitlab/license/th-schwarz%2FCloudflareDNS-java)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
