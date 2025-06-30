@@ -1,6 +1,6 @@
 # CloudflareDNS-java
 
-![GitLab Pipeline Status](https://gitlab.com/thischwa/CloudflareDNS-java/badges/develop/pipeline.svg)
+![GitLab Pipeline Status](https://gitlab.com/th-schwarz/CloudflareDNS-java/badges/develop/pipeline.svg)
 ![GitLab License](https://img.shields.io/gitlab/license/th-schwarz%2FCloudflareDNS-java)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
@@ -15,7 +15,7 @@ This project provides a java client for minimalistic access to the Cloudflare AP
 managing DNS settings such as creating, updating and deleting DNS records.
 
 If you encounter any bugs or find missing features, feel free to report them on
-the [GitLab Issues page](https://gitlab.com/thischwa/CloudflareDNS-java/-/issues).
+the [GitLab Issues page](https://gitlab.com/th-schwarz/CloudflareDNS-java/-/issues).
 
 ---
 
@@ -68,7 +68,7 @@ The methods can be categorized as follows:
 - `Record`: list, info, create, update, delete
 
 The following text focuses on the basic methods. For further information, take a look at
-the [javadoc of the CfDnsClient](https://cloudflaredns-java-f4ee3a.gitlab.io/codes/thischwa/cf/CfDnsClient.html).
+the [javadoc of the CfDnsClient](https://cloudflaredns-java-f4ee3a.gitlab.io/codes/th-schwarz/cf/CfDnsClient.html).
 
 ### Instantiation of `CfDnsClient`
 

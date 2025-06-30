@@ -51,9 +51,9 @@
     </properties>
 
     <scm>
-        <developerConnection>scm:git:git@gitlab.com:thischwa/CloudflareDNS-java.git</developerConnection>
-        <connection>scm:git:git@gitlab.com:thischwa/CloudflareDNS-java.git</connection>
-        <url>https://gitlab.com/thischwa/CloudflareDNS-java</url>
+        <developerConnection>scm:git:git@gitlab.com:th-schwarz/CloudflareDNS-java.git</developerConnection>
+        <connection>scm:git:git@gitlab.com:th-schwarz/CloudflareDNS-java.git</connection>
+        <url>https://gitlab.com/th-schwarz/CloudflareDNS-java</url>
         <tag>HEAD</tag>
     </scm>
 
