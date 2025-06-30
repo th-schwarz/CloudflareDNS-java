@@ -34,7 +34,8 @@ build:
     - cp -rv target/apidocs/* public/apidocs/
   artifacts:
     paths:
-      - target/
+      - target/surefire-reports/*.xml
+      - targert/
       - public/
   except:
     - tags
