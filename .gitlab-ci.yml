@@ -31,7 +31,7 @@ build:
     - mkdir public
     - cp -rv docs/* public/
     - mkdir public/apidocs
-    - cp -rv target/apidocs/* public/apidocs/
+    - cp -rv target/apidocs public/
   artifacts:
     paths:
       - target/surefire-reports/*.xml
