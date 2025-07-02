@@ -68,7 +68,7 @@ The methods can be categorized as follows:
 - `Record`: list, info, create, update, delete
 
 The following text focuses on the basic methods. For further information, take a look at
-the [javadoc of the CfDnsClient](https://cloudflaredns-java-f4ee3a.gitlab.io/codes/thischwa/cf/CfDnsClient.html).
+the [javadoc of the CfDnsClient](https://cloudflaredns-java-f4ee3a.gitlab.io/apidocs/codes/thischwa/cf/CfDnsClient.html).
 
 ### Instantiation of `CfDnsClient`
 
