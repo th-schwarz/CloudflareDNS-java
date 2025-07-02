@@ -5,7 +5,7 @@ stages:
   - build
   - on_commit
   - sonarcloud_scan
-  - deploy_pages
+  - deploy
 
 variables:
   GITLAB_CLONE_DIR: "/builds/th-schwarz/CloudflareDNS-java"
@@ -49,6 +49,16 @@ on_commits:
   only:
     - /^feature.*$/
     - merge_request
+    - develop
+
+pages:
+  stage: deploy
+  script:
+    - echo "Publishing to GitLab Pages..."
+  artifacts:
+    paths:
+      - public
+  only:
     - develop
 
 sonarcloud_scan:
