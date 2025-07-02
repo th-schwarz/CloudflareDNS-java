@@ -52,6 +52,7 @@ on_commits:
     - develop
 
 pages:
+  # triggers the page deployment of gitlab
   stage: deploy
   script:
     - echo "Publishing to GitLab Pages ..."
@@ -60,6 +61,7 @@ pages:
       - public
   only:
     - develop
+    - tags
 
 sonarcloud_scan:
   stage: sonarcloud_scan
