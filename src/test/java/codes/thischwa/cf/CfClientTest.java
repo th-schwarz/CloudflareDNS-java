@@ -10,7 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
@@ -24,6 +26,12 @@ public class CfClientTest {
   private static final String API_KEY = System.getenv("API_KEY");
 
   private final CfDnsClient client = new CfDnsClient(API_EMAIL, API_KEY);
+
+  @BeforeAll
+  static void checkEnv() {
+    assumeTrue(API_EMAIL != null && !API_EMAIL.isBlank(), "API_EMAIL not set; skipping pen tests");
+    assumeTrue(API_KEY != null && !API_KEY.isBlank(), "API_KEY not set; skipping pen tests");
+  }
 
   @Test
   void testZoneListAnlFailedSldList() throws Exception {
@@ -62,8 +70,8 @@ public class CfClientTest {
     String domain = randomSld + "." + ZONE_STR;
 
     RecordEntity r;
-    RecordEntity createdRe1 = null;
-    RecordEntity createdRe2 = null;
+    RecordEntity createdRe1;
+    RecordEntity createdRe2;
 
     try {
       // ensure clean state

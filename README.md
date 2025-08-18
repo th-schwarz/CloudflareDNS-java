@@ -25,12 +25,6 @@ This guide comes without any warranty. Use at your own risk. The author is not r
 
 ---
 
-## State of the Project
-
-BETA
-
----
-
 ## Get It
 
 The project has its own maven repository. It can be added to the `pom.xml`:
