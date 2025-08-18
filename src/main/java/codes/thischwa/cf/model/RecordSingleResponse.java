@@ -1,6 +1,9 @@
 package codes.thischwa.cf.model;
 
-/** Represents the API response of the Cloudflare API containing a single DNS record entity. */
+/**
+ * Represents the API response of the Cloudflare API containing a single {@link RecordEntity}
+ * instance.
+ */
 public class RecordSingleResponse extends AbstractSingleResponse<RecordEntity> {
 
   /**
