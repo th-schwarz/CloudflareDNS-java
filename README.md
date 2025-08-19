@@ -43,12 +43,14 @@ The dependency is:
 <dependency>
   <groupId>codes.thischwa</groupId>
   <artifactId>cloudflaredns</artifactId>
-  <version>0.1.0-beta.3</version>
+  <version>[version]</version>
 </dependency>
 ```
 
 ## Changelog
 
+- 0.1.0:
+    - refactored / extended tests
 - 0.1.0-beta.3:
   - fixed json deserialization
   - added logging of api errors
