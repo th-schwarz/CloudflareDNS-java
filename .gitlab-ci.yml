@@ -62,7 +62,6 @@ pages:
       - public
   only:
     - develop
-    - tags
 
 sonarcloud_scan:
   stage: sonarcloud_scan
