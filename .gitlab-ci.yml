@@ -6,6 +6,7 @@ stages:
   - on_commit
   - sonarcloud_scan
   - deploy
+  - release
 
 variables:
   GITLAB_CLONE_DIR: "/builds/th-schwarz/CloudflareDNS-java"
@@ -72,3 +73,44 @@ sonarcloud_scan:
   only:
     - merge_requests
     - develop
+
+perform_release:
+  stage: release
+  script:
+    - cd ${GITLAB_CLONE_DIR}
+    - git config --global user.name "${GITLAB_USERNAME}"
+    - git config --global user.email "${GITLAB_USEREMAIL}"
+    
+    # config git auth
+    - git remote set-url origin "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
+    
+    # build versions ...
+    - CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    - RELEASE_VERSION=$(echo $CURRENT_VERSION | sed 's/-SNAPSHOT//')
+    - MINOR_VERSION=$(echo $RELEASE_VERSION | awk -F. '{print $2}')
+    - NEXT_MINOR_VERSION=$((MINOR_VERSION + 1))
+    - NEXT_VERSION=$(echo $RELEASE_VERSION | awk -F. -v minor="$NEXT_MINOR_VERSION" '{print $1"."minor".0-SNAPSHOT"}')
+
+    - echo "current version: $CURRENT_VERSION"
+    - echo "release version: $RELEASE_VERSION"
+    - echo "next version: $NEXT_VERSION"
+    
+    # process maven release ...
+    - >
+      mvn release:clean release:prepare release:perform 
+      -B 
+      -DreleaseVersion=$RELEASE_VERSION 
+      -DdevelopmentVersion=$NEXT_VERSION 
+      -Darguments="-DskipTests" 
+      -DscmCommentPrefix="[ci skip] " 
+      -DpreparationGoals="clean verify"
+    
+    # generate release
+    - >
+      curl --header "PRIVATE-TOKEN: ${GITLAB_API_TOKEN}" 
+      --data "name=v${RELEASE_VERSION}" 
+      --data "tag_name=v${RELEASE_VERSION}" 
+      --data "description=Release v${RELEASE_VERSION} of CloudflareDNS-java" 
+      "https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/releases"
+  only:
+    - /^v\d+\.\d+\.\d+$/
