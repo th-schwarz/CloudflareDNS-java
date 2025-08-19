@@ -1,233 +1,234 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-    <groupId>codes.thischwa</groupId>
-    <artifactId>cloudflaredns</artifactId>
-  <version>0.1.0</version>
-    <name>CloudflareDNS-java</name>
-    <inceptionYear>2025</inceptionYear>
-    <packaging>jar</packaging>
+  <groupId>codes.thischwa</groupId>
+  <artifactId>cloudflaredns</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <name>CloudflareDNS-java</name>
+  <inceptionYear>2025</inceptionYear>
+  <packaging>jar</packaging>
 
-    <issueManagement>
-        <url>https://gitlab.com/th-schwarz/CloudflareDNS-java/-/issues</url>
-        <system>GitLab Issues</system>
-    </issueManagement>
+  <issueManagement>
+    <url>https://gitlab.com/th-schwarz/CloudflareDNS-java/-/issues</url>
+    <system>GitLab Issues</system>
+  </issueManagement>
 
-    <properties>
-        <java.version>17</java.version>
-        <file.encoding>UTF-8</file.encoding>
-        <project.build.sourceEncoding>${file.encoding}</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>${file.encoding}</project.reporting.outputEncoding>
+  <properties>
+    <java.version>17</java.version>
+    <file.encoding>UTF-8</file.encoding>
+    <project.build.sourceEncoding>${file.encoding}</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>${file.encoding}</project.reporting.outputEncoding>
 
+    <!-- checkstyle -->
+    <checkstyle.version>10.21.3</checkstyle.version>
+    <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
+    <checkstyle.config.location>${project.basedir}/src/checkstyle/google_custom_checks.xml
+    </checkstyle.config.location>
+    <checkstyle.includeTestResources>false</checkstyle.includeTestResources>
+    <checkstyle.violationSeverity>warning</checkstyle.violationSeverity>
+    <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
+    <checkstyle.consoleOutput>true</checkstyle.consoleOutput>
+    <linkX-Ref>false</linkX-Ref>
+
+    <!-- 3rd party dependencies -->
+    <jackson.version>2.18.2</jackson.version>
+    <httpclient5.version>5.4.3</httpclient5.version>
+    <lombok.version>1.18.36</lombok.version>
+    <slf4j.version>2.0.17</slf4j.version>
+    <logback-classic.version>1.5.18</logback-classic.version>
+    <junit5.version>5.12.2</junit5.version>
+    <mockito-junit5.version>5.17.0</mockito-junit5.version>
+
+    <!-- sonarqube -->
+    <sonar.organization>thischwa</sonar.organization>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    <sonar.sourceEncoding>${file.encoding}</sonar.sourceEncoding>
+    <sonar.projectKey>thischwa_CloudflareDNS-java</sonar.projectKey>
+    <sonar.projectName>CloudflareDNS-java</sonar.projectName>
+    <sonar.branch.name>develop</sonar.branch.name>
+    <sonar.test.exclusions>src/test/java/**/*</sonar.test.exclusions>
+  </properties>
+
+  <scm>
+    <developerConnection>scm:git:git@gitlab.com:th-schwarz/CloudflareDNS-java.git</developerConnection>
+    <connection>scm:git:git@gitlab.com:th-schwarz/CloudflareDNS-java.git</connection>
+    <url>https://gitlab.com/th-schwarz/CloudflareDNS-java</url>
+    <tag>v0.1.0</tag>
+  </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>gitlab-cloudflaredns</id>
+      <name>GitLab Maven Packages</name>
+      <url>https://gitlab.com/api/v4/projects/68509751/packages/maven</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </distributionManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
+      <version>${httpclient5.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains</groupId>
+      <artifactId>annotations</artifactId>
+      <version>24.0.0</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit5.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mockito-junit5.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback-classic.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.6.3</version>
+        <configuration>
+          <failOnError>false</failOnError>
+          <locale>en</locale>
+          <source>${java.version}</source>
+        </configuration>
+        <executions>
+          <execution>
+            <id>build javadoc jar</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>3.1.1</version>
+        <configuration>
+          <tagNameFormat>v@{project.version}</tagNameFormat>
+          <arguments>-DskipTests</arguments>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <!-- checkstyle -->
-        <checkstyle.version>10.21.3</checkstyle.version>
-        <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
-        <checkstyle.config.location>${project.basedir}/src/checkstyle/google_custom_checks.xml
-        </checkstyle.config.location>
-        <checkstyle.includeTestResources>false</checkstyle.includeTestResources>
-        <checkstyle.violationSeverity>warning</checkstyle.violationSeverity>
-        <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
-        <checkstyle.consoleOutput>true</checkstyle.consoleOutput>
-        <linkX-Ref>false</linkX-Ref>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>${checkstyle.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>checkstyle-validate</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>${checkstyle.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
 
-        <!-- 3rd party dependencies -->
-        <jackson.version>2.18.2</jackson.version>
-        <httpclient5.version>5.4.3</httpclient5.version>
-        <lombok.version>1.18.36</lombok.version>
-        <slf4j.version>2.0.17</slf4j.version>
-        <logback-classic.version>1.5.18</logback-classic.version>
-        <junit5.version>5.12.2</junit5.version>
-        <mockito-junit5.version>5.17.0</mockito-junit5.version>
+      <plugin>
+        <!-- generates the code coverage report for sonar cube -->
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.12</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report-code-coverage</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <configuration>
+              <formats>XML</formats>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
-        <!-- sonarqube -->
-        <sonar.organization>thischwa</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.sourceEncoding>${file.encoding}</sonar.sourceEncoding>
-        <sonar.projectKey>thischwa_CloudflareDNS-java</sonar.projectKey>
-        <sonar.projectName>CloudflareDNS-java</sonar.projectName>
-        <sonar.branch.name>develop</sonar.branch.name>
-        <sonar.test.exclusions>src/test/java/**/*</sonar.test.exclusions>
-    </properties>
+      <plugin>
+        <!-- to export test summary -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.3</version>
+      </plugin>
 
-    <scm>
-        <developerConnection>scm:git:git@gitlab.com:th-schwarz/CloudflareDNS-java.git</developerConnection>
-        <connection>scm:git:git@gitlab.com:th-schwarz/CloudflareDNS-java.git</connection>
-        <url>https://gitlab.com/th-schwarz/CloudflareDNS-java</url>
-        <tag>v0.1.0</tag>
-    </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>gitlab-cloudflaredns</id>
-            <name>GitLab Maven Packages</name>
-            <url>https://gitlab.com/api/v4/projects/68509751/packages/maven</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </distributionManagement>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-            <version>${httpclient5.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <version>24.0.0</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit5.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>${mockito-junit5.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback-classic.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.3</version>
-                <configuration>
-                    <failOnError>false</failOnError>
-                    <locale>en</locale>
-                    <source>${java.version}</source>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>build javadoc jar</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>3.1.1</version>
-                <configuration>
-                    <tagNameFormat>v@{project.version}</tagNameFormat>
-                    <arguments>-DskipTests</arguments>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <!-- checkstyle -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>${checkstyle.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>checkstyle-validate</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.puppycrawl.tools</groupId>
-                        <artifactId>checkstyle</artifactId>
-                        <version>${checkstyle.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-
-            <plugin>
-                <!-- generates the code coverage report for sonar cube -->
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
-                <executions>
-                    <execution>
-                        <id>prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>report-code-coverage</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                        <configuration>
-                            <formats>XML</formats>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <!-- to export test summary -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.3</version>
-            </plugin>
-
-        </plugins>
-    </build>
+    </plugins>
+  </build>
 </project>
