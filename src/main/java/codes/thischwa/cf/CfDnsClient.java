@@ -339,21 +339,20 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Records a batch of DNS record operations, including creating, updating, and deleting records
-   * within a specific zone. This method processes the provided put, patch, and delete operations
-   * into a clean format before sending a batch request to the Cloudflare API.
+   * Processes a batch of DNS record operations (POST, PUT, PATCH, DELETE) for a specified zone.
+   * This method builds and cleans the input records, sends the batch request to the Cloudflare API,
+   * and returns a result containing processed batch entries.
    *
-   * @param zone          the zone entity representing the DNS zone where the changes will be applied
-   * @param ttl           the time-to-live (TTL) value assigned to the new records being added
-   * @param postRecords   a list of records to be created; each record must contain the necessary
-   *                      attributes for creation
-   * @param patchRecords  a list of records to be updated; only specific attributes (e.g., content)
-   *                      will be modified
-   * @param deleteRecords a list of records to be deleted; each record must contain name, type, and content
-   * @throws CloudflareApiException if there is an error while communicating with the Cloudflare API
+   * @param zone          The zone entity to which the records belong.
+   * @param postRecords   A list of DNS records to be created (POST). This parameter is nullable.
+   * @param putRecords    A list of DNS records to be fully replaced (PUT). This parameter is nullable.
+   * @param patchRecords  A list of DNS records to be partially updated (PATCH). This parameter is nullable.
+   * @param deleteRecords A list of DNS records to be deleted (DELETE). This parameter is nullable.
+   * @return The resulting {@link BatchEntry} containing the processed records after the batch operation.
+   * @throws CloudflareApiException If an error occurs while communicating with the Cloudflare API.
    */
-  public void recordBatch(ZoneEntity zone, int ttl, @Nullable List<RecordEntity> postRecords,
-                          @Nullable List<RecordEntity> patchRecords, @Nullable List<RecordEntity> deleteRecords)
+  public BatchEntry recordBatch(ZoneEntity zone, @Nullable List<RecordEntity> postRecords, @Nullable List<RecordEntity> putRecords,
+                                @Nullable List<RecordEntity> patchRecords, @Nullable List<RecordEntity> deleteRecords)
       throws CloudflareApiException {
     BatchEntry batchEntry = new BatchEntry();
     // build 'clean' record entries
@@ -362,6 +361,12 @@ public class CfDnsClient extends CfBasicHttpClient {
       postRecords.forEach(
           rec -> cleanedPosts.add(RecordEntity.build(rec.getId(), rec.getName(), rec.getType(), rec.getTtl(), rec.getContent())));
       batchEntry.setPosts(cleanedPosts);
+    }
+    if (putRecords != null) {
+      List<RecordEntity> cleanedPuts = new ArrayList<>();
+      putRecords.forEach(
+          rec -> cleanedPuts.add(RecordEntity.build(rec.getId(), rec.getName(), rec.getType(), rec.getTtl(), rec.getContent())));
+      batchEntry.setPuts(cleanedPuts);
     }
     if (patchRecords != null) {
       List<RecordEntity> cleanedPatches = new ArrayList<>();
@@ -378,6 +383,19 @@ public class CfDnsClient extends CfBasicHttpClient {
     String endpoint = CfRequest.RECORD_BATCH.buildPath(zone.getId());
     BatchResponse resp = postRequest(endpoint, batchEntry, BatchResponse.class);
     checkResponse(resp);
+
+    // set zone id
+    BatchEntry result = resp.getResult();
+    if (result.getPosts() != null) {
+      result.getPosts().forEach(rec -> rec.setZoneId(zone.getId()));
+    }
+    if (result.getPuts() != null) {
+      result.getPuts().forEach(rec -> rec.setZoneId(zone.getId()));
+    }
+    if (result.getPatches() != null) {
+      result.getPatches().forEach(rec -> rec.setZoneId(zone.getId()));
+    }
+    return result;
   }
 
   private void checkResponse(AbstractResponse resp) throws CloudflareApiException {

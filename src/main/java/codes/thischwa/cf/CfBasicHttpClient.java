@@ -152,7 +152,7 @@ abstract class CfBasicHttpClient {
       throws CloudflareApiException {
     try {
       String jsonPayload = objectMapper.writeValueAsString(requestPayload);
-      log.debug("Request payload: {}", jsonPayload);
+      log.trace("Request methode [{}] payload: {}", request.getMethod(), jsonPayload);
       request.setEntity(new StringEntity(jsonPayload,
           ContentType.APPLICATION_JSON));
     } catch (JsonProcessingException e) {

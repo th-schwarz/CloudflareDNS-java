@@ -54,6 +54,23 @@ public class RecordEntity extends AbstractEntity {
   }
 
   /**
+   * Retrieves the name of the DNS record.
+   * If the name contains a dot ('.'), only the substring before the first dot is returned.
+   *
+   * @return the name of the DNS record, potentially truncated before the first dot,
+   * or the full name if no dot is present.
+   */
+  public String getName() {
+    if (name != null) {
+      int pos = name.indexOf('.');
+      if (pos > 0) {
+        return name.substring(0, pos);
+      }
+    }
+    return name;
+  }
+
+  /**
    * Builds and returns a {@link RecordEntity} instance with the specified attributes.
    *
    * @param name    the name of the DNS record
