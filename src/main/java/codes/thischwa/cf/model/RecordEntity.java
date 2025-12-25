@@ -34,10 +34,14 @@ public class RecordEntity extends AbstractEntity {
   private Boolean proxied;
   private Integer ttl;
   private Boolean locked;
-  @Nullable private String zoneId;
-  @Nullable private String zoneName;
-  @Nullable private LocalDateTime modifiedOn;
-  @Nullable private LocalDateTime createdOn;
+  @Nullable
+  private String zoneId;
+  @Nullable
+  private String zoneName;
+  @Nullable
+  private LocalDateTime modifiedOn;
+  @Nullable
+  private LocalDateTime createdOn;
 
   /**
    * Initializes a new instance of the RecordEntity class and invokes the parent constructor from
@@ -52,9 +56,9 @@ public class RecordEntity extends AbstractEntity {
   /**
    * Builds and returns a {@link RecordEntity} instance with the specified attributes.
    *
-   * @param name the name of the DNS record
-   * @param type the {@link RecordType} of the DNS record
-   * @param ttl the time-to-live (TTL) value for the DNS record
+   * @param name    the name of the DNS record
+   * @param type    the {@link RecordType} of the DNS record
+   * @param ttl     the time-to-live (TTL) value for the DNS record
    * @param content the content of the DNS record, typically an IP address
    * @return a {@link RecordEntity} populated with the provided attributes
    */
@@ -81,6 +85,16 @@ public class RecordEntity extends AbstractEntity {
     return rec;
   }
 
+  /**
+   * Builds and returns a {@link RecordEntity} instance with the specified attributes.
+   *
+   * @param id      the unique identifier for the DNS record
+   * @param name    the name of the DNS record
+   * @param type    the type of the DNS record, represented as a string (e.g., "A", "CNAME")
+   * @param ttl     the time-to-live (TTL) value for the DNS record
+   * @param content the content of the DNS record, typically an IP address or other record data
+   * @return a {@link RecordEntity} populated with the provided attributes
+   */
   public static RecordEntity build(String id, String name, String type, Integer ttl, String content) {
     RecordEntity rec = build(name, RecordType.valueOf(type), ttl, content);
     rec.setId(id);

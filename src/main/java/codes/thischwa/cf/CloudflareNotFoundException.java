@@ -13,7 +13,7 @@ public class CloudflareNotFoundException extends CloudflareApiException {
    * Constructs a new CloudflareNotFoundException with the specified detail message.
    *
    * @param message the detail message, which provides additional context about the "not found"
-   *     error encountered during interaction with the Cloudflare API.
+   *                error encountered during interaction with the Cloudflare API.
    */
   public CloudflareNotFoundException(String message) {
     super(message);
@@ -23,9 +23,9 @@ public class CloudflareNotFoundException extends CloudflareApiException {
    * Constructs a new CloudflareNotFoundException with the specified detail message and cause.
    *
    * @param message the detail message, which provides additional context about the "not found"
-   *     error encountered during interaction with the Cloudflare API.
-   * @param cause the cause of this exception, which is the underlying throwable that triggered this
-   *     exception.
+   *                error encountered during interaction with the Cloudflare API.
+   * @param cause   the cause of this exception, which is the underlying throwable that triggered this
+   *                exception.
    */
   public CloudflareNotFoundException(String message, Throwable cause) {
     super(message, cause);

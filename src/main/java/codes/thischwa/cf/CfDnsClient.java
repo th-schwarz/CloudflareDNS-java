@@ -106,6 +106,10 @@ public class CfDnsClient extends CfBasicHttpClient {
     this.responseValidator = new ResponseValidator(emptyResultThrowsException);
   }
 
+  private static String buildFqdn(ZoneEntity zone, String sld) {
+    return sld + "." + zone.getName();
+  }
+
   /**
    * Retrieves a list of all zones from the Cloudflare API.
    *
@@ -374,10 +378,6 @@ public class CfDnsClient extends CfBasicHttpClient {
     String endpoint = CfRequest.RECORD_BATCH.buildPath(zone.getId());
     BatchResponse resp = postRequest(endpoint, batchEntry, BatchResponse.class);
     checkResponse(resp);
-  }
-
-  private static String buildFqdn(ZoneEntity zone, String sld) {
-    return sld + "." + zone.getName();
   }
 
   private void checkResponse(AbstractResponse resp) throws CloudflareApiException {

@@ -7,7 +7,8 @@ import java.io.Serial;
  */
 public class CloudflareApiException extends Exception {
 
-  @Serial private static final long serialVersionUID = 1L;
+  @Serial
+  private static final long serialVersionUID = 1L;
 
   /**
    * Constructs a new CloudflareApiException with the specified detail message.
@@ -22,9 +23,9 @@ public class CloudflareApiException extends Exception {
    * Constructs a new CloudflareApiException with the specified detail message and cause.
    *
    * @param message the detail message, which provides additional context or information about the
-   *     exception.
-   * @param cause the cause of this exception, which is the underlying throwable that triggered this
-   *     exception.
+   *                exception.
+   * @param cause   the cause of this exception, which is the underlying throwable that triggered this
+   *                exception.
    */
   public CloudflareApiException(String message, Throwable cause) {
     super(message, cause);

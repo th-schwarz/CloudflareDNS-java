@@ -32,7 +32,7 @@ public class PagingRequest {
   /**
    * Creates a new {@code PagingRequest} instance with the specified page number and items per page.
    *
-   * @param page the page number to be requested
+   * @param page    the page number to be requested
    * @param perPage the number of items to be included per page
    * @return a new {@code PagingRequest} instance with the provided parameters
    */

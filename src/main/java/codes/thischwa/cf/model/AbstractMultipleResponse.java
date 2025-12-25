@@ -24,7 +24,7 @@ import lombok.EqualsAndHashCode;
  * <p>Subclasses can be created by specifying the entity type that the response should handle.
  *
  * @param <T> Represents the type of entities contained within the response. For this class, it is
- *     expected to be {@code ResponseEntity}.
+ *            expected to be {@code ResponseEntity}.
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

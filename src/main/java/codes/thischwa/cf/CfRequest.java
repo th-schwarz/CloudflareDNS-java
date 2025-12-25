@@ -9,7 +9,9 @@ import lombok.Getter;
 @Getter
 public enum CfRequest {
 
-  /** Represents the API endpoint path for retrieving the list of DNS zones. */
+  /**
+   * Represents the API endpoint path for retrieving the list of DNS zones.
+   */
   ZONE_LIST("/zones"),
   /**
    * Represents the API endpoint path for retrieving information about a specific DNS zone by its
@@ -69,7 +71,7 @@ public enum CfRequest {
    * arguments.
    *
    * @param vars the arguments to format the path string with; these are typically specific
-   *     identifiers or parameters required by the API endpoint.
+   *             identifiers or parameters required by the API endpoint.
    * @return the fully constructed API endpoint path as a string.
    */
   String buildPath(Object... vars) {
