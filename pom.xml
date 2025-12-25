@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>codes.thischwa</groupId>
     <artifactId>cloudflaredns</artifactId>
-    <version>0.2.0-beta.1-SNAPSHOT</version>
+    <version>0.2.0-beta.1</version>
     <name>CloudflareDNS-java</name>
     <inceptionYear>2025</inceptionYear>
     <packaging>jar</packaging>
@@ -55,7 +54,7 @@
         <developerConnection>scm:git:git@gitlab.com:th-schwarz/CloudflareDNS-java.git</developerConnection>
         <connection>scm:git:git@gitlab.com:th-schwarz/CloudflareDNS-java.git</connection>
         <url>https://gitlab.com/th-schwarz/CloudflareDNS-java</url>
-        <tag>v0.1.0</tag>
+        <tag>v0.2.0-beta.1</tag>
     </scm>
 
     <distributionManagement>
