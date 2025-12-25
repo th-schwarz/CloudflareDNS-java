@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
  *   <li>Content of the DNS record, such as an IP address.
  *   <li>Flags indicating whether the record is proxiable or proxied.
  *   <li>TTL (Time-To-Live) for the DNS record.
- *   <li>A locked status to indicate immutability of the record.
+ *   <li>A locked status to indicate the immutability of the record.
  *   <li>Zone-specific metadata including zone ID and name.
  *   <li>Timestamps for creation and modification.
  * </ul>
@@ -55,15 +55,35 @@ public class RecordEntity extends AbstractEntity {
    * @param name the name of the DNS record
    * @param type the {@link RecordType} of the DNS record
    * @param ttl the time-to-live (TTL) value for the DNS record
-   * @param ip the content of the DNS record, typically an IP address
+   * @param content the content of the DNS record, typically an IP address
    * @return a {@link RecordEntity} populated with the provided attributes
    */
-  public static RecordEntity build(String name, RecordType type, Integer ttl, String ip) {
+  public static RecordEntity build(String name, RecordType type, Integer ttl, String content) {
     RecordEntity rec = new RecordEntity();
     rec.setName(name);
     rec.setType(type.getType());
     rec.setTtl(ttl);
-    rec.setContent(ip);
+    rec.setContent(content);
+    return rec;
+  }
+
+  /**
+   * Builds and returns a {@link RecordEntity} instance with the specified ID and content.
+   *
+   * @param id      the unique identifier for the DNS record
+   * @param content the content of the DNS record, typically an IP address or other record data
+   * @return a {@link RecordEntity} populated with the provided ID and content
+   */
+  public static RecordEntity build(String id, String content) {
+    RecordEntity rec = new RecordEntity();
+    rec.setId(id);
+    rec.setContent(content);
+    return rec;
+  }
+
+  public static RecordEntity build(String id, String name, String type, Integer ttl, String content) {
+    RecordEntity rec = build(name, RecordType.valueOf(type), ttl, content);
+    rec.setId(id);
     return rec;
   }
 }

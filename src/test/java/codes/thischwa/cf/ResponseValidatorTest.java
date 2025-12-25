@@ -1,16 +1,16 @@
 package codes.thischwa.cf;
 
-import codes.thischwa.cf.model.AbstractResponse;
-import codes.thischwa.cf.model.RecordMultipleResponse;
-import codes.thischwa.cf.model.ResponseResultInfo;
-import codes.thischwa.cf.model.ResultInfo;
-import java.util.Arrays;
-import lombok.Getter;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
+import codes.thischwa.cf.model.AbstractResponse;
+import codes.thischwa.cf.model.RecordMultipleResponse;
+import codes.thischwa.cf.model.ResponseResultInfo;
+import codes.thischwa.cf.model.ResultInfo;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,9 +48,15 @@ class ResponseValidatorTest {
 
   @Test
   void validateFailedResponse() {
+    List<ResponseResultInfo.Error> errors = new ArrayList<>();
+    ResponseResultInfo.Error error = new ResponseResultInfo.Error(1, "Fehler 1");
+    errors.add(error);
+    error = new ResponseResultInfo.Error(2, "Fehler 2");
+    errors.add(error);
+
     when(mockResponse.getResponseResultInfo()).thenReturn(mockResultInfo);
     when(mockResultInfo.isSuccess()).thenReturn(false);
-    when(mockResultInfo.getErrors()).thenReturn(Arrays.asList("Fehler 1", "Fehler 2"));
+    when(mockResultInfo.getErrors()).thenReturn(errors);
 
     CloudflareApiException exception = assertThrows(CloudflareApiException.class,
         () -> validatorWithException.validate(mockResponse, false));

@@ -6,6 +6,7 @@ import lombok.Data;
 /**
  * Represents the result of a response with metadata about its success and associated messages or
  * errors.
+ *
  * <p>This class provides a structure to capture the outcome of an operation, including:
  * <ul>
  * <li>Whether the operation was successful.
@@ -17,6 +18,25 @@ import lombok.Data;
 @Data
 public class ResponseResultInfo {
   private boolean success;
-  private List<String> errors;
+  private List<Error> errors;
   private List<String> messages;
+
+  @Data
+  public static class Error {
+    private int code;
+    private String message;
+
+    public Error() {
+    }
+
+    public Error(int code, String message) {
+      this.code = code;
+      this.message = message;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%d: %s", code, message);
+    }
+  }
 }

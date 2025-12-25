@@ -1,12 +1,10 @@
 package codes.thischwa.cf;
 
-import codes.thischwa.cf.model.AbstractEntity;
 import codes.thischwa.cf.model.AbstractResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
-
 import org.apache.hc.client5.http.classic.methods.HttpDelete;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPatch;
@@ -70,14 +68,14 @@ abstract class CfBasicHttpClient {
           EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8)));
 
 
+      T respObj = objectMapper.readValue(result.responseBody, responseType);
+      if (!respObj.getResponseResultInfo().isSuccess()) {
+        log.error("API error.");
+        respObj.getResponseResultInfo().getErrors().forEach(e -> log.error("  - {}", e.toString()));
+        throw new CloudflareApiException("API error.");
+      }
       logUri = request.getRequestUri();
       if (result.statusCode >= 200 && result.statusCode < 300) {
-        T respObj = objectMapper.readValue(result.responseBody, responseType);
-        if (!respObj.getResponseResultInfo().isSuccess()) {
-          log.error("API error.");
-          respObj.getResponseResultInfo().getErrors().forEach(e -> log.error("  - {}", e));
-          throw new CloudflareApiException("API error.");
-        }
         return respObj;
       } else {
         log.error("{} request failed for URL {}: Status {}", request.getMethod(), request.getUri(),
@@ -110,23 +108,25 @@ abstract class CfBasicHttpClient {
     return executeRequest(request, (Class<T>) codes.thischwa.cf.model.RecordSingleResponse.class);
   }
 
+
   /**
    * Sends a POST request with a payload to the given endpoint and maps the response.
    */
-  <T extends AbstractResponse, R extends AbstractEntity> T postRequest(String endpoint,
-                                                                       R requestPayload)
+  <T extends AbstractResponse> T postRequest(String endpoint,
+                                             Object requestPayload,
+                                             Class<T> responseType)
     throws CloudflareApiException {
     HttpPost request = new HttpPost(buildUrl(endpoint));
     setRequestPayload(request, requestPayload);
-    return executeRequest(request, (Class<T>) codes.thischwa.cf.model.RecordSingleResponse.class);
+    return executeRequest(request, responseType);
   }
 
   /**
    * Sends a PUT request with a payload to the given endpoint and maps the response.
    */
-  <T extends AbstractResponse, R extends AbstractEntity> T putRequest(String endpoint,
-                                                                      R requestPayload,
-                                                                      Class<T> responseType)
+  <T extends AbstractResponse> T putRequest(String endpoint,
+                                            Object requestPayload,
+                                            Class<T> responseType)
     throws CloudflareApiException {
     HttpPut request = new HttpPut(buildUrl(endpoint));
     setRequestPayload(request, requestPayload);
@@ -136,8 +136,8 @@ abstract class CfBasicHttpClient {
   /**
    * Sends a PATCH request with a payload to the given endpoint and maps the response.
    */
-  <T extends AbstractResponse, R extends AbstractEntity> T patchRequest(String endpoint,
-                                                                        R requestPayload)
+  <T extends AbstractResponse> T patchRequest(String endpoint,
+                                              Object requestPayload)
     throws CloudflareApiException {
     HttpPatch request = new HttpPatch(buildUrl(endpoint));
     setRequestPayload(request, requestPayload);
@@ -147,11 +147,13 @@ abstract class CfBasicHttpClient {
   /**
    * Sets the JSON payload for a request.
    */
-  private <R extends AbstractEntity> void setRequestPayload(BasicClassicHttpRequest request,
-                                                            R requestPayload)
+  private void setRequestPayload(BasicClassicHttpRequest request,
+                                 Object requestPayload)
     throws CloudflareApiException {
     try {
-      request.setEntity(new StringEntity(objectMapper.writeValueAsString(requestPayload),
+      String jsonPayload = objectMapper.writeValueAsString(requestPayload);
+      log.debug("Request payload: {}", jsonPayload);
+      request.setEntity(new StringEntity(jsonPayload,
         ContentType.APPLICATION_JSON));
     } catch (JsonProcessingException e) {
       throw new CloudflareApiException("Error serializing JSON payload", e);

@@ -1,6 +1,8 @@
 package codes.thischwa.cf;
 
 import codes.thischwa.cf.model.AbstractResponse;
+import codes.thischwa.cf.model.BatchEntry;
+import codes.thischwa.cf.model.BatchResponse;
 import codes.thischwa.cf.model.PagingRequest;
 import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordMultipleResponse;
@@ -8,9 +10,11 @@ import codes.thischwa.cf.model.RecordSingleResponse;
 import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ZoneEntity;
 import codes.thischwa.cf.model.ZoneMultipleResponse;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * CfDnsClient is a client interface to interact with Cloudflare DNS service. It allows managing DNS
@@ -97,7 +101,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    *                                   services.
    */
   public CfDnsClient(boolean emptyResultThrowsException, String baseUrl, String authEmail,
-      String authKey) {
+                     String authKey) {
     super(baseUrl, authEmail, authKey);
     this.responseValidator = new ResponseValidator(emptyResultThrowsException);
   }
@@ -191,7 +195,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     String fqdn = buildFqdn(zone, sld);
     String endpoint = CfRequest.RECORD_INFO_NAME_TYPE.buildPath(zone.getId(), fqdn, type);
     RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
-    checkResponse(resp, true);
+    checkResponse(resp, false);
     return resp.getResult().get(0);
   }
 
@@ -209,7 +213,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    *                                or creating the record.
    */
   public RecordEntity recordCreateSld(ZoneEntity zone, String sld, int ttl, RecordType type,
-      String content) throws CloudflareApiException {
+                                      String content) throws CloudflareApiException {
     String fqdn = buildFqdn(zone, sld);
     return recordCreate(zone, fqdn, ttl, type, content);
   }
@@ -226,7 +230,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @throws CloudflareApiException if an error occurs while interacting with the Cloudflare API
    */
   public RecordEntity recordCreate(ZoneEntity zone, String name, int ttl, RecordType type,
-      String content) throws CloudflareApiException {
+                                   String content) throws CloudflareApiException {
     RecordEntity rec = RecordEntity.build(name, type, ttl, content);
     return recordCreate(zone, rec);
   }
@@ -244,7 +248,7 @@ public class CfDnsClient extends CfBasicHttpClient {
   public RecordEntity recordCreate(ZoneEntity zone, RecordEntity rec)
       throws CloudflareApiException {
     String endpoint = CfRequest.RECORD_CREATE.buildPath(zone.getId());
-    RecordSingleResponse resp = postRequest(endpoint, rec);
+    RecordSingleResponse resp = postRequest(endpoint, rec, RecordSingleResponse.class);
     checkResponse(resp);
     log.info("Record {} of type {} successful created.", rec.getName(), rec.getType());
     return resp.getResult();
@@ -262,7 +266,7 @@ public class CfDnsClient extends CfBasicHttpClient {
   public boolean recordDelete(ZoneEntity zone, RecordEntity rec) throws CloudflareApiException {
     boolean changed = recordDelete(zone, rec.getId());
     if (changed) {
-      log.info("Record {} of the type {} successful deleted.", rec.getName(), rec.getType());
+      log.debug("Record {} of the type [{}] successful deleted.", rec.getName(), rec.getType());
     } else {
       log.warn("Record {} of the type {} was not deleted.", rec.getName(), rec.getType());
     }
@@ -323,11 +327,53 @@ public class CfDnsClient extends CfBasicHttpClient {
       try {
         RecordEntity rec = sldInfo(zone, sld, recordType);
         recordDelete(zone, rec);
-        log.info("Record {} of type {} successful deleted.", fqdn, recordTypes);
+        log.info("Record {} of type [{}] successful deleted.", fqdn, recordTypes);
       } catch (CloudflareNotFoundException e) {
         log.debug("Record {} of type {} does not exist.", fqdn, recordTypes);
       }
     }
+  }
+
+  /**
+   * Records a batch of DNS record operations, including creating, updating, and deleting records
+   * within a specific zone. This method processes the provided put, patch, and delete operations
+   * into a clean format before sending a batch request to the Cloudflare API.
+   *
+   * @param zone          the zone entity representing the DNS zone where the changes will be applied
+   * @param ttl           the time-to-live (TTL) value assigned to the new records being added
+   * @param postRecords   a list of records to be created; each record must contain the necessary
+   *                      attributes for creation
+   * @param patchRecords  a list of records to be updated; only specific attributes (e.g., content)
+   *                      will be modified
+   * @param deleteRecords a list of records to be deleted; each record must contain name, type, and content
+   * @throws CloudflareApiException if there is an error while communicating with the Cloudflare API
+   */
+  public void recordBatch(ZoneEntity zone, int ttl, @Nullable List<RecordEntity> postRecords,
+                          @Nullable List<RecordEntity> patchRecords, @Nullable List<RecordEntity> deleteRecords)
+      throws CloudflareApiException {
+    BatchEntry batchEntry = new BatchEntry();
+    // build 'clean' record entries
+    if (postRecords != null) {
+      List<RecordEntity> cleanedPosts = new ArrayList<>();
+      postRecords.forEach(
+          rec -> cleanedPosts.add(RecordEntity.build(rec.getId(), rec.getName(), rec.getType(), rec.getTtl(), rec.getContent())));
+      batchEntry.setPosts(cleanedPosts);
+    }
+    if (patchRecords != null) {
+      List<RecordEntity> cleanedPatches = new ArrayList<>();
+      patchRecords.forEach(rec -> cleanedPatches.add(RecordEntity.build(rec.getId(), rec.getContent())));
+      batchEntry.setPatches(cleanedPatches);
+    }
+    if (deleteRecords != null) {
+      List<RecordEntity> cleanedDeletes = new ArrayList<>();
+      deleteRecords.forEach(
+          rec -> cleanedDeletes.add(RecordEntity.build(rec.getId(), rec.getName(), rec.getType(), null, rec.getContent())));
+      batchEntry.setDeletes(cleanedDeletes);
+    }
+
+    String endpoint = CfRequest.RECORD_BATCH.buildPath(zone.getId());
+    BatchResponse resp = postRequest(endpoint, batchEntry, BatchResponse.class);
+    checkResponse(resp);
   }
 
   private static String buildFqdn(ZoneEntity zone, String sld) {

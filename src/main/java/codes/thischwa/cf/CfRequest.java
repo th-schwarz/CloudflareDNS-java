@@ -43,6 +43,13 @@ public enum CfRequest {
    * identifier, which need to be provided to construct the complete path.
    */
   RECORD_UPDATE("/zones/%s/dns_records/%s"),
+
+  /**
+   * Represents the API endpoint path for performing batch operations on DNS records within a specific zone.
+   * The placeholder "%s" in the path is intended to be replaced by a zone identifier.
+   * This constant is used to construct the URL for interacting with the batch DNS records API.
+   */
+  RECORD_BATCH("/zones/%s/dns_records/batch"),
   /**
    * Represents the API endpoint path for deleting an existing DNS record within a specific DNS
    * zone. The endpoint path includes placeholders for the zone identifier and the record

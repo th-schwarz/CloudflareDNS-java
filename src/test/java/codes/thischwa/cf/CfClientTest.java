@@ -1,17 +1,17 @@
 package codes.thischwa.cf;
 
-import codes.thischwa.cf.model.RecordEntity;
-import codes.thischwa.cf.model.RecordType;
-import codes.thischwa.cf.model.ZoneEntity;
-import java.util.List;
-import java.util.Objects;
-import lombok.extern.slf4j.Slf4j;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import codes.thischwa.cf.model.RecordEntity;
+import codes.thischwa.cf.model.RecordType;
+import codes.thischwa.cf.model.ZoneEntity;
+import java.util.List;
+import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -148,5 +148,49 @@ public class CfClientTest {
     assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("email", null));
     assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("email", ""));
     assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("", "key"));
+  }
+
+  @Test
+  void testBatch() throws Exception {
+    // starting point: already existing zone 'mein-d-ns.de'
+    ZoneEntity z = client.zoneInfo(ZONE_STR);
+    String sld1 = SLD_STR + "-1";
+    String sld2 = SLD_STR + "-2";
+    String sld3 = SLD_STR + "-3";
+    RecordEntity r1 = RecordEntity.build(sld1, RecordType.A, TTL, "130.0.0.1");
+    RecordEntity r2 = RecordEntity.build(sld2, RecordType.A, TTL, "130.0.0.2");
+    RecordEntity r3 = RecordEntity.build(sld3, RecordType.A, TTL, "130.0.0.3");
+
+    // ensure clean state
+    client.recordDeleteTypeIfExists(z, sld1, RecordType.A);
+    client.recordDeleteTypeIfExists(z, sld2, RecordType.A);
+    client.recordDeleteTypeIfExists(z, sld3, RecordType.A);
+
+    try {
+      // test put
+      client.recordBatch(z, 30, List.of(r1, r2, r3), null, null);
+      RecordEntity testRec = client.sldInfo(z, sld1, RecordType.A);
+      assertEquals("130.0.0.1", testRec.getContent());
+      testRec = client.sldInfo(z, sld2, RecordType.A);
+      assertEquals("130.0.0.2", testRec.getContent());
+      testRec = client.sldInfo(z, sld3, RecordType.A);
+      assertEquals("130.0.0.3", testRec.getContent());
+
+      // test patch
+      r1 = client.sldInfo(z, sld1, RecordType.A);
+      r1.setContent("130.1.0.1");
+      client.recordBatch(z, 30, null, List.of(r1), null);
+      testRec = client.sldInfo(z, sld1, RecordType.A);
+      assertEquals("130.1.0.1", testRec.getContent());
+
+      // test delete
+      client.recordBatch(z, 30, null, null, List.of(r1));
+      assertThrows(CloudflareNotFoundException.class,
+          () -> client.sldInfo(z, sld1, RecordType.A));
+    } finally {
+      client.recordDeleteTypeIfExists(z, sld1, RecordType.A);
+      client.recordDeleteTypeIfExists(z, sld2, RecordType.A);
+      client.recordDeleteTypeIfExists(z, sld3, RecordType.A);
+    }
   }
 }
