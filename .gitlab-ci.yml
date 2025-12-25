@@ -68,7 +68,7 @@ sonarcloud_scan:
   dependencies:
     - build
   script:
-    - mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+    - mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
   only:
     - merge_requests
     - develop
