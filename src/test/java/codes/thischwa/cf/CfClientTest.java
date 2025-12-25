@@ -82,7 +82,7 @@ public class CfClientTest {
       createdRe1 =
           client.recordCreate(z, RecordEntity.build(domain, RecordType.A, TTL, "130.0.0.3"));
       assertNotNull(createdRe1.getId());
-      assertEquals(domain, createdRe1.getName());
+      assertEquals(randomSld, createdRe1.getName());
       assertEquals(RecordType.A.getType(), createdRe1.getType());
       assertEquals(TTL, createdRe1.getTtl());
       assertEquals("130.0.0.3", createdRe1.getContent());
@@ -158,7 +158,6 @@ public class CfClientTest {
     String sld1 = SLD_STR + "-1";
     String sld2 = SLD_STR + "-2";
     String sld3 = SLD_STR + "-3";
-    String sld4 = SLD_STR + "-4";
     RecordEntity r1 = RecordEntity.build(sld1, RecordType.A, TTL, "130.0.0.1");
     RecordEntity r2 = RecordEntity.build(sld2, RecordType.A, TTL, "130.0.0.2");
     RecordEntity r3 = RecordEntity.build(sld3, RecordType.A, TTL, "130.0.0.3");
@@ -198,9 +197,11 @@ public class CfClientTest {
           () -> client.sldInfo(z, sld1, RecordType.A));
 
       // test put
-      r1 = RecordEntity.build(sld4, RecordType.A, TTL, "130.1.0.2");
-      client.recordBatch(z, List.of(r1), null, null, null);
-      testRec = client.sldInfo(z, sld4, RecordType.A);
+      r2 = client.sldInfo(z, sld2, RecordType.A);
+      assertEquals("130.0.0.2", r2.getContent());
+      r2.setContent("130.1.0.2");
+      client.recordBatch(z, null, List.of(r2), null, null);
+      testRec = client.sldInfo(z, sld2, RecordType.A);
       assertEquals("130.1.0.2", testRec.getContent());
     } finally {
       client.recordDeleteTypeIfExists(z, sld1, RecordType.A);
