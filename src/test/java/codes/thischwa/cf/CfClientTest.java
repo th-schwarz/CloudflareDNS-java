@@ -10,6 +10,7 @@ import codes.thischwa.cf.model.BatchEntry;
 import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ZoneEntity;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
@@ -151,62 +152,133 @@ public class CfClientTest {
     assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("", "key"));
   }
 
+  private static final String IP_PREFIX = "130.0.0.";
+  private static final String UPDATED_IP_PREFIX = "130.1.0.";
+
   @Test
   void testBatch() throws Exception {
     // starting point: already existing zone 'mein-d-ns.de'
-    ZoneEntity z = client.zoneInfo(ZONE_STR);
-    String sld1 = SLD_STR + "-1";
-    String sld2 = SLD_STR + "-2";
-    String sld3 = SLD_STR + "-3";
-    RecordEntity r1 = RecordEntity.build(sld1, RecordType.A, TTL, "130.0.0.1");
-    RecordEntity r2 = RecordEntity.build(sld2, RecordType.A, TTL, "130.0.0.2");
-    RecordEntity r3 = RecordEntity.build(sld3, RecordType.A, TTL, "130.0.0.3");
+    ZoneEntity zone = client.zoneInfo(ZONE_STR);
 
-    // ensure clean state
-    client.recordDeleteTypeIfExists(z, sld1, RecordType.A);
-    client.recordDeleteTypeIfExists(z, sld2, RecordType.A);
-    client.recordDeleteTypeIfExists(z, sld3, RecordType.A);
+    List<String> sldNames = createSldNames();
+    List<RecordEntity> initialRecords = createInitialRecords(sldNames);
+
+    cleanupRecords(zone, sldNames);
 
     try {
-      // test pos
-      BatchEntry batchEntry = client.recordBatch(z, List.of(r1, r2, r3), null, null, null);
-      assertEquals(3, batchEntry.getPosts().size());
-      RecordEntity batchedRec = batchEntry.getPosts().get(0);
-      assertNotNull(batchedRec.getId());
-      assertEquals(r1.getName(), batchedRec.getName());
-      assertEquals(r1.getType(), batchedRec.getType());
-      assertNotNull(batchedRec.getCreatedOn());
-
-      RecordEntity testRec = client.sldInfo(z, sld1, RecordType.A);
-      assertEquals("130.0.0.1", testRec.getContent());
-      testRec = client.sldInfo(z, sld2, RecordType.A);
-      assertEquals("130.0.0.2", testRec.getContent());
-      testRec = client.sldInfo(z, sld3, RecordType.A);
-      assertEquals("130.0.0.3", testRec.getContent());
-
-      // test patch
-      r1 = client.sldInfo(z, sld1, RecordType.A);
-      r1.setContent("130.1.0.1");
-      client.recordBatch(z, null, null, List.of(r1), null);
-      testRec = client.sldInfo(z, sld1, RecordType.A);
-      assertEquals("130.1.0.1", testRec.getContent());
-
-      // test delete
-      client.recordBatch(z, null, null, null, List.of(r1));
-      assertThrows(CloudflareNotFoundException.class,
-          () -> client.sldInfo(z, sld1, RecordType.A));
-
-      // test put
-      r2 = client.sldInfo(z, sld2, RecordType.A);
-      assertEquals("130.0.0.2", r2.getContent());
-      r2.setContent("130.1.0.2");
-      client.recordBatch(z, null, List.of(r2), null, null);
-      testRec = client.sldInfo(z, sld2, RecordType.A);
-      assertEquals("130.1.0.2", testRec.getContent());
+      testBatchPost(zone, initialRecords, sldNames);
+      testBatchPatch(zone, sldNames);
+      testBatchDelete(zone, sldNames);
+      testBatchPut(zone, sldNames);
     } finally {
-      client.recordDeleteTypeIfExists(z, sld1, RecordType.A);
-      client.recordDeleteTypeIfExists(z, sld2, RecordType.A);
-      client.recordDeleteTypeIfExists(z, sld3, RecordType.A);
+      cleanupRecords(zone, sldNames);
     }
   }
+
+  private List<String> createSldNames() {
+    return List.of(SLD_STR + "-1", SLD_STR + "-2", SLD_STR + "-3");
+  }
+
+  private List<RecordEntity> createInitialRecords(List<String> sldNames) {
+    List<RecordEntity> records = new ArrayList<>();
+    for (int i = 0; i < sldNames.size(); i++) {
+      records.add(RecordEntity.build(sldNames.get(i), RecordType.A, TTL, IP_PREFIX + (i + 1)));
+    }
+    return records;
+  }
+
+  private void cleanupRecords(ZoneEntity zone, List<String> sldNames) {
+    sldNames.forEach(sld -> {
+      try {
+        client.recordDeleteTypeIfExists(zone, sld, RecordType.A);
+      } catch (CloudflareApiException e) {
+        throw new RuntimeException(e);
+      }
+    });
+  }
+
+  private void testBatchPost(ZoneEntity zone, List<RecordEntity> records, List<String> sldNames) throws Exception {
+    // Use only first 2 records for POST
+    List<RecordEntity> postRecords = records.subList(0, 2);
+    BatchEntry batchEntry = client.recordBatch(zone, postRecords, null, null, null);
+    assertEquals(2, batchEntry.getPosts().size());
+
+    RecordEntity batchedRecord = batchEntry.getPosts().get(0);
+    assertValidBatchedRecord(batchedRecord, postRecords.get(0));
+
+    // Verify only the first 2 records
+    for (int i = 0; i < 2; i++) {
+      RecordEntity record = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      assertEquals(IP_PREFIX + (i + 1), record.getContent());
+    }
+  }
+
+  private void testBatchPatch(ZoneEntity zone, List<String> sldNames) throws Exception {
+    // Use first 2 records for PATCH
+    List<RecordEntity> patchRecords = new ArrayList<>();
+    for (int i = 0; i < 2; i++) {
+      RecordEntity record = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      record.setContent(UPDATED_IP_PREFIX + (i + 1));
+      patchRecords.add(record);
+    }
+
+    client.recordBatch(zone, null, null, patchRecords, null);
+
+    // Verify both records were updated
+    for (int i = 0; i < 2; i++) {
+      RecordEntity updatedRecord = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      assertEquals(UPDATED_IP_PREFIX + (i + 1), updatedRecord.getContent());
+    }
+  }
+
+  private void testBatchDelete(ZoneEntity zone, List<String> sldNames) throws Exception {
+    // Delete first 2 records
+    List<RecordEntity> deleteRecords = new ArrayList<>();
+    for (int i = 0; i < 2; i++) {
+      RecordEntity record = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      deleteRecords.add(record);
+    }
+
+    client.recordBatch(zone, null, null, null, deleteRecords);
+
+    // Verify both records are deleted
+    for (int i = 0; i < 2; i++) {
+      String sldName = sldNames.get(i);
+      assertThrows(CloudflareNotFoundException.class,
+          () -> client.sldInfo(zone, sldName, RecordType.A));
+    }
+  }
+
+  private void testBatchPut(ZoneEntity zone, List<String> sldNames) throws Exception {
+    // Create 2 new records first for PUT test
+    List<RecordEntity> newRecords = new ArrayList<>();
+    for (int i = 0; i < 2; i++) {
+      RecordEntity record = RecordEntity.build(sldNames.get(i), RecordType.A, TTL, IP_PREFIX + (i + 1));
+      newRecords.add(record);
+    }
+    client.recordBatch(zone, newRecords, null, null, null);
+
+    // Now use PUT to replace them
+    List<RecordEntity> putRecords = new ArrayList<>();
+    for (int i = 0; i < 2; i++) {
+      RecordEntity record = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      record.setContent(UPDATED_IP_PREFIX + (i + 1));
+      putRecords.add(record);
+    }
+    client.recordBatch(zone, null, putRecords, null, null);
+
+    // Verify both records were updated
+    for (int i = 0; i < 2; i++) {
+      RecordEntity updatedRecord = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      assertEquals(UPDATED_IP_PREFIX + (i + 1), updatedRecord.getContent());
+    }
+  }
+
+  private void assertValidBatchedRecord(RecordEntity batchedRecord, RecordEntity originalRecord) {
+    assertNotNull(batchedRecord.getId());
+    assertEquals(originalRecord.getName(), batchedRecord.getName());
+    assertEquals(originalRecord.getType(), batchedRecord.getType());
+    assertNotNull(batchedRecord.getCreatedOn());
+  }
+
 }
