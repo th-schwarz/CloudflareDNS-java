@@ -200,6 +200,109 @@ cfDnsClient.recordDeleteTypeIfExists(zone, "api", RecordType.A);
 System.out.println("Deletion attempt completed.");
 ```
 
+### Batch Operations
+
+Process multiple DNS record operations (POST, PUT, PATCH, DELETE) in a single batch request.
+
+- **Parameters**:
+    - `ZoneEntity zone` - The target zone.
+    - `List<RecordEntity> postRecords` - Records to create (nullable).
+    - `List<RecordEntity> putRecords` - Records to fully replace (nullable).
+    - `List<RecordEntity> patchRecords` - Records to partially update (nullable).
+    - `List<RecordEntity> deleteRecords` - Records to delete (nullable).
+- **Returns**: A `BatchEntry` object containing the processed records.
+
+#### Batch Create (POST)
+
+```java
+List<RecordEntity> newRecords = Arrays.asList(
+    RecordEntity.build("api." + zone.getName(), RecordType.A, 60, "192.168.1.10"),
+    RecordEntity.build("cdn." + zone.getName(), RecordType.A, 60, "192.168.1.11"),
+    RecordEntity.build("mail." + zone.getName(), RecordType.A, 60, "192.168.1.12")
+);
+BatchEntry result = cfDnsClient.recordBatch(zone, newRecords, null, null, null);
+System.out.
+
+println("Created "+result.getPosts().
+
+size() +" records.");
+```
+
+#### Batch Update (PATCH)
+
+```java
+// Fetch existing records and modify them
+List<RecordEntity> recordsToUpdate = Arrays.asList(
+        cfDnsClient.sldInfo(zone, "api", RecordType.A),
+        cfDnsClient.sldInfo(zone, "cdn", RecordType.A)
+    );
+recordsToUpdate.
+
+forEach(record ->record.
+
+setContent("192.168.2.10"));
+
+BatchEntry result = cfDnsClient.recordBatch(zone, null, null, recordsToUpdate, null);
+System.out.
+
+println("Updated "+result.getPatches().
+
+size() +" records.");
+```
+
+#### Batch Replace (PUT)
+
+```java
+// Fetch existing records and fully replace them
+List<RecordEntity> recordsToReplace = Arrays.asList(
+        cfDnsClient.sldInfo(zone, "api", RecordType.A),
+        cfDnsClient.sldInfo(zone, "cdn", RecordType.A)
+    );
+recordsToReplace.
+
+get(0).
+
+setContent("192.168.3.10");
+recordsToReplace.
+
+get(0).
+
+setTtl(120);
+
+BatchEntry result = cfDnsClient.recordBatch(zone, null, recordsToReplace, null, null);
+System.out.
+
+println("Replaced "+result.getPuts().
+
+size() +" records.");
+```
+
+#### Batch Delete
+
+```java
+List<RecordEntity> recordsToDelete = Arrays.asList(
+    cfDnsClient.sldInfo(zone, "api", RecordType.A),
+    cfDnsClient.sldInfo(zone, "mail", RecordType.A)
+);
+BatchEntry result = cfDnsClient.recordBatch(zone, null, null, null, recordsToDelete);
+System.out.
+
+println("Deleted records.");
+```
+
+#### Combined Batch Operations
+
+```java
+// You can combine multiple operations in a single batch request
+BatchEntry result = cfDnsClient.recordBatch(
+        zone,
+        newRecords,      // POST
+        putRecords,      // PUT
+        patchRecords,    // PATCH
+        deleteRecords    // DELETE
+    );
+```
+
 ---
 
 ### Notes on Error Handling

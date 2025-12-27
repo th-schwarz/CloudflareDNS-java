@@ -36,12 +36,40 @@ public class CfClientTest {
   }
 
   @Test
+  void testAddHost() throws Exception {
+    ZoneEntity zone = client.zoneInfo(ZONE_STR);
+    RecordEntity record = RecordEntity.build(SLD_STR, RecordType.A, TTL, "127.0.0.1");
+    RecordEntity createdRecord = client.recordCreate(zone, record);
+    assertNotNull(createdRecord.getId());
+    assertEquals(SLD_STR, createdRecord.getName());
+    assertEquals(RecordType.A.getType(), createdRecord.getType());
+    assertEquals(TTL, createdRecord.getTtl());
+    assertEquals("127.0.0.1", createdRecord.getContent());
+    assertNotNull(createdRecord.getCreatedOn());
+
+    client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A);
+    assertThrows(CloudflareNotFoundException.class,
+        () -> client.sldInfo(zone, SLD_STR, RecordType.A));
+
+    record = RecordEntity.build(SLD_STR + "." + ZONE_STR, RecordType.A, TTL, "127.1.0.1");
+    createdRecord = client.recordCreate(zone, record);
+    assertNotNull(createdRecord.getId());
+    assertEquals(SLD_STR, createdRecord.getName());
+    assertEquals(RecordType.A.getType(), createdRecord.getType());
+    assertEquals(TTL, createdRecord.getTtl());
+    assertEquals("127.1.0.1", createdRecord.getContent());
+    assertNotNull(createdRecord.getCreatedOn());
+
+    client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A);
+  }
+
+  @Test
   void testZoneListAnlFailedSldList() throws Exception {
     List<ZoneEntity> zList = client.zoneListAll();
     assertEquals(1, zList.size());
 
     assertThrows(CloudflareNotFoundException.class,
-      () -> client.sldListAll(zList.get(0), "not-existing"));
+        () -> client.sldListAll(zList.get(0), "not-existing"));
   }
 
   @Test

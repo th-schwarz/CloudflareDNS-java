@@ -272,7 +272,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     if (changed) {
       log.debug("Record {} of the type [{}] successful deleted.", rec.getName(), rec.getType());
     } else {
-      log.warn("Record {} of the type {} was not deleted.", rec.getName(), rec.getType());
+      log.warn("Record {} of the type [{}] was not deleted.", rec.getName(), rec.getType());
     }
     return changed;
   }
