@@ -50,6 +50,7 @@ The dependency is:
 ## Changelog
 
 - 0.2.0-beta-SNAPSHOT:
+    - CfClient#sldInfo must return multiple RecordEntries
     - add a missing source jar
     - ResponseResultInfo#Errors: wrong object structure
     - changing multiple records with put, post, patch and delete for dns-records
