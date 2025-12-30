@@ -119,13 +119,17 @@ public class CfClientTest {
       assertNotNull(createdRe1.getModifiedOn());
 
       // verify sldInfo for A
-      r = client.sldInfo(z, randomSld, RecordType.A);
+      List<RecordEntity> aRecords = client.sldInfo(z, randomSld, RecordType.A);
+      assertEquals(1, aRecords.size());
+      r = aRecords.get(0);
       assertEquals("130.0.0.3", r.getContent());
 
       // create AAAA record using recordCreateSld
       createdRe2 =
           client.recordCreateSld(z, randomSld, TTL, RecordType.AAAA, "2a0a:4cc0:c0:2e4::1");
-      r = client.sldInfo(z, randomSld, RecordType.AAAA);
+      List<RecordEntity> aaaaRecords = client.sldInfo(z, randomSld, RecordType.AAAA);
+      assertEquals(1, aaaaRecords.size());
+      r = aaaaRecords.get(0);
       assertEquals("2a0a:4cc0:c0:2e4::1", r.getContent());
       assertEquals(RecordType.AAAA.getType(), r.getType());
 
@@ -145,11 +149,15 @@ public class CfClientTest {
       // update AAAA record
       createdRe2.setContent("2a0a:4cc0:c0:2e4::2");
       client.recordUpdate(z, createdRe2);
-      r = client.sldInfo(z, randomSld, RecordType.AAAA);
+      aaaaRecords = client.sldInfo(z, randomSld, RecordType.AAAA);
+      assertEquals(1, aaaaRecords.size());
+      r = aaaaRecords.get(0);
       assertEquals("2a0a:4cc0:c0:2e4::2", r.getContent());
 
       // verify A record still intact
-      r = client.sldInfo(z, randomSld, RecordType.A);
+      aRecords = client.sldInfo(z, randomSld, RecordType.A);
+      assertEquals(1, aRecords.size());
+      r = aRecords.get(0);
       assertEquals("130.0.0.3", r.getContent());
 
       // delete AAAA record and verify it's gone
@@ -182,6 +190,7 @@ public class CfClientTest {
 
   private static final String IP_PREFIX = "130.0.0.";
   private static final String UPDATED_IP_PREFIX = "130.1.0.";
+
 
   @Test
   void testBatch() throws Exception {
@@ -236,8 +245,9 @@ public class CfClientTest {
 
     // Verify only the first 2 records
     for (int i = 0; i < 2; i++) {
-      RecordEntity record = client.sldInfo(zone, sldNames.get(i), RecordType.A);
-      assertEquals(IP_PREFIX + (i + 1), record.getContent());
+      List<RecordEntity> records1 = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      assertEquals(1, records1.size());
+      assertEquals(IP_PREFIX + (i + 1), records1.get(0).getContent());
     }
   }
 
@@ -245,7 +255,8 @@ public class CfClientTest {
     // Use first 2 records for PATCH
     List<RecordEntity> patchRecords = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
-      RecordEntity record = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      List<RecordEntity> records = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      RecordEntity record = records.get(0);
       record.setContent(UPDATED_IP_PREFIX + (i + 1));
       patchRecords.add(record);
     }
@@ -254,8 +265,9 @@ public class CfClientTest {
 
     // Verify both records were updated
     for (int i = 0; i < 2; i++) {
-      RecordEntity updatedRecord = client.sldInfo(zone, sldNames.get(i), RecordType.A);
-      assertEquals(UPDATED_IP_PREFIX + (i + 1), updatedRecord.getContent());
+      List<RecordEntity> updatedRecords = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      assertEquals(1, updatedRecords.size());
+      assertEquals(UPDATED_IP_PREFIX + (i + 1), updatedRecords.get(0).getContent());
     }
   }
 
@@ -263,8 +275,8 @@ public class CfClientTest {
     // Delete first 2 records
     List<RecordEntity> deleteRecords = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
-      RecordEntity record = client.sldInfo(zone, sldNames.get(i), RecordType.A);
-      deleteRecords.add(record);
+      List<RecordEntity> records = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      deleteRecords.add(records.get(0));
     }
 
     client.recordBatch(zone, null, null, null, deleteRecords);
@@ -289,7 +301,8 @@ public class CfClientTest {
     // Now use PUT to replace them
     List<RecordEntity> putRecords = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
-      RecordEntity record = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      List<RecordEntity> records = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      RecordEntity record = records.get(0);
       record.setContent(UPDATED_IP_PREFIX + (i + 1));
       putRecords.add(record);
     }
@@ -297,8 +310,9 @@ public class CfClientTest {
 
     // Verify both records were updated
     for (int i = 0; i < 2; i++) {
-      RecordEntity updatedRecord = client.sldInfo(zone, sldNames.get(i), RecordType.A);
-      assertEquals(UPDATED_IP_PREFIX + (i + 1), updatedRecord.getContent());
+      List<RecordEntity> updatedRecords = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      assertEquals(1, updatedRecords.size());
+      assertEquals(UPDATED_IP_PREFIX + (i + 1), updatedRecords.get(0).getContent());
     }
   }
 

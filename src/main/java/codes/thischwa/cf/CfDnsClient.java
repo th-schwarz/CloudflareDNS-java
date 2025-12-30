@@ -194,13 +194,13 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @return the {@link RecordEntity} of the requested SLD and record type
    * @throws CloudflareApiException if an error occurs during interaction with the Cloudflare API
    */
-  public RecordEntity sldInfo(ZoneEntity zone, String sld, RecordType type)
+  public List<RecordEntity> sldInfo(ZoneEntity zone, String sld, RecordType type)
       throws CloudflareApiException {
     String fqdn = buildFqdn(zone, sld);
     String endpoint = CfRequest.RECORD_INFO_NAME_TYPE.buildPath(zone.getId(), fqdn, type);
     RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
     checkResponse(resp, false);
-    return resp.getResult().get(0);
+    return resp.getResult();
   }
 
   /**
@@ -290,7 +290,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     String endpoint = CfRequest.RECORD_DELETE.buildPath(zone.getId(), id);
     RecordSingleResponse resp = deleteRequest(endpoint);
     checkResponse(resp);
-    log.debug("Record {} successful deleted.", id);
+    log.debug("Record id#{} successful deleted.", id);
     return resp.getResult().getId().equals(id);
   }
 
@@ -329,11 +329,17 @@ public class CfDnsClient extends CfBasicHttpClient {
     String fqdn = buildFqdn(zone, sld);
     for (RecordType recordType : recordTypes) {
       try {
-        RecordEntity rec = sldInfo(zone, sld, recordType);
-        recordDelete(zone, rec);
-        log.info("Record {} of type [{}] successful deleted.", fqdn, recordTypes);
+        List<RecordEntity> recs = sldInfo(zone, sld, recordType);
+        recs.forEach(rec -> {
+          try {
+            recordDelete(zone, rec);
+            log.info("Record {} of type [{}] successful deleted.", fqdn, recordType);
+          } catch (CloudflareApiException e) {
+            log.error("Failed to delete record {} of type {} for zone {}: {}", fqdn, recordType, zone.getName(), e.getMessage());
+          }
+        });
       } catch (CloudflareNotFoundException e) {
-        log.debug("Record {} of type {} does not exist.", fqdn, recordTypes);
+        log.debug("Record {} of type {} does not exist.", fqdn, recordType);
       }
     }
   }
