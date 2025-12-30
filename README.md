@@ -49,9 +49,8 @@ The dependency is:
 
 ## Changelog
 
-- 0.2.0-beta-2
+- 0.2.0-beta-SNAPSHOT:
     - add a missing source jar
-- 0.2.0-beta-1
     - ResponseResultInfo#Errors: wrong object structure
     - changing multiple records with put, post, patch and delete for dns-records
 - 0.1.0:
