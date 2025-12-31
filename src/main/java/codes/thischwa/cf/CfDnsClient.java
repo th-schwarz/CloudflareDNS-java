@@ -185,16 +185,29 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Retrieves detailed information about a specific second-level domain (SLD) record for a given
-   * zone and record type from the Cloudflare API.
+   * Retrieves a list of DNS record entities for a specified second-level domain (SLD)
+   * within a given zone.
    *
-   * @param zone  the zone entity that contains information about the DNS zone
-   * @param sld   the second-level domain (SLD) for which the record information is requested
-   * @param types the type of DNS record (e.g., A, AAAA, CNAME) being queried, nullable
-   * @return a list of {@code RecordEntity} objects representing the requested record(s)
-   * @throws CloudflareApiException if an error occurs during interaction with the Cloudflare API
+   * @param zone the zone entity representing the DNS zone to query
+   * @param sld  the second-level domain (SLD) to filter the records
+   * @return a list of RecordEntity objects that match the specified SLD within the zone
+   * @throws CloudflareNotFoundException if the specified SLD is not found in the zone
+   * @throws CloudflareApiException      if an error occurs while interacting with the Cloudflare API
    */
+  public List<RecordEntity> sldInfo(ZoneEntity zone, String sld) throws CloudflareApiException {
+    return sldInfo(zone, sld, (RecordType[]) null);
+  }
 
+  /**
+   * Retrieves a list of DNS records for a given second-level domain (SLD) within a specific zone.
+   *
+   * @param zone The zone entity containing information about the domain zone.
+   * @param sld The second-level domain (SLD) for which to retrieve DNS records.
+   * @param types Optional parameter specifying one or more DNS record types to filter the results.
+   * @return A list of {@code RecordEntity} objects representing the DNS records for the specified domain.
+   * @throws CloudflareNotFoundException if the specified SLD is not found in the zone
+   * @throws CloudflareApiException if an error occurs while interacting with the Cloudflare API
+   */
   public List<RecordEntity> sldInfo(ZoneEntity zone, String sld, @Nullable RecordType... types)
       throws CloudflareApiException {
     String fqdn = buildFqdn(zone, sld);
@@ -335,7 +348,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    *
    * @param zone        The DNS zone entity in which the record exists.
    * @param sld         The second-level domain for which the record is being checked.
-   * @param recordTypes The types of DNS records that should be deleted, if they exist.
+   * @param recordTypes The types of DNS records that should be deleted if they exist.
    * @throws CloudflareApiException If an error occurs during API communication.
    */
   public void recordDeleteTypeIfExists(ZoneEntity zone, String sld, RecordType... recordTypes)
