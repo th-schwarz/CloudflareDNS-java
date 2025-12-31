@@ -127,18 +127,42 @@ records.forEach(record ->
 
 ### `sldInfo`
 
-Retrieve DNS record details for a specific SLD, zone, and record type.
+Retrieve DNS record details for a specific SLD and zone, optionally filtered by record types.
 
 - **Parameters**:
     - `ZoneEntity zone` - The zone object.
     - `String sld` - The second-level domain.
-    - `RecordType type` - Record type (e.g., A, CNAME).
+  - `RecordType... types` - Optional record types to filter by (e.g., A, CNAME). If not specified, returns all record
+    types.
+- **Returns**: A list of `RecordEntity` objects matching the criteria.
 
 ```java
-RecordEntity record = cfDnsClient.sldInfo(zone, "www", RecordType.A);
-System.out.println("Record IP: " + record.getContent());
-```
+// Get all records for a specific SLD
+List<RecordEntity> allRecords = cfDnsClient.sldInfo(zone, "www");
+allRecords.
 
+forEach(record ->
+    System.out.
+
+println("Type: "+record.getType() +", Content: "+record.
+
+getContent())
+    );
+
+// Get only A records
+List<RecordEntity> aRecords = cfDnsClient.sldInfo(zone, "www", RecordType.A);
+System.out.
+
+println("Found "+aRecords.size() +" A records");
+
+// Get A and AAAA records
+List<RecordEntity> ipRecords = cfDnsClient.sldInfo(zone, "www", RecordType.A, RecordType.AAAA);
+ipRecords.
+
+forEach(record ->System.out.
+
+println("IP Record: "+record.getContent()));
+```
 ---
 
 ### `recordCreate`

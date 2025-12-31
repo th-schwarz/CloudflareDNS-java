@@ -188,19 +188,33 @@ public class CfDnsClient extends CfBasicHttpClient {
    * Retrieves detailed information about a specific second-level domain (SLD) record for a given
    * zone and record type from the Cloudflare API.
    *
-   * @param zone the zone entity that contains information about the DNS zone
-   * @param sld  the second-level domain (SLD) for which the record information is requested
-   * @param type the type of DNS record (e.g., A, AAAA, CNAME) being queried
-   * @return the {@link RecordEntity} of the requested SLD and record type
+   * @param zone  the zone entity that contains information about the DNS zone
+   * @param sld   the second-level domain (SLD) for which the record information is requested
+   * @param types the type of DNS record (e.g., A, AAAA, CNAME) being queried, nullable
+   * @return a list of {@code RecordEntity} objects representing the requested record(s)
    * @throws CloudflareApiException if an error occurs during interaction with the Cloudflare API
    */
-  public List<RecordEntity> sldInfo(ZoneEntity zone, String sld, RecordType type)
+
+  public List<RecordEntity> sldInfo(ZoneEntity zone, String sld, @Nullable RecordType... types)
       throws CloudflareApiException {
     String fqdn = buildFqdn(zone, sld);
-    String endpoint = CfRequest.RECORD_INFO_NAME_TYPE.buildPath(zone.getId(), fqdn, type);
+    String endpoint = buildEndpointWithTypeFilters(zone.getId(), fqdn, types);
     RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
     checkResponse(resp, false);
     return resp.getResult();
+  }
+
+  private String buildEndpointWithTypeFilters(String zoneId, String fqdn, @Nullable RecordType... types) {
+    String baseEndpoint = CfRequest.RECORD_INFO_NAME.buildPath(zoneId, fqdn);
+    if (types == null || types.length == 0) {
+      return baseEndpoint;
+    }
+    StringBuilder queryParams = new StringBuilder();
+    for (RecordType type : types) {
+      queryParams.append("&");
+      queryParams.append("type=").append(type);
+    }
+    return baseEndpoint + queryParams;
   }
 
   /**
@@ -327,19 +341,19 @@ public class CfDnsClient extends CfBasicHttpClient {
   public void recordDeleteTypeIfExists(ZoneEntity zone, String sld, RecordType... recordTypes)
       throws CloudflareApiException {
     String fqdn = buildFqdn(zone, sld);
-    for (RecordType recordType : recordTypes) {
+    List<RecordEntity> recs;
+    try {
+      recs = sldInfo(zone, sld, recordTypes);
+    } catch (CloudflareNotFoundException e) {
+      log.trace("No record of type {} found for domain {}.", recordTypes, fqdn);
+      return;
+    }
+    for (RecordEntity rec : recs) {
       try {
-        List<RecordEntity> recs = sldInfo(zone, sld, recordType);
-        recs.forEach(rec -> {
-          try {
-            recordDelete(zone, rec);
-            log.info("Record {} of type [{}] successful deleted.", fqdn, recordType);
-          } catch (CloudflareApiException e) {
-            log.error("Failed to delete record {} of type {} for zone {}: {}", fqdn, recordType, zone.getName(), e.getMessage());
-          }
-        });
-      } catch (CloudflareNotFoundException e) {
-        log.debug("Record {} of type {} does not exist.", fqdn, recordType);
+        recordDelete(zone, rec);
+        log.info("Record {} of type {} successful deleted.", fqdn, recordTypes);
+      } catch (CloudflareApiException e) {
+        log.error("Failed to delete record {} of type {} for zone {}: {}", fqdn, recordTypes, zone.getName(), e.getMessage());
       }
     }
   }

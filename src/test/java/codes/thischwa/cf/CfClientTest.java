@@ -38,6 +38,7 @@ public class CfClientTest {
   @Test
   void testAddHost() throws Exception {
     ZoneEntity zone = client.zoneInfo(ZONE_STR);
+    client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A, RecordType.AAAA);
     RecordEntity record = RecordEntity.build(SLD_STR, RecordType.A, TTL, "127.0.0.1");
     RecordEntity createdRecord = client.recordCreate(zone, record);
     assertNotNull(createdRecord.getId());

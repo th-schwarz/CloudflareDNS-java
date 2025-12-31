@@ -3,7 +3,6 @@ package codes.thischwa.cf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import codes.thischwa.cf.model.RecordType;
 import org.junit.jupiter.api.Test;
 
 public class CfRequestTest {
@@ -46,14 +45,14 @@ public class CfRequestTest {
 
     @Test
     public void testBuildRecordInfo() {
-        String result = CfRequest.RECORD_INFO_NAME_TYPE.buildPath("zone123", "sld.domain.com", RecordType.A);
-        assertEquals("/zones/zone123/dns_records?name=sld.domain.com&type=A", result);
+      String result = CfRequest.RECORD_INFO_NAME.buildPath("zone123", "sld.domain.com");
+      assertEquals("/zones/zone123/dns_records?name=sld.domain.com", result);
     }
 
     @Test
     public void testBuildPathInvalidArguments() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> CfRequest.RECORD_INFO_NAME_TYPE.buildPath("zone123", "sld.domain.com"));
+            () -> CfRequest.RECORD_UPDATE.buildPath("zone123"));
     }
 }

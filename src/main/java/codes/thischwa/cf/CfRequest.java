@@ -33,13 +33,6 @@ public enum CfRequest {
    */
   RECORD_INFO_NAME("/zones/%s/dns_records?name=%s"),
   /**
-   * Represents the API endpoint path for retrieving information about a DNS record within a
-   * specific DNS zone by its name and type. The endpoint path includes placeholders for the zone
-   * identifier, record name, and record type, which need to be provided to construct the complete
-   * path.
-   */
-  RECORD_INFO_NAME_TYPE("/zones/%s/dns_records?name=%s&type=%s"),
-  /**
    * Represents the API endpoint path for updating an existing DNS record within a specific DNS
    * zone. The endpoint path includes placeholders for the zone identifier and the record
    * identifier, which need to be provided to construct the complete path.
