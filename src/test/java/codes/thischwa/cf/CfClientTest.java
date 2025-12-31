@@ -36,6 +36,12 @@ public class CfClientTest {
   }
 
   @Test
+  void testUnknownSld() throws Exception {
+    ZoneEntity zone = client.zoneInfo(ZONE_STR);
+    assertThrows(CloudflareNotFoundException.class, () -> client.sldInfo(zone, "unknown", RecordType.A));
+  }
+
+  @Test
   void testAddHost() throws Exception {
     ZoneEntity zone = client.zoneInfo(ZONE_STR);
     client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A, RecordType.AAAA);
