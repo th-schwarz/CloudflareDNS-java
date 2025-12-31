@@ -54,7 +54,7 @@ public class PagingRequest {
    * Retrieves the pagination parameters in a key-value map format.
    *
    * @return a map containing the pagination parameters, where the key "page" indicates the current
-   *     page number and the key "perPage" indicates the number of items per page.
+   * page number and the key "perPage" indicates the number of items per page.
    */
   public Map<String, String> getPagingParams() {
     return Map.of("page", String.valueOf(page), "perPage", String.valueOf(perPage));
