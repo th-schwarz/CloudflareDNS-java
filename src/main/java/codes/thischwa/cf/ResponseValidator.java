@@ -1,6 +1,7 @@
 package codes.thischwa.cf;
 
 import codes.thischwa.cf.model.AbstractResponse;
+import codes.thischwa.cf.model.AbstractSingleResponse;
 import codes.thischwa.cf.model.RecordMultipleResponse;
 import codes.thischwa.cf.model.ResponseResultInfo;
 import java.util.stream.Collectors;
@@ -14,9 +15,11 @@ import java.util.stream.Collectors;
  * <li>It checks whether the API response was successful by analyzing the associated response
  * metadata. If the response indicates failure, an exception is thrown with descriptive error
  * messages.
- * <li>If a {@link RecordMultipleResponse} is used, it validates the number of results in the API
- * response payload to detect unexpected counts. Depending on the parameter
- * 'emptyResultThrowsException', an exception will be triggered or an empty result will be returned.
+ * <li>It validates the number of results in the API response payload to detect unexpected counts.
+ * For {@link RecordMultipleResponse}, it checks if results are empty or if more than one result
+ * was returned when a single result was expected. For {@link AbstractSingleResponse}, it checks
+ * if the result is null. Depending on the parameter 'emptyResultThrowsException', an exception
+ * will be triggered or an empty/null result will be returned.
  * </ul>
  */
 class ResponseValidator {
@@ -48,6 +51,10 @@ class ResponseValidator {
             "Unexpected result count: " + respMulti.getResultInfo().totalCount());
       }
       if (emptyResultThrowsException && respMulti.getResultInfo().totalCount() == 0) {
+        throw new CloudflareNotFoundException("No result found");
+      }
+    } else if (resp instanceof AbstractSingleResponse<?> respSingle) {
+      if (emptyResultThrowsException && respSingle.getResult() == null) {
         throw new CloudflareNotFoundException("No result found");
       }
     }

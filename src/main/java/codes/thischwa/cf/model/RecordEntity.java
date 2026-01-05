@@ -94,27 +94,45 @@ public class RecordEntity extends AbstractEntity {
    * @param ttl     the time-to-live (TTL) value for the DNS record
    * @param content the content of the DNS record, typically an IP address or other record data
    * @return a {@link RecordEntity} populated with the provided attributes
+   * @throws IllegalArgumentException if the type string is not a valid RecordType
    */
   public static RecordEntity build(String id, String name, String type, Integer ttl, String content) {
-    RecordEntity rec = build(name, RecordType.valueOf(type), ttl, content);
+    RecordType recordType;
+    try {
+      recordType = RecordType.valueOf(type);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid record type: " + type + ". Must be one of: "
+          + java.util.Arrays.toString(RecordType.values()), e);
+    }
+    RecordEntity rec = build(name, recordType, ttl, content);
     rec.setId(id);
     return rec;
   }
 
   /**
-   * Retrieves the name of the DNS record.
+   * Retrieves the short name (subdomain) of the DNS record.
    * If the name contains a dot ('.'), only the substring before the first dot is returned.
+   * This is useful for getting the subdomain part of a fully qualified domain name.
    *
-   * @return the name of the DNS record, potentially truncated before the first dot,
-   * or the full name if no dot is present.
+   * @return the short name of the DNS record (substring before the first dot),
+   *     or the full name if no dot is present
    */
-  public String getName() {
-    if (name != null) {
-      int pos = name.indexOf('.');
-      if (pos > 0) {
-        return name.substring(0, pos);
-      }
+  public String getSld() {
+    if (name == null) {
+      return null;
     }
+
+    if (zoneName != null && name.endsWith(zoneName)) {
+      int zoneNameLength = zoneName.length();
+      int dotSeparatorLength = 1;
+      return name.substring(0, name.length() - zoneNameLength - dotSeparatorLength);
+    }
+
+    int firstDotPosition = name.indexOf('.');
+    if (firstDotPosition > 0) {
+      return name.substring(0, firstDotPosition);
+    }
+
     return name;
   }
 }

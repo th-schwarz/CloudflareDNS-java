@@ -27,7 +27,7 @@ public class CfClientTest {
   private static final String API_EMAIL = System.getenv("API_EMAIL");
   private static final String API_KEY = System.getenv("API_KEY");
 
-  private final CfDnsClient client = new CfDnsClient(API_EMAIL, API_KEY);
+  private final CfDnsClient client = new CfDnsClient(true, API_EMAIL, API_KEY);
 
   @BeforeAll
   static void checkEnv() {
@@ -37,18 +37,18 @@ public class CfClientTest {
 
   @Test
   void testUnknownSld() throws Exception {
-    ZoneEntity zone = client.zoneInfo(ZONE_STR);
-    assertThrows(CloudflareNotFoundException.class, () -> client.sldInfo(zone, "unknown", RecordType.A));
+    ZoneEntity zone = client.zoneGet(ZONE_STR);
+    assertThrows(CloudflareNotFoundException.class, () -> client.recordGet(zone, "unknown", RecordType.A));
   }
 
   @Test
   void testAddHost() throws Exception {
-    ZoneEntity zone = client.zoneInfo(ZONE_STR);
+    ZoneEntity zone = client.zoneGet(ZONE_STR);
     client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A, RecordType.AAAA);
     RecordEntity record = RecordEntity.build(SLD_STR, RecordType.A, TTL, "127.0.0.1");
     RecordEntity createdRecord = client.recordCreate(zone, record);
     assertNotNull(createdRecord.getId());
-    assertEquals(SLD_STR, createdRecord.getName());
+    assertEquals(SLD_STR, createdRecord.getSld());
     assertEquals(RecordType.A.getType(), createdRecord.getType());
     assertEquals(TTL, createdRecord.getTtl());
     assertEquals("127.0.0.1", createdRecord.getContent());
@@ -56,12 +56,12 @@ public class CfClientTest {
 
     client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A);
     assertThrows(CloudflareNotFoundException.class,
-        () -> client.sldInfo(zone, SLD_STR, RecordType.A));
+        () -> client.recordGet(zone, SLD_STR, RecordType.A));
 
     record = RecordEntity.build(SLD_STR + "." + ZONE_STR, RecordType.A, TTL, "127.1.0.1");
     createdRecord = client.recordCreate(zone, record);
     assertNotNull(createdRecord.getId());
-    assertEquals(SLD_STR, createdRecord.getName());
+    assertEquals(SLD_STR, createdRecord.getSld());
     assertEquals(RecordType.A.getType(), createdRecord.getType());
     assertEquals(TTL, createdRecord.getTtl());
     assertEquals("127.1.0.1", createdRecord.getContent());
@@ -72,25 +72,25 @@ public class CfClientTest {
 
   @Test
   void testZoneListAnlFailedSldList() throws Exception {
-    List<ZoneEntity> zList = client.zoneListAll();
+    List<ZoneEntity> zList = client.zoneList();
     assertEquals(1, zList.size());
 
     assertThrows(CloudflareNotFoundException.class,
-        () -> client.sldListAll(zList.get(0), "not-existing"));
+        () -> client.recordList(zList.get(0), "not-existing"));
   }
 
   @Test
   void testEmptyResultThrowsException() throws Exception {
-    List<ZoneEntity> zList = client.zoneListAll();
+    List<ZoneEntity> zList = client.zoneList();
     CfDnsClient client = new CfDnsClient(true, API_EMAIL, API_KEY);
     assertThrows(CloudflareNotFoundException.class,
-        () -> client.sldListAll(zList.get(0), "not-existing"));
+        () -> client.recordList(zList.get(0), "not-existing"));
   }
 
   @Test
   void testDns() throws Exception {
     // starting point: already existing zone 'mein-d-ns.de'
-    ZoneEntity z = client.zoneInfo(ZONE_STR);
+    ZoneEntity z = client.zoneGet(ZONE_STR);
     assertEquals("0a83dd6e7f8c46039f2517bbded8115e", z.getId());
     assertEquals("mein-d-ns.de", z.getName());
     assertEquals("active", z.getStatus());
@@ -118,15 +118,15 @@ public class CfClientTest {
       createdRe1 =
           client.recordCreate(z, RecordEntity.build(domain, RecordType.A, TTL, "130.0.0.3"));
       assertNotNull(createdRe1.getId());
-      assertEquals(randomSld, createdRe1.getName());
+      assertEquals(randomSld, createdRe1.getSld());
       assertEquals(RecordType.A.getType(), createdRe1.getType());
       assertEquals(TTL, createdRe1.getTtl());
       assertEquals("130.0.0.3", createdRe1.getContent());
       assertNotNull(createdRe1.getCreatedOn());
       assertNotNull(createdRe1.getModifiedOn());
 
-      // verify sldInfo for A
-      List<RecordEntity> aRecords = client.sldInfo(z, randomSld, RecordType.A);
+      // verify recordGet for A
+      List<RecordEntity> aRecords = client.recordGet(z, randomSld, RecordType.A);
       assertEquals(1, aRecords.size());
       r = aRecords.get(0);
       assertEquals("130.0.0.3", r.getContent());
@@ -134,14 +134,14 @@ public class CfClientTest {
       // create AAAA record using recordCreateSld
       createdRe2 =
           client.recordCreateSld(z, randomSld, TTL, RecordType.AAAA, "2a0a:4cc0:c0:2e4::1");
-      List<RecordEntity> aaaaRecords = client.sldInfo(z, randomSld, RecordType.AAAA);
+      List<RecordEntity> aaaaRecords = client.recordGet(z, randomSld, RecordType.AAAA);
       assertEquals(1, aaaaRecords.size());
       r = aaaaRecords.get(0);
       assertEquals("2a0a:4cc0:c0:2e4::1", r.getContent());
       assertEquals(RecordType.AAAA.getType(), r.getType());
 
-      // test sldListAll
-      List<RecordEntity> rList = client.sldListAll(z, randomSld);
+      // test recordList
+      List<RecordEntity> rList = client.recordList(z, randomSld);
       assertEquals(2, rList.size());
       for (RecordEntity re : rList) {
         if (Objects.equals(re.getType(), RecordType.A.getType())) {
@@ -156,13 +156,13 @@ public class CfClientTest {
       // update AAAA record
       createdRe2.setContent("2a0a:4cc0:c0:2e4::2");
       client.recordUpdate(z, createdRe2);
-      aaaaRecords = client.sldInfo(z, randomSld, RecordType.AAAA);
+      aaaaRecords = client.recordGet(z, randomSld, RecordType.AAAA);
       assertEquals(1, aaaaRecords.size());
       r = aaaaRecords.get(0);
       assertEquals("2a0a:4cc0:c0:2e4::2", r.getContent());
 
       // verify A record still intact
-      aRecords = client.sldInfo(z, randomSld, RecordType.A);
+      aRecords = client.recordGet(z, randomSld, RecordType.A);
       assertEquals(1, aRecords.size());
       r = aRecords.get(0);
       assertEquals("130.0.0.3", r.getContent());
@@ -170,12 +170,12 @@ public class CfClientTest {
       // delete AAAA record and verify it's gone
       assertTrue(client.recordDelete(z, createdRe2));
       assertThrows(CloudflareNotFoundException.class,
-          () -> client.sldInfo(z, randomSld, RecordType.AAAA));
+          () -> client.recordGet(z, randomSld, RecordType.AAAA));
 
       // delete A record using helper and verify it's gone
       client.recordDeleteTypeIfExists(z, randomSld, RecordType.A);
       assertThrows(CloudflareNotFoundException.class,
-          () -> client.sldInfo(z, randomSld, RecordType.A));
+          () -> client.recordGet(z, randomSld, RecordType.A));
     } finally {
       // cleanup in case of failures during test
       try {
@@ -195,6 +195,14 @@ public class CfClientTest {
     assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("", "key"));
   }
 
+  @Test
+  void testRecordEntityInvalidType() {
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        () -> RecordEntity.build("id123", "example.com", "INVALID_TYPE", 60, "192.168.1.1"));
+    assertTrue(exception.getMessage().contains("Invalid record type: INVALID_TYPE"));
+    assertTrue(exception.getMessage().contains("Must be one of:"));
+  }
+
   private static final String IP_PREFIX = "130.0.0.";
   private static final String UPDATED_IP_PREFIX = "130.1.0.";
 
@@ -202,7 +210,7 @@ public class CfClientTest {
   @Test
   void testBatch() throws Exception {
     // starting point: already existing zone 'mein-d-ns.de'
-    ZoneEntity zone = client.zoneInfo(ZONE_STR);
+    ZoneEntity zone = client.zoneGet(ZONE_STR);
 
     List<String> sldNames = createSldNames();
     List<RecordEntity> initialRecords = createInitialRecords(sldNames);
@@ -252,7 +260,7 @@ public class CfClientTest {
 
     // Verify only the first 2 records
     for (int i = 0; i < 2; i++) {
-      List<RecordEntity> records1 = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      List<RecordEntity> records1 = client.recordGet(zone, sldNames.get(i), RecordType.A);
       assertEquals(1, records1.size());
       assertEquals(IP_PREFIX + (i + 1), records1.get(0).getContent());
     }
@@ -262,7 +270,7 @@ public class CfClientTest {
     // Use first 2 records for PATCH
     List<RecordEntity> patchRecords = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
-      List<RecordEntity> records = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      List<RecordEntity> records = client.recordGet(zone, sldNames.get(i), RecordType.A);
       RecordEntity record = records.get(0);
       record.setContent(UPDATED_IP_PREFIX + (i + 1));
       patchRecords.add(record);
@@ -272,7 +280,7 @@ public class CfClientTest {
 
     // Verify both records were updated
     for (int i = 0; i < 2; i++) {
-      List<RecordEntity> updatedRecords = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      List<RecordEntity> updatedRecords = client.recordGet(zone, sldNames.get(i), RecordType.A);
       assertEquals(1, updatedRecords.size());
       assertEquals(UPDATED_IP_PREFIX + (i + 1), updatedRecords.get(0).getContent());
     }
@@ -282,7 +290,7 @@ public class CfClientTest {
     // Delete first 2 records
     List<RecordEntity> deleteRecords = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
-      List<RecordEntity> records = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      List<RecordEntity> records = client.recordGet(zone, sldNames.get(i), RecordType.A);
       deleteRecords.add(records.get(0));
     }
 
@@ -292,7 +300,7 @@ public class CfClientTest {
     for (int i = 0; i < 2; i++) {
       String sldName = sldNames.get(i);
       assertThrows(CloudflareNotFoundException.class,
-          () -> client.sldInfo(zone, sldName, RecordType.A));
+          () -> client.recordGet(zone, sldName, RecordType.A));
     }
   }
 
@@ -308,7 +316,7 @@ public class CfClientTest {
     // Now use PUT to replace them
     List<RecordEntity> putRecords = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
-      List<RecordEntity> records = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      List<RecordEntity> records = client.recordGet(zone, sldNames.get(i), RecordType.A);
       RecordEntity record = records.get(0);
       record.setContent(UPDATED_IP_PREFIX + (i + 1));
       putRecords.add(record);
@@ -317,7 +325,7 @@ public class CfClientTest {
 
     // Verify both records were updated
     for (int i = 0; i < 2; i++) {
-      List<RecordEntity> updatedRecords = client.sldInfo(zone, sldNames.get(i), RecordType.A);
+      List<RecordEntity> updatedRecords = client.recordGet(zone, sldNames.get(i), RecordType.A);
       assertEquals(1, updatedRecords.size());
       assertEquals(UPDATED_IP_PREFIX + (i + 1), updatedRecords.get(0).getContent());
     }
@@ -325,9 +333,54 @@ public class CfClientTest {
 
   private void assertValidBatchedRecord(RecordEntity batchedRecord, RecordEntity originalRecord) {
     assertNotNull(batchedRecord.getId());
-    assertEquals(originalRecord.getName(), batchedRecord.getName());
+    assertEquals(originalRecord.getSld(), batchedRecord.getSld());
     assertEquals(originalRecord.getType(), batchedRecord.getType());
     assertNotNull(batchedRecord.getCreatedOn());
+  }
+
+  @Test
+  void testFluentApi() throws Exception {
+    ZoneEntity zone = client.zoneGet(ZONE_STR);
+    String fluentSld = "fluent-" + System.currentTimeMillis();
+
+    try {
+      // Test fluent create
+      RecordEntity created = client.zone(ZONE_STR)
+          .record(fluentSld)
+          .create(RecordType.A, "192.168.100.1", TTL);
+
+      assertNotNull(created.getId());
+      assertEquals(fluentSld, created.getSld());
+      assertEquals("192.168.100.1", created.getContent());
+
+      // Test fluent get
+      List<RecordEntity> records = client.zone(ZONE_STR)
+          .record(fluentSld, RecordType.A)
+          .get();
+
+      assertEquals(1, records.size());
+      assertEquals("192.168.100.1", records.get(0).getContent());
+
+      // Test fluent update
+      RecordEntity updated = client.zone(ZONE_STR)
+          .record(fluentSld, RecordType.A)
+          .update("192.168.100.2");
+
+      assertEquals("192.168.100.2", updated.getContent());
+
+      // Test fluent delete
+      client.zone(ZONE_STR)
+          .record(fluentSld)
+          .delete(RecordType.A);
+
+      assertThrows(CloudflareNotFoundException.class,
+          () -> client.zone(ZONE_STR).record(fluentSld, RecordType.A).get());
+
+    } finally {
+      try {
+        client.recordDeleteTypeIfExists(zone, fluentSld, RecordType.A);
+      } catch (Exception e) { /* ignore */ }
+    }
   }
 
 }

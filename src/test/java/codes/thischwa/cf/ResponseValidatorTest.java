@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import codes.thischwa.cf.model.AbstractResponse;
+import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordMultipleResponse;
+import codes.thischwa.cf.model.RecordSingleResponse;
 import codes.thischwa.cf.model.ResponseResultInfo;
 import codes.thischwa.cf.model.ResultInfo;
 import java.util.ArrayList;
@@ -28,6 +30,12 @@ class ResponseValidatorTest {
 
   @Mock
   private RecordMultipleResponse mockMultipleResponse;
+
+  @Mock
+  private RecordSingleResponse mockSingleResponse;
+
+  @Mock
+  private RecordEntity mockRecordEntity;
 
   private ResponseValidator validatorWithException;
   private ResponseValidator validatorWithoutException;
@@ -92,5 +100,34 @@ class ResponseValidatorTest {
     when(mockMultipleResponse.getResultInfo()).thenReturn(new ResultInfo(0));
 
     assertDoesNotThrow(() -> validatorWithoutException.validate(mockMultipleResponse, true));
+  }
+
+  @Test
+  void validateSingleResultWithNullResultAndExceptionEnabled() {
+    when(mockSingleResponse.getResponseResultInfo()).thenReturn(mockResultInfo);
+    when(mockResultInfo.isSuccess()).thenReturn(true);
+    when(mockSingleResponse.getResult()).thenReturn(null);
+
+    assertThrows(CloudflareNotFoundException.class,
+        () -> validatorWithException.validate(mockSingleResponse, false));
+  }
+
+  @Test
+  void validateSingleResultWithNullResultAndExceptionDisabled() {
+    when(mockSingleResponse.getResponseResultInfo()).thenReturn(mockResultInfo);
+    when(mockResultInfo.isSuccess()).thenReturn(true);
+    // mockSingleResponse.getResult() returns null by default (no stubbing needed)
+
+    assertDoesNotThrow(() -> validatorWithoutException.validate(mockSingleResponse, false));
+  }
+
+  @Test
+  void validateSingleResultWithValidResult() {
+    when(mockSingleResponse.getResponseResultInfo()).thenReturn(mockResultInfo);
+    when(mockResultInfo.isSuccess()).thenReturn(true);
+    when(mockSingleResponse.getResult()).thenReturn(mockRecordEntity);
+
+    assertDoesNotThrow(() -> validatorWithException.validate(mockSingleResponse, false));
+    assertDoesNotThrow(() -> validatorWithoutException.validate(mockSingleResponse, false));
   }
 }

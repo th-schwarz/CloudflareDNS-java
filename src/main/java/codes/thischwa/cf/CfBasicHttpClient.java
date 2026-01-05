@@ -102,10 +102,16 @@ abstract class CfBasicHttpClient {
 
   /**
    * Sends a DELETE request to the given endpoint and maps the response.
+   *
+   * @param endpoint     the API endpoint path
+   * @param responseType the expected response type class
+   * @param <T>          the response type extending AbstractResponse
+   * @return the parsed response object
+   * @throws CloudflareApiException if an error occurs during the request
    */
-  <T extends AbstractResponse> T deleteRequest(String endpoint) throws CloudflareApiException {
+  <T extends AbstractResponse> T deleteRequest(String endpoint, Class<T> responseType) throws CloudflareApiException {
     HttpDelete request = new HttpDelete(buildUrl(endpoint));
-    return executeRequest(request, (Class<T>) codes.thischwa.cf.model.RecordSingleResponse.class);
+    return executeRequest(request, responseType);
   }
 
 
@@ -135,13 +141,21 @@ abstract class CfBasicHttpClient {
 
   /**
    * Sends a PATCH request with a payload to the given endpoint and maps the response.
+   *
+   * @param endpoint        the API endpoint path
+   * @param requestPayload  the payload to send
+   * @param responseType    the expected response type class
+   * @param <T>             the response type extending AbstractResponse
+   * @return the parsed response object
+   * @throws CloudflareApiException if an error occurs during the request
    */
   <T extends AbstractResponse> T patchRequest(String endpoint,
-                                              Object requestPayload)
+                                              Object requestPayload,
+                                              Class<T> responseType)
       throws CloudflareApiException {
     HttpPatch request = new HttpPatch(buildUrl(endpoint));
     setRequestPayload(request, requestPayload);
-    return executeRequest(request, (Class<T>) codes.thischwa.cf.model.RecordSingleResponse.class);
+    return executeRequest(request, responseType);
   }
 
   /**

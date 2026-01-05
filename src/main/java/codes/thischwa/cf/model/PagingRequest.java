@@ -21,6 +21,12 @@ import lombok.Data;
  */
 @Data
 public class PagingRequest {
+  /**
+   * Default page size for retrieving all records in a single request.
+   * Set to a very high value to effectively disable pagination when fetching all records.
+   */
+  private static final int DEFAULT_ALL_RECORDS_PAGE_SIZE = 5_000_000;
+
   private int page;
   private int perPage;
 
@@ -42,19 +48,19 @@ public class PagingRequest {
 
   /**
    * Creates a default {@code PagingRequest} instance with a page number set to 1 and a high number
-   * of items per page (5,000,000) to accommodate large dataset requests.
+   * of items per page to accommodate large dataset requests and effectively retrieve all records.
    *
    * @return a default {@code PagingRequest} instance with predefined pagination parameters
    */
   public static PagingRequest defaultPaging() {
-    return new PagingRequest(1, 5000000);
+    return new PagingRequest(1, DEFAULT_ALL_RECORDS_PAGE_SIZE);
   }
 
   /**
    * Retrieves the pagination parameters in a key-value map format.
    *
    * @return a map containing the pagination parameters, where the key "page" indicates the current
-   * page number and the key "perPage" indicates the number of items per page.
+   *     page number and the key "perPage" indicates the number of items per page.
    */
   public Map<String, String> getPagingParams() {
     return Map.of("page", String.valueOf(page), "perPage", String.valueOf(perPage));
