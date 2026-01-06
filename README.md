@@ -55,12 +55,12 @@ The dependency is:
   - **Breaking Change**: `emptyResultThrowsException` default changed from `true` to `false`. Now applies to both
     single and multiple result requests. Empty results will be returned by default without throwing exceptions.
     - API method names refactored for consistency: `zoneListAll` → `zoneList`, `zoneInfo` → `zoneGet`, `sldListAll` →
-      `recordList`, `sldInfo` → `recordGet`
+      `recordList`
     - RecordEntity getter methods renamed for clarity: `getName()` → `getSld()`
   - Code quality improvements: eliminated duplication in batch operations, improved type safety in HTTP methods,
     optimized string concatenation, removed mutable setters from CfDnsClient
     - Enhanced type validation in `RecordEntity.build()` with better error messages
-    - CfClient#sldInfo must return multiple RecordEntries
+    - CfClient#recordList must return multiple RecordEntries
     - add a missing source jar
     - ResponseResultInfo#Errors: wrong object structure
     - changing multiple records with put, post, patch and delete for dns-records
@@ -124,6 +124,9 @@ System.out.println("Zone ID: " + zone.getId());
 
 ### `recordList`
 
+Retrieve records for a given zone. There are two variants:
+
+#### List by SLD
 Retrieve all records for a specific second-level domain (SLD) under a given zone.
 
 - **Parameters**:
@@ -139,31 +142,27 @@ records.forEach(record ->
 );
 ```
 
----
-
-### `recordGet`
-
-Retrieve DNS record details for a specific SLD and zone, optionally filtered by record types.
+#### List by Zone (optional filtering)
+Retrieve DNS record details for a zone or a specific SLD, optionally filtered by record types.
 
 - **Parameters**:
     - `ZoneEntity zone` - The zone object.
-    - `String sld` - The second-level domain.
-  - `RecordType... types` - Optional record types to filter by (e.g., A, CNAME). If not specified, returns all record types.
+    - `String sld` - (Optional) The second-level domain.
+    - `RecordType... types` - Optional record types to filter by (e.g., A, CNAME). If not specified, returns all record types.
 - **Returns**: A list of `RecordEntity` objects matching the criteria.
 
 ```java
 // Get all records for a specific SLD
-List<RecordEntity> allRecords = cfDnsClient.recordGet(zone, "www");
-allRecords.forEach(record ->
-    System.out.println("Type: "+record.getType()+", Content: "+record.getContent()));
+List<RecordEntity> allSldRecords = cfDnsClient.recordList(zone, "www");
 
-// Get only A records
-List<RecordEntity> aRecords = cfDnsClient.recordGet(zone, "www", RecordType.A);
-System.out.println("Found "+aRecords.size() +" A records");
+// Get only A records for a specific SLD
+List<RecordEntity> aSldRecords = cfDnsClient.recordList(zone, "www", RecordType.A);
 
-// Get A and AAAA records
-List<RecordEntity> ipRecords = cfDnsClient.recordGet(zone, "www", RecordType.A, RecordType.AAAA);
-ipRecords.forEach(record -> System.out.println("IP Record: "+record.getContent()));
+// Get all records of a zone
+List<RecordEntity> allZoneRecords = cfDnsClient.recordList(zone);
+
+// Get only A and AAAA records of a zone
+List<RecordEntity> ipZoneRecords = cfDnsClient.recordList(zone, RecordType.A, RecordType.AAAA);
 ```
 ---
 
@@ -263,8 +262,8 @@ Partially update existing records. **Record IDs are required** - fetch them firs
 ```java
 // Step 1: Fetch existing records to get their IDs
 List<RecordEntity> recordsToUpdate = new ArrayList<>();
-recordsToUpdate.add(cfDnsClient.recordGet(zone, "api",RecordType.A).get(0));
-recordsToUpdate.add(cfDnsClient.recordGet(zone, "cdn",RecordType.A).get(0));
+recordsToUpdate.add(cfDnsClient.recordList(zone, "api",RecordType.A).get(0));
+recordsToUpdate.add(cfDnsClient.recordList(zone, "cdn",RecordType.A).get(0));
 
 // Step 2: Modify only the fields you want to update
 recordsToUpdate.forEach(record ->record.setContent("192.168.2.10"));
@@ -281,8 +280,8 @@ Fully replace existing records. **Record IDs are required** - fetch them first:
 ```java
 // Step 1: Fetch existing records to get their IDs
 List<RecordEntity> recordsToReplace = new ArrayList<>();
-recordsToReplace.add(cfDnsClient.recordGet(zone, "mail",RecordType.A).get(0));
-recordsToReplace.add(cfDnsClient.recordGet(zone, "cdn",RecordType.A).get(0));
+recordsToReplace.add(cfDnsClient.recordList(zone, "mail",RecordType.A).get(0));
+recordsToReplace.add(cfDnsClient.recordList(zone, "cdn",RecordType.A).get(0));
 
 // Step 2: Modify all fields as needed (full replacement)
 recordsToReplace.get(0).setContent("192.168.3.10");
@@ -302,8 +301,8 @@ Delete existing records. **Record IDs are required** - fetch them first:
 ```java
 // Step 1: Fetch existing records to get their IDs
 List<RecordEntity> recordsToDelete = new ArrayList<>();
-recordsToDelete.add(cfDnsClient.recordGet(zone, "cdn",RecordType.A).get(0));
-recordsToDelete.add(cfDnsClient.recordGet(zone, "mail",RecordType.A).get(0));
+recordsToDelete.add(cfDnsClient.recordList(zone, "cdn",RecordType.A).get(0));
+recordsToDelete.add(cfDnsClient.recordList(zone, "mail",RecordType.A).get(0));
 
 // Step 2: Send batch delete request
 BatchEntry result = cfDnsClient.recordBatch(zone, null, null, null, recordsToDelete);
@@ -322,12 +321,12 @@ List<RecordEntity> newRecords = Arrays.asList(
 
 // Fetch existing records for update/delete (IDs required)
 List<RecordEntity> recordsToUpdate = Arrays.asList(
-    cfDnsClient.recordGet(zone, "existing-api", RecordType.A).get(0)
+    cfDnsClient.recordList(zone, "existing-api", RecordType.A).get(0)
 );
 recordsToUpdate.get(0).setContent("192.168.1.200");
 
 List<RecordEntity> recordsToDelete = Arrays.asList(
-    cfDnsClient.recordGet(zone, "old-api", RecordType.A).get(0)
+    cfDnsClient.recordList(zone, "old-api", RecordType.A).get(0)
 );
 
 // Execute all operations in a single batch request
@@ -360,10 +359,14 @@ client.zone("example.com")
     .record("api")
     .create(RecordType.A, "192.168.1.1",60);
 
-// Get DNS records
+// Get DNS records of a subdomain
 List<RecordEntity> records = client.zone("example.com")
     .record("www", RecordType.A)
     .get();
+
+// Get all DNS records of a zone
+List<RecordEntity> zoneRecords = client.zone("example.com")
+    .list(RecordType.A, RecordType.AAAA);
 
 // Update a DNS record
 RecordEntity updated = client.zone("example.com")
@@ -428,7 +431,7 @@ CfDnsClient client = new CfDnsClient(true, "email@example.com", "yourApiKey");
 
 ```java
 try {
-  List<RecordEntity> records = cfDnsClient.recordGet(zone, "www", RecordType.A);
+  List<RecordEntity> records = cfDnsClient.recordList(zone, "www", RecordType.A);
   System.out.println("Record IP: "+records.get(0).getContent());
 } catch (CloudflareApiException e) {
   if (e instanceof CloudflareNotFoundException) {

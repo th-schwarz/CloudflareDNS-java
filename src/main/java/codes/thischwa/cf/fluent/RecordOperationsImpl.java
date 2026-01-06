@@ -35,10 +35,7 @@ public class RecordOperationsImpl implements RecordOperations {
 
   @Override
   public List<RecordEntity> get() throws CloudflareApiException {
-    if (types == null || types.length == 0) {
-      return client.recordGet(zone, sld);
-    }
-    return client.recordGet(zone, sld, types);
+    return client.recordList(zone, sld, types);
   }
 
   @Override
