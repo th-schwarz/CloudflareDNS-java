@@ -133,15 +133,9 @@ Retrieve all records for a specific second-level domain (SLD) under a given zone
 
 ```java
 List<RecordEntity> records = cfDnsClient.recordList(zone, "sld");
-records.
-
-forEach(record ->
-    System.out.
-
-println("Record Type: "+record.getType() 
-        +", Value: "+record.
-
-getContent())
+records.forEach(record ->
+    System.out.println("Record Type: "+record.getType() 
+        +", Value: "+record.getContent())
 );
 ```
 
@@ -154,35 +148,22 @@ Retrieve DNS record details for a specific SLD and zone, optionally filtered by 
 - **Parameters**:
     - `ZoneEntity zone` - The zone object.
     - `String sld` - The second-level domain.
-  - `RecordType... types` - Optional record types to filter by (e.g., A, CNAME). If not specified, returns all record
-    types.
+  - `RecordType... types` - Optional record types to filter by (e.g., A, CNAME). If not specified, returns all record types.
 - **Returns**: A list of `RecordEntity` objects matching the criteria.
 
 ```java
 // Get all records for a specific SLD
 List<RecordEntity> allRecords = cfDnsClient.recordGet(zone, "www");
-allRecords.
-
-forEach(record ->
-    System.out.
-
-println("Type: "+record.getType()+", Content: "+record.
-
-getContent()));
+allRecords.forEach(record ->
+    System.out.println("Type: "+record.getType()+", Content: "+record.getContent()));
 
 // Get only A records
 List<RecordEntity> aRecords = cfDnsClient.recordGet(zone, "www", RecordType.A);
-System.out.
-
-println("Found "+aRecords.size() +" A records");
+System.out.println("Found "+aRecords.size() +" A records");
 
 // Get A and AAAA records
 List<RecordEntity> ipRecords = cfDnsClient.recordGet(zone, "www", RecordType.A, RecordType.AAAA);
-ipRecords.
-
-forEach(record ->System.out.
-
-println("IP Record: "+record.getContent()));
+ipRecords.forEach(record -> System.out.println("IP Record: "+record.getContent()));
 ```
 ---
 
@@ -259,8 +240,7 @@ Process multiple DNS record operations (POST, PUT, PATCH, DELETE) in a single ba
   - `List<RecordEntity> deleteRecords` - Records to delete (nullable). **Requires record IDs**.
 - **Returns**: A `BatchEntry` object containing the processed records.
 
-**Important**: For UPDATE (PATCH), REPLACE (PUT), and DELETE operations, you must first retrieve the existing records to
-obtain their IDs.
+**Important**: For UPDATE (PATCH), REPLACE (PUT), and DELETE operations, you must first retrieve the existing records to obtain their IDs.
 
 #### Batch Create (POST)
 
@@ -273,11 +253,7 @@ List<RecordEntity> newRecords = Arrays.asList(
 );
 
 BatchEntry result = cfDnsClient.recordBatch(zone, newRecords, null, null, null);
-System.out.
-
-println("Created "+result.getPosts().
-
-size() +" records.");
+System.out.println("Created "+result.getPosts().size() +" records.");
 ```
 
 #### Batch Update (PATCH)
@@ -287,31 +263,15 @@ Partially update existing records. **Record IDs are required** - fetch them firs
 ```java
 // Step 1: Fetch existing records to get their IDs
 List<RecordEntity> recordsToUpdate = new ArrayList<>();
-recordsToUpdate.
-
-add(cfDnsClient.recordGet(zone, "api",RecordType.A).
-
-get(0));
-    recordsToUpdate.
-
-add(cfDnsClient.recordGet(zone, "cdn",RecordType.A).
-
-get(0));
+recordsToUpdate.add(cfDnsClient.recordGet(zone, "api",RecordType.A).get(0));
+recordsToUpdate.add(cfDnsClient.recordGet(zone, "cdn",RecordType.A).get(0));
 
 // Step 2: Modify only the fields you want to update
-    recordsToUpdate.
-
-forEach(record ->record.
-
-setContent("192.168.2.10"));
+recordsToUpdate.forEach(record ->record.setContent("192.168.2.10"));
 
 // Step 3: Send batch update request
 BatchEntry result = cfDnsClient.recordBatch(zone, null, null, recordsToUpdate, null);
-System.out.
-
-println("Updated "+result.getPatches().
-
-size() +" records.");
+System.out.println("Updated "+result.getPatches().size() +" records.");
 ```
 
 #### Batch Replace (PUT)
@@ -321,46 +281,18 @@ Fully replace existing records. **Record IDs are required** - fetch them first:
 ```java
 // Step 1: Fetch existing records to get their IDs
 List<RecordEntity> recordsToReplace = new ArrayList<>();
-recordsToReplace.
-
-add(cfDnsClient.recordGet(zone, "mail",RecordType.A).
-
-get(0));
-    recordsToReplace.
-
-add(cfDnsClient.recordGet(zone, "cdn",RecordType.A).
-
-get(0));
+recordsToReplace.add(cfDnsClient.recordGet(zone, "mail",RecordType.A).get(0));
+recordsToReplace.add(cfDnsClient.recordGet(zone, "cdn",RecordType.A).get(0));
 
 // Step 2: Modify all fields as needed (full replacement)
-    recordsToReplace.
-
-get(0).
-
-setContent("192.168.3.10");
-recordsToReplace.
-
-get(0).
-
-setTtl(120);
-recordsToReplace.
-
-get(1).
-
-setContent("192.168.3.11");
-recordsToReplace.
-
-get(1).
-
-setTtl(120);
+recordsToReplace.get(0).setContent("192.168.3.10");
+recordsToReplace.get(0).setTtl(120);
+recordsToReplace.get(1).setContent("192.168.3.11");
+recordsToReplace.get(1).setTtl(120);
 
 // Step 3: Send batch replace request
 BatchEntry result = cfDnsClient.recordBatch(zone, null, recordsToReplace, null, null);
-System.out.
-
-println("Replaced "+result.getPuts().
-
-size() +" records.");
+System.out.println("Replaced "+result.getPuts().size() +" records.");
 ```
 
 #### Batch Delete
@@ -370,22 +302,12 @@ Delete existing records. **Record IDs are required** - fetch them first:
 ```java
 // Step 1: Fetch existing records to get their IDs
 List<RecordEntity> recordsToDelete = new ArrayList<>();
-recordsToDelete.
-
-add(cfDnsClient.recordGet(zone, "cdn",RecordType.A).
-
-get(0));
-    recordsToDelete.
-
-add(cfDnsClient.recordGet(zone, "mail",RecordType.A).
-
-get(0));
+recordsToDelete.add(cfDnsClient.recordGet(zone, "cdn",RecordType.A).get(0));
+recordsToDelete.add(cfDnsClient.recordGet(zone, "mail",RecordType.A).get(0));
 
 // Step 2: Send batch delete request
 BatchEntry result = cfDnsClient.recordBatch(zone, null, null, null, recordsToDelete);
-System.out.
-
-println("Deleted "+recordsToDelete.size() +" records.");
+System.out.println("Deleted "+recordsToDelete.size() +" records.");
 ```
 
 #### Combined Batch Operations
@@ -402,11 +324,7 @@ List<RecordEntity> newRecords = Arrays.asList(
 List<RecordEntity> recordsToUpdate = Arrays.asList(
     cfDnsClient.recordGet(zone, "existing-api", RecordType.A).get(0)
 );
-recordsToUpdate.
-
-get(0).
-
-setContent("192.168.1.200");
+recordsToUpdate.get(0).setContent("192.168.1.200");
 
 List<RecordEntity> recordsToDelete = Arrays.asList(
     cfDnsClient.recordGet(zone, "old-api", RecordType.A).get(0)
@@ -421,24 +339,10 @@ BatchEntry result = cfDnsClient.recordBatch(
     recordsToDelete    // DELETE - remove records
 );
 
-System.out.
-
-println("Batch completed:");
-System.out.
-
-println("  Created: "+result.getPosts().
-
-size());
-    System.out.
-
-println("  Updated: "+result.getPatches().
-
-size());
-    System.out.
-
-println("  Deleted: "+result.getDeletes().
-
-size());
+System.out.println("Batch completed:");
+System.out.println("  Created: "+result.getPosts().size());
+System.out.println("  Updated: "+result.getPatches().size());
+System.out.println("  Deleted: "+result.getDeletes().size());
 ```
 
 ---
@@ -453,12 +357,8 @@ that reduces verbosity and improves code readability.
 ```java
 // Create a DNS record
 client.zone("example.com")
-    .
-
-record("api")
-    .
-
-create(RecordType.A, "192.168.1.1",60);
+    .record("api")
+    .create(RecordType.A, "192.168.1.1",60);
 
 // Get DNS records
 List<RecordEntity> records = client.zone("example.com")
@@ -471,15 +371,9 @@ RecordEntity updated = client.zone("example.com")
     .update("192.168.1.2");
 
 // Delete DNS records
-client.
-
-zone("example.com") 
-    .
-
-record("old-service")
-    .
-
-delete(RecordType.A, RecordType.AAAA);
+client.zone("example.com") 
+    .record("old-service")
+    .delete(RecordType.A, RecordType.AAAA);
 ```
 
 ### Advantages of Fluent API
@@ -495,47 +389,25 @@ delete(RecordType.A, RecordType.AAAA);
 CfDnsClient client = new CfDnsClient("email@example.com", "yourApiKey");
 
 // Create a new record
-client.
-
-zone("example.com")
-    .
-
-record("api")
-    .
-
-create(RecordType.A, "192.168.100.1",60);
+client.zone("example.com")
+    .record("api")
+    .create(RecordType.A, "192.168.100.1",60);
 
 // Retrieve and verify
 List<RecordEntity> records = client.zone("example.com")
     .record("api", RecordType.A)
     .get();
-System.out.
-
-println("IP: "+records.get(0).
-
-getContent());
+System.out.println("IP: "+records.get(0).getContent());
 
 // Update the record
-    client.
-
-zone("example.com")
-     .
-
-record("api",RecordType.A)
-     .
-
-update("192.168.100.2");
+client.zone("example.com")
+     .record("api",RecordType.A)
+     .update("192.168.100.2");
 
 // Clean up
-client.
-
-zone("example.com")
-    .
-
-record("api")
-    .
-
-delete(RecordType.A);
+client.zone("example.com")
+    .record("api")
+    .delete(RecordType.A);
 ```
 
 ---
@@ -544,9 +416,7 @@ delete(RecordType.A);
 
 The `CfDnsClient` provides internal error-handling mechanisms through exceptions. For example:
 - `CloudflareApiException` is thrown for errors during API communication or invalid responses.
-- `CloudflareNotFoundException` is thrown when the requested resource (single or multiple) is not found, if enabled via
-  the `emptyResultThrowsException` flag during initialization. **Default is `false`**, meaning empty results will be
-  returned without throwing an exception.
+- `CloudflareNotFoundException` is thrown when the requested resource (single or multiple) is not found, if enabled via the `emptyResultThrowsException` flag during initialization. **Default is `false`**, meaning empty results will be returned without throwing an exception.
 
 To enable exception throwing for empty results:
 
