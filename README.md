@@ -180,8 +180,7 @@ println("Found "+aRecords.size() +" A records");
 List<RecordEntity> ipRecords = cfDnsClient.recordGet(zone, "www", RecordType.A, RecordType.AAAA);
 ipRecords.
 
-forEach(record ->
-    System.out.
+forEach(record ->System.out.
 
 println("IP Record: "+record.getContent()));
 ```
