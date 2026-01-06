@@ -428,12 +428,8 @@ CfDnsClient client = new CfDnsClient(true, "email@example.com", "yourApiKey");
 
 ```java
 try {
-List<RecordEntity> records = cfDnsClient.recordGet(zone, "www", RecordType.A);
-  System.out.
-
-println("Record IP: "+records.get(0).
-
-getContent());
+  List<RecordEntity> records = cfDnsClient.recordGet(zone, "www", RecordType.A);
+  System.out.println("Record IP: "+records.get(0).getContent());
 } catch (CloudflareApiException e) {
   if (e instanceof CloudflareNotFoundException) {
     log.warn("Sld not found: www");
@@ -448,5 +444,4 @@ getContent());
 
 # Summary
 
-`CfDnsClient` offers a simple interface for managing DNS entries via Cloudflare's public API, allowing seamless CRUD
-operations and automation-friendly workflows. 
+`CfDnsClient` offers a simple interface for managing DNS entries via Cloudflare's public API, allowing seamless CRUD operations and automation-friendly workflows. 
