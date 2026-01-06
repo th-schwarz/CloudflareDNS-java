@@ -449,10 +449,10 @@ that reduces verbosity and improves code readability.
 ```java
 // Create a DNS record
 client.zone("example.com")
-      .
+    .
 
 record("api")
-      .
+    .
 
 create(RecordType.A, "192.168.1.1",60);
 
@@ -469,11 +469,9 @@ RecordEntity updated = client.zone("example.com")
 // Delete DNS records
 client.
 
-zone("example.com")
-      .
+zone("example.com").
 
-record("old-service")
-      .
+record("old-service").
 
 delete(RecordType.A, RecordType.AAAA);
 ```
@@ -493,11 +491,9 @@ CfDnsClient client = new CfDnsClient("email@example.com", "yourApiKey");
 // Create a new record
 client.
 
-zone("example.com")
-      .
+zone("example.com").
 
-record("api")
-      .
+record("api").
 
 create(RecordType.A, "192.168.100.1",60);
 
@@ -514,22 +510,18 @@ getContent());
 // Update the record
     client.
 
-zone("example.com")
-      .
+zone("example.com").
 
-record("api",RecordType.A)
-      .
+record("api",RecordType.A).
 
 update("192.168.100.2");
 
 // Clean up
 client.
 
-zone("example.com")
-      .
+zone("example.com").
 
-record("api")
-      .
+record("api").
 
 delete(RecordType.A);
 ```
