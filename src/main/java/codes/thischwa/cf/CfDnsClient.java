@@ -233,20 +233,38 @@ public class CfDnsClient extends CfBasicHttpClient {
   public List<RecordEntity> recordGet(ZoneEntity zone, String sld, @Nullable RecordType... types)
       throws CloudflareApiException {
     String fqdn = buildFqdn(zone, sld);
-    String endpoint = buildEndpointWithTypeFilters(zone.getId(), fqdn, types);
+    String endpoint = buildEndpointWithTypeFilters(CfRequest.RECORD_INFO_NAME.buildPath(zone.getId(), fqdn), types);
     RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
     checkResponse(resp, false);
     return resp.getResult();
   }
 
-  private String buildEndpointWithTypeFilters(String zoneId, String fqdn, @Nullable RecordType... types) {
-    String baseEndpoint = CfRequest.RECORD_INFO_NAME.buildPath(zoneId, fqdn);
+  /**
+   * Retrieves a list of all DNS records for a given zone.
+   * Optionally filters by one or more DNS record types.
+   *
+   * @param zone  The zone entity containing information about the domain zone.
+   * @param types Optional parameter specifying one or more DNS record types to filter the results.
+   * @return A list of {@code RecordEntity} objects representing the DNS records for the specified zone.
+   * @throws CloudflareApiException if an error occurs while interacting with the Cloudflare API
+   */
+  public List<RecordEntity> recordList(ZoneEntity zone, RecordType... types)
+      throws CloudflareApiException {
+    String endpoint = buildEndpointWithTypeFilters(CfRequest.RECORD_LIST.buildPath(zone.getId()), types);
+    RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
+    checkResponse(resp, false);
+    return resp.getResult();
+  }
+
+  private String buildEndpointWithTypeFilters(String baseEndpoint, @Nullable RecordType... types) {
     if (types == null || types.length == 0) {
       return baseEndpoint;
     }
     StringBuilder endpoint = new StringBuilder(baseEndpoint);
+    String separator = baseEndpoint.contains("?") ? "&" : "?";
     for (RecordType type : types) {
-      endpoint.append("&type=").append(type);
+      endpoint.append(separator).append("type=").append(type);
+      separator = "&";
     }
     return endpoint.toString();
   }

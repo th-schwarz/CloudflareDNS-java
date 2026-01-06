@@ -2,8 +2,10 @@ package codes.thischwa.cf.fluent;
 
 import codes.thischwa.cf.CfDnsClient;
 import codes.thischwa.cf.CloudflareApiException;
+import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ZoneEntity;
+import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -33,5 +35,10 @@ public class ZoneOperationsImpl implements ZoneOperations {
   @Override
   public RecordOperations record(String sld, @Nullable RecordType... types) throws CloudflareApiException {
     return new RecordOperationsImpl(client, zone, sld, types);
+  }
+
+  @Override
+  public List<RecordEntity> list(@Nullable RecordType... types) throws CloudflareApiException {
+    return client.recordList(zone, types);
   }
 }

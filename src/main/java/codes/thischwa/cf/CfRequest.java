@@ -21,6 +21,12 @@ public enum CfRequest {
   ZONE_INFO("/zones?name=%s"),
 
   /**
+   * Represents the API endpoint path for retrieving information about DNS records within a
+   * specific DNS zone. The endpoint path includes a placeholder for the zone identifier, which
+   * needs to be provided to construct the complete path.
+   */
+  RECORD_LIST("/zones/%s/dns_records"),
+  /**
    * Represents the API endpoint path for creating a new DNS record within a specific DNS zone. The
    * endpoint path includes a placeholder for the zone identifier, which needs to be provided to
    * construct the complete path.

@@ -153,6 +153,23 @@ public class CfClientTest {
         }
       }
 
+      // test recordList without SLD
+      List<RecordEntity> fullList = client.recordList(z);
+      assertTrue(fullList.size() >= 2);
+      assertTrue(fullList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
+      assertTrue(fullList.stream().anyMatch(re -> re.getId().equals(createdRe2.getId())));
+
+      // test recordList with types without SLD
+      List<RecordEntity> aList = client.recordList(z, RecordType.A);
+      assertTrue(aList.size() >= 1);
+      assertTrue(aList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
+      assertTrue(aList.stream().noneMatch(re -> re.getId().equals(createdRe2.getId())));
+
+      // test fluent api list
+      List<RecordEntity> fluentList = client.zone(ZONE_STR).list(RecordType.A);
+      assertTrue(fluentList.size() >= 1);
+      assertTrue(fluentList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
+
       // update AAAA record
       createdRe2.setContent("2a0a:4cc0:c0:2e4::2");
       client.recordUpdate(z, createdRe2);
