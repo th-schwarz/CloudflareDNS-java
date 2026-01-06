@@ -136,7 +136,12 @@ List<RecordEntity> records = cfDnsClient.recordList(zone, "sld");
 records.
 
 forEach(record ->
-    System.out.println("Record Type: " + record.getType() + ", Value: " + record.getContent())
+    System.out.
+
+println("Record Type: "+record.getType() 
+        +", Value: "+record.
+
+getContent())
 );
 ```
 
@@ -469,9 +474,11 @@ RecordEntity updated = client.zone("example.com")
 // Delete DNS records
 client.
 
-zone("example.com").
+zone("example.com") 
+    .
 
-record("old-service").
+record("old-service")
+    .
 
 delete(RecordType.A, RecordType.AAAA);
 ```
@@ -491,9 +498,11 @@ CfDnsClient client = new CfDnsClient("email@example.com", "yourApiKey");
 // Create a new record
 client.
 
-zone("example.com").
+zone("example.com")
+    .
 
-record("api").
+record("api")
+    .
 
 create(RecordType.A, "192.168.100.1",60);
 
@@ -510,25 +519,29 @@ getContent());
 // Update the record
     client.
 
-zone("example.com").
+zone("example.com")
+     .
 
-record("api",RecordType.A).
+record("api",RecordType.A)
+     .
 
 update("192.168.100.2");
 
 // Clean up
 client.
 
-zone("example.com").
+zone("example.com")
+    .
 
-record("api").
+record("api")
+    .
 
 delete(RecordType.A);
 ```
 
 ---
 
-### Notes on Error Handling
+# Notes on Error Handling
 
 The `CfDnsClient` provides internal error-handling mechanisms through exceptions. For example:
 - `CloudflareApiException` is thrown for errors during API communication or invalid responses.
@@ -542,7 +555,7 @@ To enable exception throwing for empty results:
 CfDnsClient client = new CfDnsClient(true, "email@example.com", "yourApiKey");
 ```
 
-#### Example:
+## Example:
 
 ```java
 try {
@@ -564,7 +577,7 @@ getContent());
 
 ---
 
-### Summary
+# Summary
 
 `CfDnsClient` offers a simple interface for managing DNS entries via Cloudflare's public API, allowing seamless CRUD
 operations and automation-friendly workflows. 
