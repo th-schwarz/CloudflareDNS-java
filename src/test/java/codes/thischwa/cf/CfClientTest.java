@@ -11,7 +11,9 @@ import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ZoneEntity;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
@@ -118,8 +120,10 @@ public class CfClientTest {
       createdRe1 =
           client.recordCreate(z, RecordEntity.build(domain, RecordType.A, TTL, "130.0.0.3"));
       assertNotNull(createdRe1.getId());
+      assertEquals(randomSld+ "." + ZONE_STR, createdRe1.getName());
       assertEquals(randomSld, createdRe1.getSld());
       assertEquals(RecordType.A.getType(), createdRe1.getType());
+      assertEquals(z.getId(), createdRe1.getZoneId());
       assertEquals(TTL, createdRe1.getTtl());
       assertEquals("130.0.0.3", createdRe1.getContent());
       assertNotNull(createdRe1.getCreatedOn());
@@ -137,6 +141,7 @@ public class CfClientTest {
       List<RecordEntity> aaaaRecords = client.recordList(z, randomSld, RecordType.AAAA);
       assertEquals(1, aaaaRecords.size());
       r = aaaaRecords.get(0);
+      assertEquals(z.getId(), r.getZoneId());
       assertEquals("2a0a:4cc0:c0:2e4::1", r.getContent());
       assertEquals(RecordType.AAAA.getType(), r.getType());
 
@@ -144,6 +149,7 @@ public class CfClientTest {
       List<RecordEntity> rList = client.recordList(z, randomSld);
       assertEquals(2, rList.size());
       for (RecordEntity re : rList) {
+        assertEquals(z.getId(), re.getZoneId());
         if (Objects.equals(re.getType(), RecordType.A.getType())) {
           assertEquals("130.0.0.3", re.getContent());
         } else if (Objects.equals(re.getType(), RecordType.AAAA.getType())) {
@@ -196,10 +202,7 @@ public class CfClientTest {
     } finally {
       // cleanup in case of failures during test
       try {
-        client.recordDeleteTypeIfExists(z, randomSld, RecordType.AAAA);
-      } catch (Exception e) { /* ignore */ }
-      try {
-        client.recordDeleteTypeIfExists(z, randomSld, RecordType.A);
+        client.recordDeleteTypeIfExists(z, randomSld, RecordType.A, RecordType.AAAA);
       } catch (Exception e) { /* ignore */ }
     }
   }
@@ -399,5 +402,40 @@ public class CfClientTest {
       } catch (Exception e) { /* ignore */ }
     }
   }
+
+  @Test
+  void testGroupRecordsByFqdn_withValidRecords() {
+    // Arrange
+    RecordEntity rec1 = RecordEntity.build("1", "example.com.", "A", 300, "192.168.1.1");
+    RecordEntity rec2 = RecordEntity.build("2", "example.com.", "AAAA", 300, "::1");
+    RecordEntity rec3 = RecordEntity.build("3", "sub.example.com.", "CNAME", 300, "example.com.");
+    List<RecordEntity> records = Arrays.asList(rec1, rec2, rec3);
+
+    // Act
+    Map<String, List<RecordEntity>> groupedRecords = CfDnsClient.groupRecordsByFqdn(records);
+
+    // Assert
+    assertNotNull(groupedRecords, "Resulting map should not be null.");
+    assertEquals(2, groupedRecords.size(), "The grouping should result in 2 FQDN keys.");
+    assertEquals(2, groupedRecords.get("example.com.").size(), "The key 'example.com.' should have 2 records.");
+    assertEquals(1, groupedRecords.get("sub.example.com.").size(), "The key 'sub.example.com.' should have 1 record.");
+  }
+
+  @Test
+  void testGroupRecordsByFqdn_withMultipleRecordsSameFqdn() {
+    // Arrange
+    RecordEntity rec1 = RecordEntity.build("1", "example.com.", "A", 300, "192.168.1.1");
+    RecordEntity rec2 = RecordEntity.build("2", "example.com.", "AAAA", 300, "::1");
+    List<RecordEntity> records = Arrays.asList(rec1, rec2);
+
+    // Act
+    Map<String, List<RecordEntity>> groupedRecords = CfDnsClient.groupRecordsByFqdn(records);
+
+    // Assert
+    assertNotNull(groupedRecords, "Resulting map should not be null.");
+    assertEquals(1, groupedRecords.size(), "The grouping should result in 1 FQDN key.");
+    assertEquals(2, groupedRecords.get("example.com.").size(), "The key 'example.com.' should have 2 records.");
+  }
+
 
 }

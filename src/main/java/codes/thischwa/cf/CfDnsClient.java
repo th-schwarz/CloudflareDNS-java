@@ -13,7 +13,10 @@ import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ZoneEntity;
 import codes.thischwa.cf.model.ZoneMultipleResponse;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
@@ -111,6 +114,21 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
+   * Groups a list of DNS records by their fully qualified domain name (FQDN).
+   *
+   * @param records A list of {@link RecordEntity} objects to be grouped by FQDN.
+   * @return A map where the key is the FQDN (name field) and the value is a list of {@link RecordEntity}
+   *         objects that share that FQDN.
+   */
+  public static Map<String, List<RecordEntity>> groupRecordsByFqdn(List<RecordEntity> records) {
+    if (records == null) {
+      return new HashMap<>();
+    }
+    return records.stream()
+        .collect(Collectors.groupingBy(RecordEntity::getName));
+  }
+
+  /**
    * Provides fluent API access to operations on a specific zone.
    * This method returns a ZoneOperations interface that allows chaining operations
    * on DNS records within the specified zone.
@@ -202,7 +220,9 @@ public class CfDnsClient extends CfBasicHttpClient {
     String endpoint = buildEndpointWithTypeFilters(CfRequest.RECORD_INFO_NAME.buildPath(zone.getId(), fqdn), types);
     RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
     checkResponse(resp, false);
-    return resp.getResult();
+    List<RecordEntity> recs = resp.getResult();
+    recs.forEach(rec -> rec.setZoneId(zone.getId()));
+    return recs;
   }
 
   /**
@@ -307,7 +327,9 @@ public class CfDnsClient extends CfBasicHttpClient {
     RecordSingleResponse resp = postRequest(endpoint, rec, RecordSingleResponse.class);
     checkResponse(resp);
     log.info("Record {} of type {} successful created.", rec.getSld(), rec.getType());
-    return resp.getResult();
+    RecordEntity record = resp.getResult();
+    record.setZoneId(zone.getId());
+    return record;
   }
 
   /**
