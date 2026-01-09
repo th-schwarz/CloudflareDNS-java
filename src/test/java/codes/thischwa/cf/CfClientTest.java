@@ -1,6 +1,7 @@
 package codes.thischwa.cf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -167,13 +168,13 @@ public class CfClientTest {
 
       // test recordList with types without SLD
       List<RecordEntity> aList = client.recordList(z, RecordType.A);
-      assertTrue(aList.size() >= 1);
+      assertFalse(aList.isEmpty());
       assertTrue(aList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
       assertTrue(aList.stream().noneMatch(re -> re.getId().equals(createdRe2.getId())));
 
       // test fluent api list
       List<RecordEntity> fluentList = client.zone(ZONE_STR).list(RecordType.A);
-      assertTrue(fluentList.size() >= 1);
+      assertFalse(fluentList.isEmpty());
       assertTrue(fluentList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
 
       // update AAAA record
