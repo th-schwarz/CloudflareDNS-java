@@ -118,7 +118,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    *
    * @param records A list of {@link RecordEntity} objects to be grouped by FQDN.
    * @return A map where the key is the FQDN (name field) and the value is a list of {@link RecordEntity}
-   *         objects that share that FQDN.
+   *     objects that share that FQDN.
    */
   public static Map<String, List<RecordEntity>> groupRecordsByFqdn(List<RecordEntity> records) {
     if (records == null) {

@@ -142,10 +142,10 @@ abstract class CfBasicHttpClient {
   /**
    * Sends a PATCH request with a payload to the given endpoint and maps the response.
    *
-   * @param endpoint        the API endpoint path
-   * @param requestPayload  the payload to send
-   * @param responseType    the expected response type class
-   * @param <T>             the response type extending AbstractResponse
+   * @param endpoint       the API endpoint path
+   * @param requestPayload the payload to send
+   * @param responseType   the expected response type class
+   * @param <T>            the response type extending AbstractResponse
    * @return the parsed response object
    * @throws CloudflareApiException if an error occurs during the request
    */

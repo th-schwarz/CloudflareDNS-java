@@ -28,6 +28,7 @@ public interface ZoneOperations {
    * @throws CloudflareApiException if the zone cannot be found or accessed
    */
   RecordOperations record(String sld, @Nullable RecordType... types) throws CloudflareApiException;
+
   /**
    * Lists all DNS records within the zone, optionally filtered by types.
    *
