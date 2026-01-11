@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import codes.thischwa.cf.model.BatchEntry;
@@ -47,30 +48,49 @@ public class CfClientTest {
   @Test
   void testAddHost() throws Exception {
     ZoneEntity zone = client.zoneGet(ZONE_STR);
-    client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A, RecordType.AAAA);
-    RecordEntity record = RecordEntity.build(SLD_STR, RecordType.A, TTL, "127.0.0.1");
-    RecordEntity createdRecord = client.recordCreate(zone, record);
-    assertNotNull(createdRecord.getId());
-    assertEquals(SLD_STR, createdRecord.getSld());
-    assertEquals(RecordType.A.getType(), createdRecord.getType());
-    assertEquals(TTL, createdRecord.getTtl());
-    assertEquals("127.0.0.1", createdRecord.getContent());
-    assertNotNull(createdRecord.getCreatedOn());
 
-    client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A);
-    assertThrows(CloudflareNotFoundException.class,
-        () -> client.recordList(zone, SLD_STR, RecordType.A));
+    try {
+      // clean-up
+      client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A, RecordType.AAAA);
 
-    record = RecordEntity.build(SLD_STR + "." + ZONE_STR, RecordType.A, TTL, "127.1.0.1");
-    createdRecord = client.recordCreate(zone, record);
-    assertNotNull(createdRecord.getId());
-    assertEquals(SLD_STR, createdRecord.getSld());
-    assertEquals(RecordType.A.getType(), createdRecord.getType());
-    assertEquals(TTL, createdRecord.getTtl());
-    assertEquals("127.1.0.1", createdRecord.getContent());
-    assertNotNull(createdRecord.getCreatedOn());
+      RecordEntity record = RecordEntity.build(SLD_STR, RecordType.A, TTL, "127.0.0.1");
+      RecordEntity createdRecord = client.recordCreate(zone, record);
+      assertNotNull(createdRecord.getId());
+      assertEquals(SLD_STR, createdRecord.getSld());
+      assertEquals(RecordType.A.getType(), createdRecord.getType());
+      assertEquals(TTL, createdRecord.getTtl());
+      assertEquals("127.0.0.1", createdRecord.getContent());
+      assertNotNull(createdRecord.getCreatedOn());
 
-    client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A);
+      List<RecordEntity> records = client.recordList(zone, SLD_STR, RecordType.A);
+      assertEquals(1, records.size());
+      RecordEntity fetchedRecord = records.get(0);
+      assertEquals(createdRecord.getId(), fetchedRecord.getId());
+      assertEquals(createdRecord.getContent(), fetchedRecord.getContent());
+      assertEquals(createdRecord.getType(), fetchedRecord.getType());
+      client.recordDelete(zone, createdRecord);
+
+      // test A and AAAA records for the same SLD
+      RecordEntity recordA = RecordEntity.build(SLD_STR, RecordType.A, TTL, "127.0.0.2");
+      RecordEntity recordAAAA = RecordEntity.build(SLD_STR, RecordType.AAAA, TTL, "2001:db8::1");
+      RecordEntity createdRecordA = client.recordCreate(zone, recordA);
+      RecordEntity createdRecordAAAA = client.recordCreate(zone, recordAAAA);
+      assertNotNull(createdRecordA.getId());
+      assertNotNull(createdRecordAAAA.getId());
+      assertEquals(SLD_STR, createdRecordA.getSld());
+      assertEquals(SLD_STR, createdRecordAAAA.getSld());
+      assertEquals(RecordType.A.getType(), createdRecordA.getType());
+      assertEquals(RecordType.AAAA.getType(), createdRecordAAAA.getType());
+
+      client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A, RecordType.AAAA);
+      assertThrows(CloudflareNotFoundException.class,
+          () -> client.recordList(zone, SLD_STR, RecordType.A, RecordType.AAAA));
+    } finally {
+      // cleanup in case of failures during test
+      try {
+        client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A, RecordType.AAAA);
+      } catch (Exception e) { /* ignore */ }
+    }
   }
 
   @Test
@@ -78,14 +98,6 @@ public class CfClientTest {
     List<ZoneEntity> zList = client.zoneList();
     assertEquals(1, zList.size());
 
-    assertThrows(CloudflareNotFoundException.class,
-        () -> client.recordList(zList.get(0), "not-existing"));
-  }
-
-  @Test
-  void testEmptyResultThrowsException() throws Exception {
-    List<ZoneEntity> zList = client.zoneList();
-    CfDnsClient client = new CfDnsClient(true, API_EMAIL, API_KEY);
     assertThrows(CloudflareNotFoundException.class,
         () -> client.recordList(zList.get(0), "not-existing"));
   }
@@ -121,7 +133,7 @@ public class CfClientTest {
       createdRe1 =
           client.recordCreate(z, RecordEntity.build(domain, RecordType.A, TTL, "130.0.0.3"));
       assertNotNull(createdRe1.getId());
-      assertEquals(randomSld+ "." + ZONE_STR, createdRe1.getName());
+      assertEquals(randomSld + "." + ZONE_STR, createdRe1.getName());
       assertEquals(randomSld, createdRe1.getSld());
       assertEquals(RecordType.A.getType(), createdRe1.getType());
       assertEquals(z.getId(), createdRe1.getZoneId());
@@ -156,7 +168,7 @@ public class CfClientTest {
         } else if (Objects.equals(re.getType(), RecordType.AAAA.getType())) {
           assertEquals("2a0a:4cc0:c0:2e4::1", re.getContent());
         } else {
-          throw new IllegalStateException("Unexpected record type: " + re.getType());
+          fail(String.format("Unexpected record type: %s", re.getType()));
         }
       }
 
@@ -165,12 +177,16 @@ public class CfClientTest {
       assertTrue(fullList.size() >= 2);
       assertTrue(fullList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
       assertTrue(fullList.stream().anyMatch(re -> re.getId().equals(createdRe2.getId())));
+      assertTrue(
+          fullList.stream().allMatch(re -> re.getType().equals(RecordType.A.getType()) || re.getType().equals(RecordType.AAAA.getType())));
 
       // test recordList with types without SLD
       List<RecordEntity> aList = client.recordList(z, RecordType.A);
       assertFalse(aList.isEmpty());
+      assertTrue(aList.size() >= 1);
       assertTrue(aList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
       assertTrue(aList.stream().noneMatch(re -> re.getId().equals(createdRe2.getId())));
+      assertTrue(aList.stream().allMatch(re -> re.getType().equals(RecordType.A.getType())));
 
       // test fluent api list
       List<RecordEntity> fluentList = client.zone(ZONE_STR).list(RecordType.A);

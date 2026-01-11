@@ -71,8 +71,19 @@ abstract class CfBasicHttpClient {
       T respObj = objectMapper.readValue(result.responseBody, responseType);
       if (!respObj.getResponseResultInfo().isSuccess()) {
         log.error("API error.");
-        respObj.getResponseResultInfo().getErrors().forEach(e -> log.error("  - {}", e.toString()));
-        throw new CloudflareApiException("API error.");
+        StringBuilder errorMessage = new StringBuilder("API error");
+        if (!respObj.getResponseResultInfo().getErrors().isEmpty()) {
+          errorMessage.append(": ");
+          respObj.getResponseResultInfo().getErrors().forEach(e -> {
+            log.error("  - {}", e.toString());
+            errorMessage.append(e).append("; ");
+          });
+          // Remove trailing "; "
+          if (errorMessage.toString().endsWith("; ")) {
+            errorMessage.setLength(errorMessage.length() - 2);
+          }
+        }
+        throw new CloudflareApiException(errorMessage.toString());
       }
       logUri = request.getRequestUri();
       if (result.statusCode >= 200 && result.statusCode < 300) {

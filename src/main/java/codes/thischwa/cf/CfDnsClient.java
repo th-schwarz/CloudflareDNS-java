@@ -13,6 +13,7 @@ import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ZoneEntity;
 import codes.thischwa.cf.model.ZoneMultipleResponse;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,8 @@ public class CfDnsClient extends CfBasicHttpClient {
   private static final String DEFAULT_BASEURL = "https://api.cloudflare.com/client/v4";
 
   private final ResponseValidator responseValidator;
+
+  private final boolean emptyResultThrowsException;
 
   /**
    * Constructs a new instance of {@code CfDnsClient}.
@@ -107,6 +110,7 @@ public class CfDnsClient extends CfBasicHttpClient {
                      String authKey) {
     super(baseUrl, authEmail, authKey);
     this.responseValidator = new ResponseValidator(emptyResultThrowsException);
+    this.emptyResultThrowsException = emptyResultThrowsException;
   }
 
   private static String buildFqdn(ZoneEntity zone, String sld) {
@@ -216,14 +220,11 @@ public class CfDnsClient extends CfBasicHttpClient {
    */
   public List<RecordEntity> recordList(ZoneEntity zone, String sld, @Nullable RecordType... types)
       throws CloudflareApiException {
-    String fqdn = buildFqdn(zone, sld);
-    String endpoint = buildEndpointWithTypeFilters(CfRequest.RECORD_INFO_NAME.buildPath(zone.getId(), fqdn), types);
-    RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
-    checkResponse(resp, false);
-    List<RecordEntity> recs = resp.getResult();
-    recs.forEach(rec -> rec.setZoneId(zone.getId()));
-    return recs;
+    PagingRequest pagingRequest = PagingRequest.defaultPaging();
+    List<RecordEntity> recs = recordList(zone, sld, pagingRequest);
+    return filterAndSetZoneRecords(zone, types, recs);
   }
+
 
   /**
    * Retrieves all record entities for a specific second-level domain (SLD) within a given DNS
@@ -256,23 +257,11 @@ public class CfDnsClient extends CfBasicHttpClient {
    */
   public List<RecordEntity> recordList(ZoneEntity zone, RecordType... types)
       throws CloudflareApiException {
-    String endpoint = buildEndpointWithTypeFilters(CfRequest.RECORD_LIST.buildPath(zone.getId()), types);
+    String endpoint = CfRequest.RECORD_LIST.buildPath(zone.getId());
     RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
     checkResponse(resp, false);
-    return resp.getResult();
-  }
-
-  private String buildEndpointWithTypeFilters(String baseEndpoint, @Nullable RecordType... types) {
-    if (types == null || types.length == 0) {
-      return baseEndpoint;
-    }
-    StringBuilder endpoint = new StringBuilder(baseEndpoint);
-    String separator = baseEndpoint.contains("?") ? "&" : "?";
-    for (RecordType type : types) {
-      endpoint.append(separator).append("type=").append(type);
-      separator = "&";
-    }
-    return endpoint.toString();
+    List<RecordEntity> recs = resp.getResult();
+    return filterAndSetZoneRecords(zone, types, recs);
   }
 
   /**
@@ -458,6 +447,24 @@ public class CfDnsClient extends CfBasicHttpClient {
     setZoneIdForBatchResults(result, zone.getId());
     return result;
   }
+
+  private List<RecordEntity> filterAndSetZoneRecords(ZoneEntity zone, @Nullable RecordType[] types, List<RecordEntity> recs)
+      throws CloudflareNotFoundException {
+    List<RecordEntity> filtered;
+    if (types != null && types.length > 0) {
+      filtered = recs.stream().filter(rec -> Arrays.asList(types).contains(RecordType.valueOf(rec.getType()))).collect(Collectors.toList());
+    } else {
+      filtered = new ArrayList<>(recs);
+    }
+    filtered.forEach(rec -> rec.setZoneId(zone.getId()));
+
+    // special exception for an empty result, normally it's done in the RecordValidator
+    if (filtered.isEmpty() && emptyResultThrowsException) {
+      throw new CloudflareNotFoundException("No records exist after filtering zone: " + zone.getName());
+    }
+    return filtered;
+  }
+
 
   private List<RecordEntity> cleanRecordsForPostOrPut(List<RecordEntity> records) {
     List<RecordEntity> cleaned = new ArrayList<>();
