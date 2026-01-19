@@ -49,7 +49,8 @@ The dependency is:
 
 ## Changelog
 
-- 0.2.0-beta-SNAPSHOT:
+- 0.2.0:
+    - de-lombok the source jar
     - **New Fluent API**: Added chainable method interface for more readable DNS operations (
       `client.zone().record()...`)
   - **Breaking Change**: `emptyResultThrowsException` default changed from `true` to `false`. Now applies to both
