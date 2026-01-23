@@ -8,9 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import codes.thischwa.cf.auth.ApiTokenAuth;
-import codes.thischwa.cf.auth.CfAuthBuilder;
-import codes.thischwa.cf.auth.EmailKeyAuth;
 import codes.thischwa.cf.model.BatchEntry;
 import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordType;
@@ -33,7 +30,7 @@ public class CfClientTest {
 
   private static final String API_TOKEN = System.getenv("API_TOKEN");
 
-  private final CfDnsClient client = new CfDnsClient(true, CfAuthBuilder.build(API_TOKEN));
+  private final CfDnsClient client = new CfDnsClientBuilder().withEmptyResultThrowsException(true).withApiTokenAuth(API_TOKEN).build();
 
   @BeforeAll
   static void checkEnv() {
@@ -223,16 +220,6 @@ public class CfClientTest {
         client.recordDeleteTypeIfExists(z, randomSld, RecordType.A, RecordType.AAAA);
       } catch (Exception e) { /* ignore */ }
     }
-  }
-
-  @Test
-  void testException() {
-    // Test EmailKeyAuth validation
-    assertThrows(IllegalArgumentException.class, () -> new EmailKeyAuth("email", ""));
-    assertThrows(IllegalArgumentException.class, () -> new EmailKeyAuth("", "key"));
-
-    // Test ApiTokenAuth validation;
-    assertThrows(IllegalArgumentException.class, () -> new ApiTokenAuth(""));
   }
 
   @Test

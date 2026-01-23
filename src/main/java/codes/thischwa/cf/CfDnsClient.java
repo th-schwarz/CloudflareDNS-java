@@ -1,6 +1,5 @@
 package codes.thischwa.cf;
 
-import codes.thischwa.cf.auth.CfAuth;
 import codes.thischwa.cf.fluent.ZoneOperations;
 import codes.thischwa.cf.fluent.ZoneOperationsImpl;
 import codes.thischwa.cf.model.AbstractResponse;
@@ -30,7 +29,9 @@ import org.jetbrains.annotations.Nullable;
  * <p>Example with API token authentication (recommended):
  * <pre><code>
  * // Create a new CfDnsClient instance with API token
- * CfDnsClient cfDnsClient = new CfDnsClient(CfAuthBuilder.build("your-api-token"));
+ * CfDnsClient cfDnsClient = new CfDnsClientBuilder()
+ *     .withApiTokenAuth("your-api-token")
+ *     .build();
  *
  * // Retrieve a zone
  * ZoneEntity zone = cfDnsClient.zoneGet("example.com");
@@ -49,62 +50,34 @@ import org.jetbrains.annotations.Nullable;
  *
  * <p>Example with email/key authentication (legacy):
  * <pre><code>
- * CfDnsClient cfDnsClient = new CfDnsClient(
- *     CfAuthBuilder.build("email@example.com", "your-api-key")
- * );
+ * CfDnsClient cfDnsClient = new CfDnsClientBuilder()
+ *     .withEmailKeyAuth("email@example.com", "your-api-key")
+ *     .build();
  * </code></pre>
  *
  * <p>Example with exception throwing enabled:
  * <pre><code>
  * // Throws exception when results are empty
- * CfDnsClient cfDnsClient = new CfDnsClient(true, CfAuthBuilder.build("your-api-token"));
+ * CfDnsClient cfDnsClient = new CfDnsClientBuilder()
+ *     .withApiTokenAuth("your-api-token")
+ *     .withEmptyResultThrowsException(true)
+ *     .build();
  * </code></pre>
  *
  * <p>Example with custom base URL:
  * <pre><code>
- * CfAuth auth = CfAuthBuilder.build("your-api-token");
- * auth.setBaseUrl("https://custom-api.example.com");
- * CfDnsClient cfDnsClient = new CfDnsClient(auth);
+ * CfDnsClient cfDnsClient = new CfDnsClientBuilder()
+ *     .withApiTokenAuth("your-api-token")
+ *     .withBaseUrl("https://custom-api.example.com")
+ *     .build();
  * </code></pre>
  */
 @Slf4j
 public class CfDnsClient extends CfBasicHttpClient {
 
-  public static final String DEFAULT_BASEURL = "https://api.cloudflare.com/client/v4";
   private final ResponseValidator responseValidator;
 
   private final boolean emptyResultThrowsException;
-
-  /**
-   * Constructs a new instance of {@code CfDnsClient} with default configuration.
-   *
-   * @param auth The authentication mechanism to use (ApiTokenAuth or EmailKeyAuth)
-   */
-  public CfDnsClient(CfAuth auth) {
-    this(false, DEFAULT_BASEURL, auth);
-  }
-
-  /**
-   * Constructs a new instance of {@code CfDnsClient}.
-   *
-   * @param baseUrl The base URL of the Cloudflare API to be used for requests.
-   * @param auth    The authentication mechanism to use (ApiTokenAuth or EmailKeyAuth)
-   */
-  public CfDnsClient(String baseUrl, CfAuth auth) {
-    this(false, baseUrl, auth);
-  }
-
-  /**
-   * Constructs a new instance of {@code CfDnsClient}.
-   *
-   * @param emptyResultThrowsException A boolean value indicating whether an exception should be
-   *                                   thrown when the result is empty. Applies to both single and
-   *                                   multiple result requests. Default is false.
-   * @param auth                       The authentication mechanism to use (ApiTokenAuth or EmailKeyAuth)
-   */
-  public CfDnsClient(boolean emptyResultThrowsException, CfAuth auth) {
-    this(emptyResultThrowsException, DEFAULT_BASEURL, auth);
-  }
 
   /**
    * Constructs a new instance of {@code CfDnsClient}.
@@ -115,7 +88,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @param baseUrl                    The base URL for the Cloudflare API endpoint.
    * @param auth                       The authentication mechanism to use (ApiTokenAuth or EmailKeyAuth)
    */
-  public CfDnsClient(boolean emptyResultThrowsException, String baseUrl, CfAuth auth) {
+  CfDnsClient(boolean emptyResultThrowsException, String baseUrl, CfDnsClientBuilder.CfAuth auth) {
     super(baseUrl, auth);
     this.responseValidator = new ResponseValidator(emptyResultThrowsException);
     this.emptyResultThrowsException = emptyResultThrowsException;
@@ -514,4 +487,5 @@ public class CfDnsClient extends CfBasicHttpClient {
       throws CloudflareApiException {
     responseValidator.validate(resp, singleResultExpected);
   }
+
 }

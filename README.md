@@ -29,7 +29,7 @@ This guide comes without any warranty. Use at your own risk. The author is not r
 
 The project has its own maven repository. It can be added to the `pom.xml`:
 
-```xml
+```xml<p>
 <repositories>
   <repository>
     <id>gitlab-cloudflare</id>
@@ -51,13 +51,13 @@ The dependency is:
 
 - 0.2.0:
     - de-lombok the source jar
-    - **New Fluent API**: Added chainable method interface for more readable DNS operations (
-      `client.zone().record()...`)
   - **Breaking Change**: `emptyResultThrowsException` default changed from `true` to `false`. Now applies to both
     single and multiple result requests. Empty results will be returned by default without throwing exceptions.
     - API method names refactored for consistency: `zoneListAll` → `zoneList`, `zoneInfo` → `zoneGet`, `sldListAll` →
       `recordList`
     - RecordEntity getter methods renamed for clarity: `getName()` → `getSld()`
+    - **New Fluent API**: Changed the initialization of the client(`new CfDnsClientBuilder().withApiTokenAuth("your-api-token").build()`) and added chainable method interface for more readable DNS operations (
+      `client.zone().record()...`)
   - Code quality improvements: eliminated duplication in batch operations, improved type safety in HTTP methods,
     optimized string concatenation, removed mutable setters from CfDnsClient
     - Enhanced type validation in `RecordEntity.build()` with better error messages
@@ -89,10 +89,18 @@ the [javadoc of the CfDnsClient](https://cloudflaredns-java-f4ee3a.gitlab.io/api
 
 ### Instantiation of `CfDnsClient`
 
+#### With API Token (recommended):
 ```java
-CfDnsClient cfDnsClient = new CfDnsClient(
-     "email@example.com", "yourApiKey"
- );
+CfDnsClient cfDnsClient = new CfDnsClientBuilder()
+    .withApiTokenAuth("your-api-token")
+    .build();
+```
+
+#### With Email/Key (legacy):
+```java
+CfDnsClient cfDnsClient = new CfDnsClientBuilder()
+    .withEmailKeyAuth("email@example.com", "yourApiKey")
+    .build();
 ```
 
 ### `zoneList`
@@ -390,7 +398,9 @@ client.zone("example.com")
 ### Complete Example
 
 ```java
-CfDnsClient client = new CfDnsClient("email@example.com", "yourApiKey");
+CfDnsClient client = new CfDnsClientBuilder()
+    .withApiTokenAuth("your-api-token")
+    .build();
 
 // Create a new record
 client.zone("example.com")
@@ -425,7 +435,10 @@ The `CfDnsClient` provides internal error-handling mechanisms through exceptions
 To enable exception throwing for empty results:
 
 ```java
-CfDnsClient client = new CfDnsClient(true, "email@example.com", "yourApiKey");
+CfDnsClient client = new CfDnsClientBuilder()
+    .withApiTokenAuth("your-api-token")
+    .withEmptyResultThrowsException(true)
+    .build();
 ```
 
 ## Example:

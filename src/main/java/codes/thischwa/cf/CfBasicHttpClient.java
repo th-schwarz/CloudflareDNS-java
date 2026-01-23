@@ -1,6 +1,5 @@
 package codes.thischwa.cf;
 
-import codes.thischwa.cf.auth.CfAuth;
 import codes.thischwa.cf.model.AbstractResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,7 +30,7 @@ import org.jetbrains.annotations.NotNull;
 abstract class CfBasicHttpClient {
 
   private final String baseUrl;
-  private final CfAuth auth;
+  private final CfDnsClientBuilder.CfAuth auth;
   private final ObjectMapper objectMapper;
 
   /**
@@ -40,7 +39,7 @@ abstract class CfBasicHttpClient {
    * @param baseUrl the base URL for the Cloudflare API
    * @param auth    the authentication mechanism to use
    */
-  CfBasicHttpClient(@NotNull String baseUrl, @NotNull CfAuth auth) {
+  CfBasicHttpClient(@NotNull String baseUrl, @NotNull CfDnsClientBuilder.CfAuth auth) {
     this.baseUrl = baseUrl;
     this.auth = auth;
     this.objectMapper = JsonConf.initObjectMapper();
