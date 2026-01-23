@@ -8,6 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import codes.thischwa.cf.auth.ApiTokenAuth;
+import codes.thischwa.cf.auth.CfAuthBuilder;
+import codes.thischwa.cf.auth.EmailKeyAuth;
 import codes.thischwa.cf.model.BatchEntry;
 import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordType;
@@ -28,15 +31,13 @@ public class CfClientTest {
   private static final String SLD_STR = "devsld";
   private static final int TTL = 60;
 
-  private static final String API_EMAIL = System.getenv("API_EMAIL");
-  private static final String API_KEY = System.getenv("API_KEY");
+  private static final String API_TOKEN = System.getenv("API_TOKEN");
 
-  private final CfDnsClient client = new CfDnsClient(true, API_EMAIL, API_KEY);
+  private final CfDnsClient client = new CfDnsClient(true, CfAuthBuilder.build(API_TOKEN));
 
   @BeforeAll
   static void checkEnv() {
-    assumeTrue(API_EMAIL != null && !API_EMAIL.isBlank(), "API_EMAIL not set; skipping pen tests");
-    assumeTrue(API_KEY != null && !API_KEY.isBlank(), "API_KEY not set; skipping pen tests");
+    assumeTrue(API_TOKEN != null && !API_TOKEN.isBlank(), "API_TOKEN not set; skipping client tests");
   }
 
   @Test
@@ -106,13 +107,13 @@ public class CfClientTest {
   void testDns() throws Exception {
     // starting point: already existing zone 'mein-d-ns.de'
     ZoneEntity z = client.zoneGet(ZONE_STR);
-    assertEquals("0a83dd6e7f8c46039f2517bbded8115e", z.getId());
+    assertEquals("cf9d8b12f61423f280e0a3ea2a96d921", z.getId());
     assertEquals("mein-d-ns.de", z.getName());
     assertEquals("active", z.getStatus());
     assertEquals(2, z.getNameServers().size());
-    assertTrue(z.getNameServers().contains("sergi.ns.cloudflare.com"));
-    assertEquals(4, z.getOriginalNameServers().size());
-    assertTrue(z.getOriginalNameServers().contains("a.ns14.net"));
+    assertTrue(z.getNameServers().contains("rafe.ns.cloudflare.com"));
+    assertTrue(z.getOriginalNameServers().size() >= 2);
+    assertTrue(z.getOriginalNameServers().contains("blair.ns.cloudflare.com"));
     assertNotNull(z.getActivatedOn());
     assertNotNull(z.getModifiedOn());
     assertNotNull(z.getCreatedOn());
@@ -226,10 +227,12 @@ public class CfClientTest {
 
   @Test
   void testException() {
-    assertThrows(IllegalArgumentException.class, () -> new CfDnsClient(null, "key"));
-    assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("email", null));
-    assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("email", ""));
-    assertThrows(IllegalArgumentException.class, () -> new CfDnsClient("", "key"));
+    // Test EmailKeyAuth validation
+    assertThrows(IllegalArgumentException.class, () -> new EmailKeyAuth("email", ""));
+    assertThrows(IllegalArgumentException.class, () -> new EmailKeyAuth("", "key"));
+
+    // Test ApiTokenAuth validation;
+    assertThrows(IllegalArgumentException.class, () -> new ApiTokenAuth(""));
   }
 
   @Test

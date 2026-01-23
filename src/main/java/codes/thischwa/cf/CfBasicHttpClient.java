@@ -1,5 +1,6 @@
 package codes.thischwa.cf;
 
+import codes.thischwa.cf.auth.CfAuth;
 import codes.thischwa.cf.model.AbstractResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +20,7 @@ import org.apache.hc.core5.http.HttpHeaders;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Abstract base class for creating HTTP clients to interact with the Cloudflare API. Provides
@@ -27,23 +29,20 @@ import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
  */
 @Slf4j
 abstract class CfBasicHttpClient {
-  private final String baseUrl;
-  private final String authEmail;
-  private final String authKey;
 
+  private final String baseUrl;
+  private final CfAuth auth;
   private final ObjectMapper objectMapper;
 
-  CfBasicHttpClient(String baseUrl, String authEmail, String authKey)
-      throws IllegalArgumentException {
-    if (authEmail == null || authEmail.isBlank()) {
-      throw new IllegalArgumentException("Authentication email must not be null or blank!");
-    }
-    if (authKey == null || authKey.isBlank()) {
-      throw new IllegalArgumentException("Authentication key must not be null or blank!");
-    }
+  /**
+   * Creates a new Cloudflare HTTP client with the specified base URL and authentication.
+   *
+   * @param baseUrl the base URL for the Cloudflare API
+   * @param auth    the authentication mechanism to use
+   */
+  CfBasicHttpClient(@NotNull String baseUrl, @NotNull CfAuth auth) {
     this.baseUrl = baseUrl;
-    this.authEmail = authEmail;
-    this.authKey = authKey;
+    this.auth = auth;
     this.objectMapper = JsonConf.initObjectMapper();
   }
 
@@ -53,8 +52,9 @@ abstract class CfBasicHttpClient {
       request.addHeader(HttpHeaders.ACCEPT_ENCODING, "gzip");
       request.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType());
       request.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
-      request.addHeader("X-Auth-Email", authEmail);
-      request.addHeader("X-Auth-Key", authKey);
+      if (request instanceof ClassicHttpRequest classicRequest) {
+        auth.applyAuth(classicRequest);
+      }
     }).build();
   }
 

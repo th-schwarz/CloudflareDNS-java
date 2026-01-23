@@ -199,6 +199,6 @@ public enum RecordType {
 
   @Override
   public String toString() {
-    return getType();
+    return type;
   }
 }

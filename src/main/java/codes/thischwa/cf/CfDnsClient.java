@@ -1,5 +1,6 @@
 package codes.thischwa.cf;
 
+import codes.thischwa.cf.auth.CfAuth;
 import codes.thischwa.cf.fluent.ZoneOperations;
 import codes.thischwa.cf.fluent.ZoneOperationsImpl;
 import codes.thischwa.cf.model.AbstractResponse;
@@ -26,57 +27,71 @@ import org.jetbrains.annotations.Nullable;
  * records and zones within the Cloudflare system, including creating, updating, retrieving, and
  * deleting DNS records.
  *
- * <p>Example:
+ * <p>Example with API token authentication (recommended):
  * <pre><code>
- * // Create a new CfDnsClient instance
- * CfDnsClient cfDnsClient = new CfDnsClient(
- *     "email@example.com",
- *     "yourApiKey"
- * );
+ * // Create a new CfDnsClient instance with API token
+ * CfDnsClient cfDnsClient = new CfDnsClient(CfAuthBuilder.build("your-api-token"));
+ *
  * // Retrieve a zone
  * ZoneEntity zone = cfDnsClient.zoneGet("example.com");
  * System.out.println("Zone ID: " + zone.getId());
+ *
  * // Retrieve records of a subdomain
- * List&lt;{@link RecordEntity}&gt; records = cfDnsClient.recordGet(zone, "sld");
+ * List&lt;RecordEntity&gt; records = cfDnsClient.recordList(zone, "sld");
  * records.forEach(record ->
  *     System.out.println("Record Type: " + record.getType() + ", Value: " + record.getContent())
  * );
+ *
  * // Create a record for the subdomain "api"
  * RecordEntity created = cfDnsClient.recordCreateSld(zone, "api", 60, RecordType.A, "192.168.1.10");
  * System.out.println("Created Record ID: " + created.getId());
  * </code></pre>
+ *
+ * <p>Example with email/key authentication (legacy):
+ * <pre><code>
+ * CfDnsClient cfDnsClient = new CfDnsClient(
+ *     CfAuthBuilder.build("email@example.com", "your-api-key")
+ * );
+ * </code></pre>
+ *
+ * <p>Example with exception throwing enabled:
+ * <pre><code>
+ * // Throws exception when results are empty
+ * CfDnsClient cfDnsClient = new CfDnsClient(true, CfAuthBuilder.build("your-api-token"));
+ * </code></pre>
+ *
+ * <p>Example with custom base URL:
+ * <pre><code>
+ * CfAuth auth = CfAuthBuilder.build("your-api-token");
+ * auth.setBaseUrl("https://custom-api.example.com");
+ * CfDnsClient cfDnsClient = new CfDnsClient(auth);
+ * </code></pre>
  */
 @Slf4j
 public class CfDnsClient extends CfBasicHttpClient {
-  private static final String DEFAULT_BASEURL = "https://api.cloudflare.com/client/v4";
 
+  public static final String DEFAULT_BASEURL = "https://api.cloudflare.com/client/v4";
   private final ResponseValidator responseValidator;
 
   private final boolean emptyResultThrowsException;
 
   /**
-   * Constructs a new instance of {@code CfDnsClient}.
+   * Constructs a new instance of {@code CfDnsClient} with default configuration.
    *
-   * @param authEmail The email address associated with the Cloudflare account, used for
-   *                  authentication.
-   * @param authKey   The API key of the Cloudflare account, used as part of the authentication
-   *                  process.
+   * @param auth The authentication mechanism to use (ApiTokenAuth or EmailKeyAuth)
    */
-  public CfDnsClient(String authEmail, String authKey) {
-    this(DEFAULT_BASEURL, authEmail, authKey);
+  public CfDnsClient(CfAuth auth) {
+    this(false, DEFAULT_BASEURL, auth);
   }
 
   /**
    * Constructs a new instance of {@code CfDnsClient}.
    *
-   * @param baseUrl   The base URL of the Cloudflare API to be used for requests.
-   * @param authEmail The email address associated with the Cloudflare account, used for
-   *                  authentication.
-   * @param authKey   The API key of the Cloudflare account, used as part of the authentication
-   *                  process.
+   * @param baseUrl The base URL of the Cloudflare API to be used for requests.
+   * @param auth    The authentication mechanism to use (ApiTokenAuth or EmailKeyAuth)
    */
-  public CfDnsClient(String baseUrl, String authEmail, String authKey) {
-    this(false, baseUrl, authEmail, authKey);
+  public CfDnsClient(String baseUrl, CfAuth auth) {
+    this(false, baseUrl, auth);
   }
 
   /**
@@ -85,13 +100,10 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @param emptyResultThrowsException A boolean value indicating whether an exception should be
    *                                   thrown when the result is empty. Applies to both single and
    *                                   multiple result requests. Default is false.
-   * @param authEmail                  The email address associated with the Cloudflare account,
-   *                                   used for authentication.
-   * @param authKey                    The API key of the Cloudflare account, used as part of the
-   *                                   authentication process.
+   * @param auth                       The authentication mechanism to use (ApiTokenAuth or EmailKeyAuth)
    */
-  public CfDnsClient(boolean emptyResultThrowsException, String authEmail, String authKey) {
-    this(emptyResultThrowsException, DEFAULT_BASEURL, authEmail, authKey);
+  public CfDnsClient(boolean emptyResultThrowsException, CfAuth auth) {
+    this(emptyResultThrowsException, DEFAULT_BASEURL, auth);
   }
 
   /**
@@ -101,14 +113,10 @@ public class CfDnsClient extends CfBasicHttpClient {
    *                                   thrown when the result is empty. Applies to both single and
    *                                   multiple result requests. Default is false.
    * @param baseUrl                    The base URL for the Cloudflare API endpoint.
-   * @param authEmail                  The email associated with the Cloudflare account for
-   *                                   authentication.
-   * @param authKey                    The API key for authenticating the client with Cloudflare
-   *                                   services.
+   * @param auth                       The authentication mechanism to use (ApiTokenAuth or EmailKeyAuth)
    */
-  public CfDnsClient(boolean emptyResultThrowsException, String baseUrl, String authEmail,
-                     String authKey) {
-    super(baseUrl, authEmail, authKey);
+  public CfDnsClient(boolean emptyResultThrowsException, String baseUrl, CfAuth auth) {
+    super(baseUrl, auth);
     this.responseValidator = new ResponseValidator(emptyResultThrowsException);
     this.emptyResultThrowsException = emptyResultThrowsException;
   }

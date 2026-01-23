@@ -64,10 +64,10 @@ public class RecordEntity extends AbstractEntity {
    */
   public static RecordEntity build(String name, RecordType type, Integer ttl, String content) {
     RecordEntity rec = new RecordEntity();
-    rec.setName(name);
-    rec.setType(type.getType());
-    rec.setTtl(ttl);
-    rec.setContent(content);
+    rec.name = name;
+    rec.type = type.getType();
+    rec.ttl = ttl;
+    rec.content = content;
     return rec;
   }
 
@@ -81,7 +81,7 @@ public class RecordEntity extends AbstractEntity {
   public static RecordEntity build(String id, String content) {
     RecordEntity rec = new RecordEntity();
     rec.setId(id);
-    rec.setContent(content);
+    rec.content = content;
     return rec;
   }
 
@@ -104,8 +104,12 @@ public class RecordEntity extends AbstractEntity {
       throw new IllegalArgumentException("Invalid record type: " + type + ". Must be one of: "
           + java.util.Arrays.toString(RecordType.values()), e);
     }
-    RecordEntity rec = build(name, recordType, ttl, content);
+    RecordEntity rec = new RecordEntity();
     rec.setId(id);
+    rec.name = name;
+    rec.type = recordType.getType();
+    rec.ttl = ttl;
+    rec.content = content;
     return rec;
   }
 
