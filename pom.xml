@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>codes.thischwa</groupId>
@@ -21,15 +22,17 @@
         <project.reporting.outputEncoding>${file.encoding}</project.reporting.outputEncoding>
 
         <!-- checkstyle -->
-        <checkstyle.version>10.21.3</checkstyle.version>
+        <checkstyle.version>12.3.0</checkstyle.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
         <checkstyle.config.location>${project.basedir}/src/checkstyle/google_custom_checks.xml
         </checkstyle.config.location>
         <checkstyle.includeTestResources>false</checkstyle.includeTestResources>
         <checkstyle.violationSeverity>warning</checkstyle.violationSeverity>
         <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
+        <checkstyle.propertyExpansion>config_loc=${basedir}
+        </checkstyle.propertyExpansion>
         <checkstyle.consoleOutput>true</checkstyle.consoleOutput>
-        <linkX-Ref>false</linkX-Ref>
+        <linkXRef>false</linkXRef>
 
         <!-- 3rd party dependencies -->
         <jackson.version>2.18.2</jackson.version>
@@ -261,6 +264,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
                 <executions>
                     <execution>
                         <id>attach-delomboked-sources</id>
