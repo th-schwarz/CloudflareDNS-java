@@ -50,7 +50,6 @@ The dependency is:
 ## Changelog
 
 - 0.2.0:
-    - de-lombok the source jar
   - **Breaking Change**: `emptyResultThrowsException` default changed from `true` to `false`. Now applies to both
     single and multiple result requests. Empty results will be returned by default without throwing exceptions.
     - API method names refactored for consistency: `zoneListAll` → `zoneList`, `zoneInfo` → `zoneGet`, `sldListAll` →
