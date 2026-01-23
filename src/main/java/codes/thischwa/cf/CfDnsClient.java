@@ -15,8 +15,10 @@ import codes.thischwa.cf.model.ZoneMultipleResponse;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
@@ -297,9 +299,9 @@ public class CfDnsClient extends CfBasicHttpClient {
     RecordSingleResponse resp = postRequest(endpoint, rec, RecordSingleResponse.class);
     checkResponse(resp);
     log.info("Record {} of type {} successful created.", rec.getSld(), rec.getType());
-    RecordEntity record = resp.getResult();
-    record.setZoneId(zone.getId());
-    return record;
+    RecordEntity retRec = resp.getResult();
+    retRec.setZoneId(zone.getId());
+    return retRec;
   }
 
   /**
@@ -433,7 +435,10 @@ public class CfDnsClient extends CfBasicHttpClient {
       throws CloudflareNotFoundException {
     List<RecordEntity> filtered;
     if (types != null && types.length > 0) {
-      filtered = recs.stream().filter(rec -> Arrays.asList(types).contains(RecordType.valueOf(rec.getType()))).collect(Collectors.toList());
+      Set<RecordType> allowedTypes = new HashSet<>(Arrays.asList(types));
+      filtered = recs.stream()
+          .filter(rec -> allowedTypes.contains(RecordType.valueOf(rec.getType())))
+          .collect(Collectors.toList());;
     } else {
       filtered = new ArrayList<>(recs);
     }

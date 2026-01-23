@@ -46,17 +46,27 @@ class ResponseValidator {
   private void validateResultCount(AbstractResponse resp, boolean singleResultExpected)
       throws CloudflareApiException {
     if (resp instanceof RecordMultipleResponse respMulti) {
-      if (singleResultExpected && respMulti.getResultInfo().totalCount() > 1) {
-        throw new CloudflareApiException(
-            "Unexpected result count: " + respMulti.getResultInfo().totalCount());
-      }
-      if (emptyResultThrowsException && respMulti.getResultInfo().totalCount() == 0) {
-        throw new CloudflareNotFoundException("No result found");
-      }
+      validateMultipleResponse(respMulti, singleResultExpected);
     } else if (resp instanceof AbstractSingleResponse<?> respSingle) {
-      if (emptyResultThrowsException && respSingle.getResult() == null) {
-        throw new CloudflareNotFoundException("No result found");
-      }
+      validateSingleResponse(respSingle);
+    }
+  }
+
+  private void validateMultipleResponse(RecordMultipleResponse response, boolean singleResultExpected)
+      throws CloudflareApiException {
+    int totalCount = response.getResultInfo().totalCount();
+    if (singleResultExpected && totalCount > 1) {
+      throw new CloudflareApiException("Unexpected result count: " + totalCount);
+    }
+    if (emptyResultThrowsException && totalCount == 0) {
+      throw new CloudflareNotFoundException("No result found");
+    }
+  }
+
+  private void validateSingleResponse(AbstractSingleResponse<?> response)
+      throws CloudflareNotFoundException {
+    if (emptyResultThrowsException && response.getResult() == null) {
+      throw new CloudflareNotFoundException("No result found");
     }
   }
 

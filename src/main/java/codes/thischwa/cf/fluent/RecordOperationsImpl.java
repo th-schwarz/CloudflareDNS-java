@@ -45,16 +45,16 @@ public class RecordOperationsImpl implements RecordOperations {
 
   @Override
   public RecordEntity update(String newContent) throws CloudflareApiException {
-    List<RecordEntity> records = get();
-    if (records.isEmpty()) {
-      throw new CloudflareApiException("No records found to update for subdomain: " + sld);
+    List<RecordEntity> recs = get();
+    if (recs.isEmpty()) {
+      throw new CloudflareApiException("No recs found to update for subdomain: " + sld);
     }
-    if (records.size() > 1) {
-      throw new CloudflareApiException("Multiple records found. Please use recordUpdate() directly for precise control.");
+    if (recs.size() > 1) {
+      throw new CloudflareApiException("Multiple recs found. Please use recordUpdate() directly for precise control.");
     }
-    RecordEntity record = records.get(0);
-    record.setContent(newContent);
-    return client.recordUpdate(zone, record);
+    RecordEntity rec = recs.get(0);
+    rec.setContent(newContent);
+    return client.recordUpdate(zone, rec);
   }
 
   @Override
