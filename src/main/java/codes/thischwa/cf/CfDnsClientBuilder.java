@@ -11,7 +11,11 @@ import org.jetbrains.annotations.Nullable;
  */
 public class CfDnsClientBuilder {
 
+  /**
+   * The default base URL for the Cloudflare v4 API requests made by the {@code CfDnsClient}.
+   */
   public static final String DEFAULT_BASEURL = "https://api.cloudflare.com/client/v4";
+
   private boolean emptyResultThrowsException;
   private CfAuth auth;
 

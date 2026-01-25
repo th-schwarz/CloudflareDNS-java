@@ -6,15 +6,12 @@ package codes.thischwa.cf.model;
  * <p>This class contains information about the current page, page size, total pages, and result
  * counts, which can be utilized in managing and navigating through paginated data.
  *
- * <ul>
- *   <li><b>page:</b> The current page number.
- *   <li><b>perPage:</b> The number of results per page.
- *   <li><b>totalPages:</b> The total number of pages available.
- *   <li><b>count:</b> The number of results on the current page.
- *   <li><b>totalCount:</b> The total number of results across all pages.
- * </ul>
+ * @param page The current page number.
+ * @param perPage The number of results per page.
+ * @param totalPages The total number of pages available.
+ * @param count The number of results on the current page.
+ * @param totalCount The total number of results across all pages.
  */
-
 public record ResultInfo(int page, int perPage, int totalPages, int count, int totalCount) {
 
   /**
