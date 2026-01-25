@@ -49,6 +49,10 @@ The dependency is:
 
 ## Changelog
 
+- 0.3.0-SNAPSHOT:
+  - **Breaking Change**:
+    - **New Fluent API**: Changed the initialization of the client(`new CfDnsClientBuilder().withApiTokenAuth("your-api-token").build()`)
+  - Authentication with API token.
 - 0.2.0:
   - **Breaking Change**: `emptyResultThrowsException` default changed from `true` to `false`. Now applies to both
     single and multiple result requests. Empty results will be returned by default without throwing exceptions.
