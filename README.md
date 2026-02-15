@@ -49,7 +49,7 @@ The dependency is:
 
 ## Changelog
 
-- 0.3.0-SNAPSHOT:
+- 0.3.0:
   - **Breaking Change**:
     - **New Fluent API**: Changed the initialization of the client(`new CfDnsClientBuilder().withApiTokenAuth("your-api-token").build()`)
   - Authentication with API token.
