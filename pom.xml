@@ -64,14 +64,18 @@
     <distributionManagement>
         <repository>
             <id>codeberg-cloudflaredns</id>
-            <url>https://codeberg.org/th-schwarz/CloudflareDNS-java/raw/branch/main/maven/</url>
+            <url>https://codeberg.org/api/packages/th-schwarz/maven</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
+        </repository>
+        <snapshotRepository>
+            <id>codeberg-cloudflaredns</id>
+            <url>https://codeberg.org/api/packages/th-schwarz/maven</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-        </repository>
+        </snapshotRepository>
     </distributionManagement>
 
     <dependencies>

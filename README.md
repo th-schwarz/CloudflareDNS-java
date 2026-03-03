@@ -29,11 +29,11 @@ This guide comes without any warranty. Use at your own risk. The author is not r
 
 The project has its own maven repository. It can be added to the `pom.xml`:
 
-```xml<p>
+```xml
 <repositories>
   <repository>
-    <id>gitlab-cloudflare</id>
-    <url>https://gitlab.com/api/v4/projects/68509751/packages/maven</url>
+      <id>gitea</id>
+      <url>https://codeberg.org/api/packages/th-schwarz/maven</url>
   </repository>
 </repositories>
 ```
