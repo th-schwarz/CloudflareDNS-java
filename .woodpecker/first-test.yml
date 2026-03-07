@@ -14,17 +14,16 @@ steps:
       commands:
         - mvn clean compile
 
-    - name: javadoc
+    - name: javadoc-and-deploy
       image: maven:3-amazoncorretto-17-alpine
-      commands:
-        - mvn javadoc:javadoc
-
-    - name: deploy-pages
-      image: bitnami/git:latest
       environment:
         CI_TOKEN:
           from_secret: ci_token
       commands:
+        - echo "Generating Javadoc..."
+        - mvn javadoc:javadoc
+        - echo "Installing git..."
+        - apk add --no-cache git
         - echo "Deploying javadoc to codeberg ..."
         - git config --global user.name "Woodpecker CI"
         - git config --global user.email "ci@woodpecker-ci.org"
