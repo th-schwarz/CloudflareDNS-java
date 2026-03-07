@@ -48,6 +48,7 @@
         <sonar.sourceEncoding>${file.encoding}</sonar.sourceEncoding>
         <sonar.projectKey>th-schwarz_CloudflareDNS-java</sonar.projectKey>
         <sonar.projectName>CloudflareDNS-java</sonar.projectName>
+        <sonar.projectMainBranch>develop</sonar.projectMainBranch>
         <sonar.branch.name>develop</sonar.branch.name>
         <sonar.test.exclusions>src/test/java/**/*</sonar.test.exclusions>
 

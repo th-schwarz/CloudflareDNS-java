@@ -16,5 +16,3 @@ steps:
           from_secret: sonar_token
       commands:
         - mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=th-schwarz_CloudflareDNS-java -Dsonar.token=$SONAR_TOKEN
-      when:
-        - branch: develop
