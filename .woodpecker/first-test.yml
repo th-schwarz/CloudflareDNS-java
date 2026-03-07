@@ -25,6 +25,7 @@ steps:
         CI_TOKEN:
           from_secret: ci_token
       commands:
+        - echo "Deploying javadoc to codeberg..."
         - git config --global user.name "Woodpecker CI"
         - git config --global user.email "ci@woodpecker-ci.org"
         - git clone https://oauth2:$CI_TOKEN@codeberg.org/$CI_REPO_OWNER/$CI_REPO_NAME.git pages-repo
