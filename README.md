@@ -1,7 +1,6 @@
 # CloudflareDNS-java
 
-![Codeberg CI](https://ci.codeberg.org/api/badges/16522/status.svg)
-
+[![pipeline-badge](https://ci.codeberg.org/api/badges/16522/status.svg?events=push%2Cmanual%2Cpull_request%2Cpull_request_closed)](https://ci.codeberg.org/repos/16522)
 
 ## Preface
 
