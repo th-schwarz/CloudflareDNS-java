@@ -14,5 +14,27 @@ steps:
       commands:
         - mvn clean compile
 
+    - name: javadoc
+      image: maven:3-amazoncorretto-17-alpine
+      commands:
+        - mvn javadoc:javadoc
+
+    - name: deploy-pages
+      image: bitnami/git:latest
+      environment:
+        - CI_TOKEN:
+            from_secret: CI_TOKEN
+      commands:
+        - git config --global user.name "Woodpecker CI"
+        - git config --global user.email "ci@woodpecker-ci.org"
+        - git clone https://oauth2:$CI_TOKEN@codeberg.org/$CI_REPO_OWNER/$CI_REPO_NAME.git pages-repo
+        - cd pages-repo
+        - git checkout pages || git checkout --orphan pages
+        - rm -rf *
+        - cp -r ../target/site/apidocs/* .
+        - git add .
+        - git commit -m "Update Javadoc from commit $CI_COMMIT_SHA" || true
+        - git push origin pages
+
 
 
