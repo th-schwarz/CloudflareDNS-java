@@ -20,7 +20,7 @@ steps:
         SONAR_TOKEN:
           from_secret: sonar_token
       commands:
-        - mvn sonar:sonar -Dsonar.token=$SONAR_TOKEN
+        - mvn -B -DtestClasspath=src/test/ verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=th-schwarz_CloudflareDNS-java -Dsonar.token=$SONAR_TOKEN
       when:
         - branch: develop
 
