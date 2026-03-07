@@ -1,9 +1,11 @@
 when:
   - event: push
-    branch: main
+    branch: develop
 
-steps: hello
+steps:
     - name: hello
       image: alpine
       commands:
         - echo "Hello World!"
+        - echo "This is a test step"
+
