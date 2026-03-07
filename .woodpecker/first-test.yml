@@ -22,8 +22,8 @@ steps:
     - name: deploy-pages
       image: bitnami/git:latest
       environment:
-        - CI_TOKEN:
-            from_secret: CI_TOKEN
+        CI_TOKEN:
+          from_secret: CI_TOKEN
       commands:
         - git config --global user.name "Woodpecker CI"
         - git config --global user.email "ci@woodpecker-ci.org"
