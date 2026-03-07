@@ -1,0 +1,9 @@
+when:
+  - event: push
+    branch: main
+
+steps: hello
+    - name: hello
+      image: alpine
+      commands:
+        - echo "Hello World!"
