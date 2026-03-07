@@ -9,8 +9,18 @@ steps:
       commands:
         - echo "Hello World!"
 
-    - name: compile
+    - name: test
       image: maven:3-amazoncorretto-17-alpine
       commands:
-        - mvn clean compile
+        - mvn clean verify
+
+    - name: sonarcloud-scan
+      image: maven:3-amazoncorretto-17-alpine
+      environment:
+        SONAR_TOKEN:
+          from_secret: sonar_token
+      commands:
+        - mvn sonar:sonar -Dsonar.token=$SONAR_TOKEN
+      when:
+        - branch: develop
 
