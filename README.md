@@ -1,7 +1,6 @@
 # CloudflareDNS-java
 
-![Codeberg CI](https://ci.codeberg.org/api/badges/16522/status.svg)
-
+[![pipeline-badge](https://ci.codeberg.org/api/badges/16522/status.svg?events=push%2Cmanual%2Cpull_request%2Cpull_request_closed)](https://ci.codeberg.org/repos/16522)
 
 ## Preface
 
@@ -9,7 +8,7 @@ This project provides a java client for minimalistic access to the Cloudflare AP
 managing DNS settings such as creating, updating and deleting DNS records.
 
 If you encounter any bugs or find missing features, feel free to report them on
-the [GitLab Issues page](https://gitlab.com/th-schwarz/CloudflareDNS-java/-/issues).
+the [Codeberg Issues page](https://codeberg.org/th-schwarz/CloudflareDNS-java/issues).
 
 ---
 
