@@ -1,13 +1,7 @@
 # CloudflareDNS-java
 
-![GitLab Pipeline Status](https://gitlab.com/th-schwarz/CloudflareDNS-java/badges/develop/pipeline.svg)
-![GitLab License](https://img.shields.io/gitlab/license/th-schwarz%2FCloudflareDNS-java)
+![Codeberg CI](https://ci.codeberg.org/api/badges/16522/status.svg)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=coverage)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=thischwa_CloudflareDNS-java&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=thischwa_CloudflareDNS-java)
 
 ## Preface
 
