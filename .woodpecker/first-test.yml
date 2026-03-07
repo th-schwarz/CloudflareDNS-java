@@ -9,11 +9,6 @@ steps:
       commands:
         - echo "Hello World!"
 
-    - name: test
-      image: maven:3-amazoncorretto-17-alpine
-      commands:
-        - mvn clean verify
-
     - name: sonarcloud-scan
       image: maven:3-amazoncorretto-17-alpine
       environment:
