@@ -1,3 +1,4 @@
+
 when:
   - event: push
     branch: develop
@@ -7,5 +8,17 @@ steps:
       image: alpine
       commands:
         - echo "Hello World!"
-        - echo "This is a test step"
+
+    - name: checkout
+      image: maven:3-amazoncorretto-17-alpine
+      commands:
+        - git clone $CI_REPO_URL .
+        - git checkout $CI_COMMIT_SHA
+
+    - name: compile
+      image: maven:3-amazoncorretto-17-alpine
+      commands:
+        - mvn clean compile
+
+
 
