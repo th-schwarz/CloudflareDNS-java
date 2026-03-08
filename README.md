@@ -8,6 +8,8 @@
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
 
+[![codeberg.png](docs/codeberg.png)](https://codeberg.org/th-schwarz/CloudflareDNS-java)
+
 ## Preface
 
 This project provides a java client for minimalistic access to the Cloudflare API version 4, which is mainly used for
