@@ -25,27 +25,12 @@ jobs:
       - name: Setup Java and Maven
         uses: ./.github/actions/setup-java-maven
 
-      - name: Set up Maven with GitHub Packages
-        run: |
-          mkdir -p ~/.m2
-          cat > ~/.m2/settings.xml << 'EOF'
-          <settings>
-            <servers>
-              <server>
-                <id>github-cloudflaredns</id>
-                <username>th-schwarz</username>
-                <password>${{ secrets.GITHUB_TOKEN }}</password>
-              </server>
-            </servers>
-          </settings>
-          EOF
-
       - name: Build and analyze with SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-        run: mvn -B -DtestClasspath=src/test/ verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=th-schwarz_DynDRest
+        run: mvn -B -DtestClasspath=src/test/ verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=th-schwarz_CloudflareDNS-java
 
       - name: Publish Test Report
         uses: ./.github/actions/publish-report/
