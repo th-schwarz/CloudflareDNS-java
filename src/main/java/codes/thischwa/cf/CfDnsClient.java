@@ -41,11 +41,11 @@ import org.jetbrains.annotations.Nullable;
  *
  * // Retrieve records of a subdomain
  * List&lt;RecordEntity&gt; records = cfDnsClient.recordList(zone, "sld");
- * records.forEach(getRecord ->
- *     System.out.println("Record Type: " + getRecord.getType() + ", Value: " + getRecord.getContent())
+ * records.forEach(record ->
+ *     System.out.println("Record Type: " + record.getType() + ", Value: " + record.getContent())
  * );
  *
- * // Create a getRecord for the subdomain "api"
+ * // Create a record for the subdomain "api"
  * RecordEntity created = cfDnsClient.recordCreateSld(zone, "api", 60, RecordType.A, "192.168.1.10");
  * System.out.println("Created Record ID: " + created.getId());
  * </code></pre>
