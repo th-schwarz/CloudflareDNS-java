@@ -6,24 +6,24 @@
  *
  * <p>Example usage:
  * <pre><code>
- * // Create a DNS record
+ * // Create a DNS getRecord
  * client.zone("example.com")
- *       .record("api")
+ *       .getRecord("api")
  *       .create(RecordType.A, "192.168.1.1", 60);
  *
  * // Get DNS records
  * List&lt;RecordEntity&gt; records = client.zone("example.com")
- *                                      .record("www", RecordType.A)
+ *                                      .getRecord("www", RecordType.A)
  *                                      .get();
  *
- * // Update a DNS record
+ * // Update a DNS getRecord
  * client.zone("example.com")
- *       .record("api", RecordType.A)
+ *       .getRecord("api", RecordType.A)
  *       .update("192.168.1.2");
  *
  * // Delete DNS records
  * client.zone("example.com")
- *       .record("old-service")
+ *       .getRecord("old-service")
  *       .delete(RecordType.A, RecordType.AAAA);
  * </code></pre>
  */

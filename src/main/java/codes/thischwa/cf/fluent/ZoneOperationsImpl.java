@@ -28,12 +28,12 @@ public class ZoneOperationsImpl implements ZoneOperations {
   }
 
   @Override
-  public RecordOperations record(String sld) throws CloudflareApiException {
+  public RecordOperations getRecord(String sld) throws CloudflareApiException {
     return new RecordOperationsImpl(client, zone, sld, null);
   }
 
   @Override
-  public RecordOperations record(String sld, @Nullable RecordType... types) throws CloudflareApiException {
+  public RecordOperations getRecord(String sld, @Nullable RecordType... types) throws CloudflareApiException {
     return new RecordOperationsImpl(client, zone, sld, types);
   }
 

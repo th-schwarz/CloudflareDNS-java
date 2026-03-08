@@ -6,22 +6,22 @@ import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Represents a DNS record entity within a specific zone.
+ * Represents a DNS getRecord entity within a specific zone.
  *
  * <p>Attributes defined in this class include:
  *
  * <ul>
- *   <li>DNS record type such as "A" or "CNAME".
- *   <li>Name of the DNS record.
- *   <li>Content of the DNS record, such as an IP address.
- *   <li>Flags indicating whether the record is proxiable or proxied.
- *   <li>TTL (Time-To-Live) for the DNS record.
- *   <li>A locked status to indicate the immutability of the record.
+ *   <li>DNS getRecord type such as "A" or "CNAME".
+ *   <li>Name of the DNS getRecord.
+ *   <li>Content of the DNS getRecord, such as an IP address.
+ *   <li>Flags indicating whether the getRecord is proxiable or proxied.
+ *   <li>TTL (Time-To-Live) for the DNS getRecord.
+ *   <li>A locked status to indicate the immutability of the getRecord.
  *   <li>Zone-specific metadata including zone ID and name.
  *   <li>Timestamps for creation and modification.
  * </ul>
  *
- * <p>Provides a static factory method {@code build} for creating a DNS record with specific
+ * <p>Provides a static factory method {@code build} for creating a DNS getRecord with specific
  * attributes.
  */
 @EqualsAndHashCode(callSuper = true)
@@ -45,7 +45,7 @@ public class RecordEntity extends AbstractEntity {
 
   /**
    * Initializes a new instance of the RecordEntity class and invokes the parent constructor from
-   * the AbstractEntity class. The RecordEntity class represents a DNS record entity within a
+   * the AbstractEntity class. The RecordEntity class represents a DNS getRecord entity within a
    * specific zone, encapsulating attributes such as type, name, content, TTL, and other related
    * metadata.
    */
@@ -56,10 +56,10 @@ public class RecordEntity extends AbstractEntity {
   /**
    * Builds and returns a {@link RecordEntity} instance with the specified attributes.
    *
-   * @param name    the name of the DNS record
-   * @param type    the {@link RecordType} of the DNS record
-   * @param ttl     the time-to-live (TTL) value for the DNS record
-   * @param content the content of the DNS record, typically an IP address
+   * @param name    the name of the DNS getRecord
+   * @param type    the {@link RecordType} of the DNS getRecord
+   * @param ttl     the time-to-live (TTL) value for the DNS getRecord
+   * @param content the content of the DNS getRecord, typically an IP address
    * @return a {@link RecordEntity} populated with the provided attributes
    */
   public static RecordEntity build(String name, RecordType type, Integer ttl, String content) {
@@ -74,8 +74,8 @@ public class RecordEntity extends AbstractEntity {
   /**
    * Builds and returns a {@link RecordEntity} instance with the specified ID and content.
    *
-   * @param id      the unique identifier for the DNS record
-   * @param content the content of the DNS record, typically an IP address or other record data
+   * @param id      the unique identifier for the DNS getRecord
+   * @param content the content of the DNS getRecord, typically an IP address or other getRecord data
    * @return a {@link RecordEntity} populated with the provided ID and content
    */
   public static RecordEntity build(String id, String content) {
@@ -88,11 +88,11 @@ public class RecordEntity extends AbstractEntity {
   /**
    * Builds and returns a {@link RecordEntity} instance with the specified attributes.
    *
-   * @param id      the unique identifier for the DNS record
-   * @param name    the name of the DNS record
-   * @param type    the type of the DNS record, represented as a string (e.g., "A", "CNAME")
-   * @param ttl     the time-to-live (TTL) value for the DNS record
-   * @param content the content of the DNS record, typically an IP address or other record data
+   * @param id      the unique identifier for the DNS getRecord
+   * @param name    the name of the DNS getRecord
+   * @param type    the type of the DNS getRecord, represented as a string (e.g., "A", "CNAME")
+   * @param ttl     the time-to-live (TTL) value for the DNS getRecord
+   * @param content the content of the DNS getRecord, typically an IP address or other getRecord data
    * @return a {@link RecordEntity} populated with the provided attributes
    * @throws IllegalArgumentException if the type string is not a valid RecordType
    */
@@ -101,7 +101,7 @@ public class RecordEntity extends AbstractEntity {
     try {
       recordType = RecordType.valueOf(type);
     } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException("Invalid record type: " + type + ". Must be one of: "
+      throw new IllegalArgumentException("Invalid getRecord type: " + type + ". Must be one of: "
           + java.util.Arrays.toString(RecordType.values()), e);
     }
     RecordEntity rec = new RecordEntity();
@@ -114,11 +114,11 @@ public class RecordEntity extends AbstractEntity {
   }
 
   /**
-   * Retrieves the short name (subdomain) of the DNS record.
+   * Retrieves the short name (subdomain) of the DNS getRecord.
    * If the name contains a dot ('.'), only the substring before the first dot is returned.
    * This is useful for getting the subdomain part of a fully qualified domain name.
    *
-   * @return the short name of the DNS record (substring before the first dot),
+   * @return the short name of the DNS getRecord (substring before the first dot),
    *     or the full name if no dot is present
    */
   public String getSld() {

@@ -17,7 +17,7 @@ public interface ZoneOperations {
    * @return a RecordOperations instance for chaining record-specific operations
    * @throws CloudflareApiException if the zone cannot be found or accessed
    */
-  RecordOperations record(String sld) throws CloudflareApiException;
+  RecordOperations getRecord(String sld) throws CloudflareApiException;
 
   /**
    * Selects a record with specific types within the zone for further operations.
@@ -27,7 +27,7 @@ public interface ZoneOperations {
    * @return a RecordOperations instance for chaining record-specific operations
    * @throws CloudflareApiException if the zone cannot be found or accessed
    */
-  RecordOperations record(String sld, @Nullable RecordType... types) throws CloudflareApiException;
+  RecordOperations getRecord(String sld, @Nullable RecordType... types) throws CloudflareApiException;
 
   /**
    * Lists all DNS records within the zone, optionally filtered by types.

@@ -367,7 +367,7 @@ that reduces verbosity and improves code readability.
 ### Basic Usage
 
 ```java
-// Create a DNS record
+// Create a DNS getRecord
 client.zone("example.com")
     .record("api")
     .create(RecordType.A, "192.168.1.1",60);
@@ -381,7 +381,7 @@ List<RecordEntity> records = client.zone("example.com")
 List<RecordEntity> zoneRecords = client.zone("example.com")
     .list(RecordType.A, RecordType.AAAA);
 
-// Update a DNS record
+// Update a DNS getRecord
 RecordEntity updated = client.zone("example.com")
     .record("api", RecordType.A)
     .update("192.168.1.2");
@@ -406,7 +406,7 @@ CfDnsClient client = new CfDnsClientBuilder()
     .withApiTokenAuth("your-api-token")
     .build();
 
-// Create a new record
+// Create a new getRecord
 client.zone("example.com")
     .record("api")
     .create(RecordType.A, "192.168.100.1",60);
@@ -417,7 +417,7 @@ List<RecordEntity> records = client.zone("example.com")
     .get();
 System.out.println("IP: "+records.get(0).getContent());
 
-// Update the record
+// Update the getRecord
 client.zone("example.com")
      .record("api",RecordType.A)
      .update("192.168.100.2");

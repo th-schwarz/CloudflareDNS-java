@@ -9,7 +9,7 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Implementation of RecordOperations for fluent API access to record-level operations.
+ * Implementation of RecordOperations for fluent API access to getRecord-level operations.
  */
 public class RecordOperationsImpl implements RecordOperations {
 

@@ -127,7 +127,7 @@ public class CfClientTest {
       // ensure clean state
       client.recordDeleteTypeIfExists(z, randomSld, RecordType.A, RecordType.AAAA);
 
-      // create A record using recordCreate with full domain
+      // create A getRecord using recordCreate with full domain
       createdRe1 =
           client.recordCreate(z, RecordEntity.build(domain, RecordType.A, TTL, "130.0.0.3"));
       assertNotNull(createdRe1.getId());
@@ -146,7 +146,7 @@ public class CfClientTest {
       r = aRecords.get(0);
       assertEquals("130.0.0.3", r.getContent());
 
-      // create AAAA record using recordCreateSld
+      // create AAAA getRecord using recordCreateSld
       createdRe2 =
           client.recordCreateSld(z, randomSld, TTL, RecordType.AAAA, "2a0a:4cc0:c0:2e4::1");
       List<RecordEntity> aaaaRecords = client.recordList(z, randomSld, RecordType.AAAA);
@@ -166,7 +166,7 @@ public class CfClientTest {
         } else if (Objects.equals(re.getType(), RecordType.AAAA.getType())) {
           assertEquals("2a0a:4cc0:c0:2e4::1", re.getContent());
         } else {
-          fail(String.format("Unexpected record type: %s", re.getType()));
+          fail(String.format("Unexpected getRecord type: %s", re.getType()));
         }
       }
 
@@ -191,7 +191,7 @@ public class CfClientTest {
       assertFalse(fluentList.isEmpty());
       assertTrue(fluentList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
 
-      // update AAAA record
+      // update AAAA getRecord
       createdRe2.setContent("2a0a:4cc0:c0:2e4::2");
       client.recordUpdate(z, createdRe2);
       aaaaRecords = client.recordList(z, randomSld, RecordType.AAAA);
@@ -199,18 +199,18 @@ public class CfClientTest {
       r = aaaaRecords.get(0);
       assertEquals("2a0a:4cc0:c0:2e4::2", r.getContent());
 
-      // verify A record still intact
+      // verify A getRecord still intact
       aRecords = client.recordList(z, randomSld, RecordType.A);
       assertEquals(1, aRecords.size());
       r = aRecords.get(0);
       assertEquals("130.0.0.3", r.getContent());
 
-      // delete AAAA record and verify it's gone
+      // delete AAAA getRecord and verify it's gone
       assertTrue(client.recordDelete(z, createdRe2));
       assertThrows(CloudflareNotFoundException.class,
           () -> client.recordList(z, randomSld, RecordType.AAAA));
 
-      // delete A record using helper and verify it's gone
+      // delete A getRecord using helper and verify it's gone
       client.recordDeleteTypeIfExists(z, randomSld, RecordType.A);
       assertThrows(CloudflareNotFoundException.class,
           () -> client.recordList(z, randomSld, RecordType.A));
@@ -226,7 +226,7 @@ public class CfClientTest {
   void testRecordEntityInvalidType() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
         () -> RecordEntity.build("id123", "example.com", "INVALID_TYPE", 60, "192.168.1.1"));
-    assertTrue(exception.getMessage().contains("Invalid record type: INVALID_TYPE"));
+    assertTrue(exception.getMessage().contains("Invalid getRecord type: INVALID_TYPE"));
     assertTrue(exception.getMessage().contains("Must be one of:"));
   }
 
@@ -373,7 +373,7 @@ public class CfClientTest {
     try {
       // Test fluent create
       RecordEntity created = client.zone(ZONE_STR)
-          .record(fluentSld)
+          .getRecord(fluentSld)
           .create(RecordType.A, "192.168.100.1", TTL);
 
       assertNotNull(created.getId());
@@ -382,7 +382,7 @@ public class CfClientTest {
 
       // Test fluent get
       List<RecordEntity> records = client.zone(ZONE_STR)
-          .record(fluentSld, RecordType.A)
+          .getRecord(fluentSld, RecordType.A)
           .get();
 
       assertEquals(1, records.size());
@@ -390,18 +390,18 @@ public class CfClientTest {
 
       // Test fluent update
       RecordEntity updated = client.zone(ZONE_STR)
-          .record(fluentSld, RecordType.A)
+          .getRecord(fluentSld, RecordType.A)
           .update("192.168.100.2");
 
       assertEquals("192.168.100.2", updated.getContent());
 
       // Test fluent delete
       client.zone(ZONE_STR)
-          .record(fluentSld)
+          .getRecord(fluentSld)
           .delete(RecordType.A);
 
       assertThrows(CloudflareNotFoundException.class,
-          () -> client.zone(ZONE_STR).record(fluentSld, RecordType.A).get());
+          () -> client.zone(ZONE_STR).getRecord(fluentSld, RecordType.A).get());
 
     } finally {
       try {
@@ -425,7 +425,7 @@ public class CfClientTest {
     assertNotNull(groupedRecords, "Resulting map should not be null.");
     assertEquals(2, groupedRecords.size(), "The grouping should result in 2 FQDN keys.");
     assertEquals(2, groupedRecords.get("example.com.").size(), "The key 'example.com.' should have 2 records.");
-    assertEquals(1, groupedRecords.get("sub.example.com.").size(), "The key 'sub.example.com.' should have 1 record.");
+    assertEquals(1, groupedRecords.get("sub.example.com.").size(), "The key 'sub.example.com.' should have 1 getRecord.");
   }
 
   @Test
