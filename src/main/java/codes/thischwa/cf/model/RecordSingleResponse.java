@@ -11,7 +11,7 @@ public class RecordSingleResponse extends AbstractSingleResponse<RecordEntity> {
    *
    * <p>This constructor initializes the RecordSingleResponse object by invoking the superclass
    * constructor. The RecordSingleResponse represents a specific API response structure that
-   * encapsulates a single DNS record entity, providing mechanisms to interact with such data in the
+   * encapsulates a single DNS getRecord entity, providing mechanisms to interact with such data in the
    * context of the Cloudflare API.
    */
   public RecordSingleResponse() {

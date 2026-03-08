@@ -9,14 +9,18 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import codes.thischwa.cf.model.BatchEntry;
+import codes.thischwa.cf.model.PagingRequest;
 import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ZoneEntity;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -92,6 +96,19 @@ public class CfClientTest {
   }
 
   @Test
+  void testZoneList() throws CloudflareApiException {
+    List<ZoneEntity> zones = client.zoneList();
+    assertNotNull(zones);
+    assertFalse(zones.isEmpty());
+    assertEquals(ZONE_STR, zones.get(0).getName());
+
+    zones = client.zoneList(PagingRequest.of(1, 100));
+    assertNotNull(zones);
+    assertFalse(zones.isEmpty());
+    assertEquals(ZONE_STR, zones.get(0).getName());
+  }
+
+  @Test
   void testZoneListAnlFailedSldList() throws Exception {
     List<ZoneEntity> zList = client.zoneList();
     assertEquals(1, zList.size());
@@ -127,7 +144,7 @@ public class CfClientTest {
       // ensure clean state
       client.recordDeleteTypeIfExists(z, randomSld, RecordType.A, RecordType.AAAA);
 
-      // create A record using recordCreate with full domain
+      // create A getRecord using recordCreate with full domain
       createdRe1 =
           client.recordCreate(z, RecordEntity.build(domain, RecordType.A, TTL, "130.0.0.3"));
       assertNotNull(createdRe1.getId());
@@ -146,7 +163,7 @@ public class CfClientTest {
       r = aRecords.get(0);
       assertEquals("130.0.0.3", r.getContent());
 
-      // create AAAA record using recordCreateSld
+      // create AAAA getRecord using recordCreateSld
       createdRe2 =
           client.recordCreateSld(z, randomSld, TTL, RecordType.AAAA, "2a0a:4cc0:c0:2e4::1");
       List<RecordEntity> aaaaRecords = client.recordList(z, randomSld, RecordType.AAAA);
@@ -166,7 +183,7 @@ public class CfClientTest {
         } else if (Objects.equals(re.getType(), RecordType.AAAA.getType())) {
           assertEquals("2a0a:4cc0:c0:2e4::1", re.getContent());
         } else {
-          fail(String.format("Unexpected record type: %s", re.getType()));
+          fail(String.format("Unexpected getRecord type: %s", re.getType()));
         }
       }
 
@@ -181,7 +198,6 @@ public class CfClientTest {
       // test recordList with types without SLD
       List<RecordEntity> aList = client.recordList(z, RecordType.A);
       assertFalse(aList.isEmpty());
-      assertTrue(aList.size() >= 1);
       assertTrue(aList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
       assertTrue(aList.stream().noneMatch(re -> re.getId().equals(createdRe2.getId())));
       assertTrue(aList.stream().allMatch(re -> re.getType().equals(RecordType.A.getType())));
@@ -191,7 +207,7 @@ public class CfClientTest {
       assertFalse(fluentList.isEmpty());
       assertTrue(fluentList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
 
-      // update AAAA record
+      // update AAAA getRecord
       createdRe2.setContent("2a0a:4cc0:c0:2e4::2");
       client.recordUpdate(z, createdRe2);
       aaaaRecords = client.recordList(z, randomSld, RecordType.AAAA);
@@ -199,18 +215,18 @@ public class CfClientTest {
       r = aaaaRecords.get(0);
       assertEquals("2a0a:4cc0:c0:2e4::2", r.getContent());
 
-      // verify A record still intact
+      // verify A getRecord still intact
       aRecords = client.recordList(z, randomSld, RecordType.A);
       assertEquals(1, aRecords.size());
       r = aRecords.get(0);
       assertEquals("130.0.0.3", r.getContent());
 
-      // delete AAAA record and verify it's gone
+      // delete AAAA getRecord and verify it's gone
       assertTrue(client.recordDelete(z, createdRe2));
       assertThrows(CloudflareNotFoundException.class,
           () -> client.recordList(z, randomSld, RecordType.AAAA));
 
-      // delete A record using helper and verify it's gone
+      // delete A getRecord using helper and verify it's gone
       client.recordDeleteTypeIfExists(z, randomSld, RecordType.A);
       assertThrows(CloudflareNotFoundException.class,
           () -> client.recordList(z, randomSld, RecordType.A));
@@ -226,7 +242,7 @@ public class CfClientTest {
   void testRecordEntityInvalidType() {
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
         () -> RecordEntity.build("id123", "example.com", "INVALID_TYPE", 60, "192.168.1.1"));
-    assertTrue(exception.getMessage().contains("Invalid record type: INVALID_TYPE"));
+    assertTrue(exception.getMessage().contains("Invalid getRecord type: INVALID_TYPE"));
     assertTrue(exception.getMessage().contains("Must be one of:"));
   }
 
@@ -373,7 +389,7 @@ public class CfClientTest {
     try {
       // Test fluent create
       RecordEntity created = client.zone(ZONE_STR)
-          .record(fluentSld)
+          .getRecord(fluentSld)
           .create(RecordType.A, "192.168.100.1", TTL);
 
       assertNotNull(created.getId());
@@ -382,7 +398,7 @@ public class CfClientTest {
 
       // Test fluent get
       List<RecordEntity> records = client.zone(ZONE_STR)
-          .record(fluentSld, RecordType.A)
+          .getRecord(fluentSld, RecordType.A)
           .get();
 
       assertEquals(1, records.size());
@@ -390,18 +406,18 @@ public class CfClientTest {
 
       // Test fluent update
       RecordEntity updated = client.zone(ZONE_STR)
-          .record(fluentSld, RecordType.A)
+          .getRecord(fluentSld, RecordType.A)
           .update("192.168.100.2");
 
       assertEquals("192.168.100.2", updated.getContent());
 
       // Test fluent delete
       client.zone(ZONE_STR)
-          .record(fluentSld)
+          .getRecord(fluentSld)
           .delete(RecordType.A);
 
       assertThrows(CloudflareNotFoundException.class,
-          () -> client.zone(ZONE_STR).record(fluentSld, RecordType.A).get());
+          () -> client.zone(ZONE_STR).getRecord(fluentSld, RecordType.A).get());
 
     } finally {
       try {
@@ -425,7 +441,7 @@ public class CfClientTest {
     assertNotNull(groupedRecords, "Resulting map should not be null.");
     assertEquals(2, groupedRecords.size(), "The grouping should result in 2 FQDN keys.");
     assertEquals(2, groupedRecords.get("example.com.").size(), "The key 'example.com.' should have 2 records.");
-    assertEquals(1, groupedRecords.get("sub.example.com.").size(), "The key 'sub.example.com.' should have 1 record.");
+    assertEquals(1, groupedRecords.get("sub.example.com.").size(), "The key 'sub.example.com.' should have 1 getRecord.");
   }
 
   @Test
@@ -444,5 +460,69 @@ public class CfClientTest {
     assertEquals(2, groupedRecords.get("example.com.").size(), "The key 'example.com.' should have 2 records.");
   }
 
+
+  @Test
+  void testPaging() throws Exception {
+    ZoneEntity zone = client.zoneGet(ZONE_STR);
+    String pagingSld = "paging-" + System.currentTimeMillis();
+
+    try {
+      int existingCount = 0;
+      try {
+        List<RecordEntity> allRecords = client.recordList(zone);
+        existingCount = allRecords.size();
+      } catch (CloudflareApiException e) {
+        // ignore
+      }
+
+      // Calculate how many records we need to create to reach at least 12 total A records
+      // (to test paging with pageSize 5: page 1 = 5, page 2 = 5, page 3 = 2+)
+      int targetCount = 12;
+      int recordsToCreate = Math.max(0, targetCount - existingCount);
+
+      // Create additional A records if needed
+      List<RecordEntity> createdRecords = new ArrayList<>();
+      for (int i = 1; i <= recordsToCreate; i++) {
+        RecordEntity record = RecordEntity.build(pagingSld, RecordType.A, TTL, "127.0.0." + i);
+        RecordEntity created = client.recordCreate(zone, record);
+        createdRecords.add(created);
+        assertNotNull(created.getId());
+      }
+
+      // Test paging with page size of 5
+      PagingRequest page1Request = PagingRequest.of(1, 5);
+      List<RecordEntity> page1Records = client.recordList(zone, page1Request);
+      assertEquals(5, page1Records.size(), "First page should contain 5 records");
+
+      // 2nd page should also contain 5 records (if we have at least 12 total)
+      PagingRequest page2Request = PagingRequest.of(2, 5);
+      List<RecordEntity> page2Records = client.recordList(zone, page2Request);
+      assertEquals(5, page2Records.size(), "Second page should contain at least 5 records");
+
+      // 3rd page should contain 2 records
+      PagingRequest page3Request = PagingRequest.of(3, 5);
+      List<RecordEntity> page3Records = client.recordList(zone, page3Request);
+      assertEquals(2, page3Records.size(), "Third page should contain 2 records");
+
+      // Verify no overlap between pages
+      List<String> page1Ids = page1Records.stream().map(RecordEntity::getId).toList();
+      List<String> page2Ids = page2Records.stream().map(RecordEntity::getId).toList();
+      List<String> page3Ids = page3Records.stream().map(RecordEntity::getId).toList();
+      Set<String> generatedRecordIds = new HashSet<>(page1Ids);
+      generatedRecordIds.addAll(page2Ids);
+      generatedRecordIds.addAll(page3Ids);
+      assertEquals(createdRecords.size(), generatedRecordIds.size());
+
+      // Verify our created records are in the zone
+      List<RecordEntity> allRecords = client.recordList(zone);
+      Set<String> allRecordIds = allRecords.stream().map(RecordEntity::getId).collect(Collectors.toSet());
+      assertEquals(createdRecords.size(), allRecordIds.size());
+      assertTrue(allRecordIds.containsAll(generatedRecordIds));
+    } finally {
+      try {
+        client.recordDeleteTypeIfExists(zone, pagingSld, RecordType.A);
+      } catch (Exception e) { /* ignore */ }
+    }
+  }
 
 }

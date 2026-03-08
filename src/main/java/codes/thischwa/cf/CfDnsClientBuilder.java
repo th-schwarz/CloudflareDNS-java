@@ -23,19 +23,6 @@ public class CfDnsClientBuilder {
   private String baseUrl;
 
   /**
-   * Constructs a new instance of `CfDnsClientBuilder`.
-   *
-   * <p>This class serves as a builder for creating and configuring instances of a CfDnsClient. It provides
-   * a fluent API to set various optional configurations, such as API authentication methods and base
-   * URL, before constructing the client.
-   *
-   * <p>By using this constructor, you can initiate the building process with default settings, which can
-   * later be overridden using the provided builder methods.
-   */
-  public CfDnsClientBuilder() {
-  }
-
-  /**
    * Configures whether an exception should be thrown when an empty result is encountered
    * during operations performed by the `CfDnsClient`.
    *

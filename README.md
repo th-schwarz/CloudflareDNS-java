@@ -2,6 +2,14 @@
 
 [![pipeline-badge](https://ci.codeberg.org/api/badges/16522/status.svg?events=push%2Cmanual%2Cpull_request%2Cpull_request_closed)](https://ci.codeberg.org/repos/16522)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)   
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=coverage)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
+
+[![codeberg.png](docs/codeberg.png)](https://codeberg.org/th-schwarz/CloudflareDNS-java)
+
 ## Preface
 
 This project provides a java client for minimalistic access to the Cloudflare API version 4, which is mainly used for
@@ -42,6 +50,9 @@ The dependency is:
 
 ## Changelog
 
+- 0.4.0-SNAPSHOT:
+  - **Breaking Change**: renamed `client.zone().record()` to `client.zone().getRecord()`
+  - Code quality improvements: Increasing test coverage
 - 0.3.0:
   - **Breaking Change**:
     - **New Fluent API**: Changed the initialization of the client(`new CfDnsClientBuilder().withApiTokenAuth("your-api-token").build()`)
@@ -54,7 +65,7 @@ The dependency is:
     - RecordEntity getter methods renamed for clarity: `getName()` → `getSld()`
     - **New Fluent API**: Changed the initialization of the client(`new CfDnsClientBuilder().withApiTokenAuth("your-api-token").build()`) and added chainable method interface for more readable DNS operations (
       `client.zone().record()...`)
-  - Code quality improvements: eliminated duplication in batch operations, improved type safety in HTTP methods,
+  - Code quality improvements: removed duplication in batch operations, improved type safety in HTTP methods,
     optimized string concatenation, removed mutable setters from CfDnsClient
     - Enhanced type validation in `RecordEntity.build()` with better error messages
     - CfClient#recordList must return multiple RecordEntries
@@ -359,7 +370,7 @@ that reduces verbosity and improves code readability.
 ### Basic Usage
 
 ```java
-// Create a DNS record
+// Create a DNS getRecord
 client.zone("example.com")
     .record("api")
     .create(RecordType.A, "192.168.1.1",60);
@@ -373,7 +384,7 @@ List<RecordEntity> records = client.zone("example.com")
 List<RecordEntity> zoneRecords = client.zone("example.com")
     .list(RecordType.A, RecordType.AAAA);
 
-// Update a DNS record
+// Update a DNS getRecord
 RecordEntity updated = client.zone("example.com")
     .record("api", RecordType.A)
     .update("192.168.1.2");
@@ -398,7 +409,7 @@ CfDnsClient client = new CfDnsClientBuilder()
     .withApiTokenAuth("your-api-token")
     .build();
 
-// Create a new record
+// Create a new getRecord
 client.zone("example.com")
     .record("api")
     .create(RecordType.A, "192.168.100.1",60);
@@ -409,7 +420,7 @@ List<RecordEntity> records = client.zone("example.com")
     .get();
 System.out.println("IP: "+records.get(0).getContent());
 
-// Update the record
+// Update the getRecord
 client.zone("example.com")
      .record("api",RecordType.A)
      .update("192.168.100.2");

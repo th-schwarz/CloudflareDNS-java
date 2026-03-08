@@ -5,11 +5,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * Represents a batch entry containing different types of operations on record entities.
+ * Represents a batch entry containing different types of operations on getRecord entities.
  *
  * <p>A BatchEntry groups together collections of operations (patches, posts, puts, and deletes)
  * intended to be performed as part of a single batch process. Each operation corresponds to a specific
- * type of action on DNS record entities.
+ * type of action on DNS getRecord entities.
  *
  * <ul>
  *   <li><b>patches</b>: A list of {@link RecordEntity} objects representing partial updates to existing records.

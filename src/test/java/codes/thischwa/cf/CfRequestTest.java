@@ -27,7 +27,7 @@ public class CfRequestTest {
 
     @Test
     public void testBuildRecordInfoName() {
-        String result = CfRequest.RECORD_INFO_NAME.buildPath("zone123", "sub.domain.com");
+        String result = CfRequest.RECORD_LIST_NAME.buildPath("zone123", "sub.domain.com");
         assertEquals("/zones/zone123/dns_records?name=sub.domain.com", result);
     }
 
@@ -45,7 +45,7 @@ public class CfRequestTest {
 
     @Test
     public void testBuildRecordInfo() {
-      String result = CfRequest.RECORD_INFO_NAME.buildPath("zone123", "sld.domain.com");
+      String result = CfRequest.RECORD_LIST_NAME.buildPath("zone123", "sld.domain.com");
       assertEquals("/zones/zone123/dns_records?name=sld.domain.com", result);
     }
 

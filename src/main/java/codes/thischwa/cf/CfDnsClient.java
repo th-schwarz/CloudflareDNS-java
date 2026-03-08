@@ -116,14 +116,14 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Provides fluent API access to operations on a specific zone.
+   * Provides fluent API access to operations in a specific zone.
    * This method returns a ZoneOperations interface that allows chaining operations
    * on DNS records within the specified zone.
    *
    * <p>Example:
    * <pre><code>
    * client.zone("example.com")
-   *       .record("api")
+   *       .getRecord("api")
    *       .create(RecordType.A, "192.168.1.1", 60);
    * </code></pre>
    *
@@ -178,6 +178,33 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
+   * Retrieves a list of DNS records for a specified zone, with optional paging support.
+   *
+   * @param zone          The zone entity containing information about the target zone.
+   * @return A list of RecordEntity objects representing the DNS records of the specified zone.
+   * @throws CloudflareApiException If an error occurs during the API request or response processing.
+   */
+  public List<RecordEntity> recordList(ZoneEntity zone) throws CloudflareApiException {
+    return recordList(zone, (PagingRequest) null);
+  }
+
+  /**
+   * Retrieves a list of DNS records for a specified zone, with optional paging support.
+   *
+   * @param zone          The zone entity containing information about the target zone.
+   * @param pagingRequest The paging request containing parameters such as page size and number.
+   * @return A list of RecordEntity objects representing the DNS records of the specified zone.
+   * @throws CloudflareApiException If an error occurs during the API request or response processing.
+   */
+  public List<RecordEntity> recordList(ZoneEntity zone, @Nullable PagingRequest pagingRequest) throws CloudflareApiException {
+    PagingRequest pr = pagingRequest == null ? PagingRequest.defaultPaging() : pagingRequest;
+    String endpoint = pr.addQueryString(CfRequest.RECORD_LIST.buildPath(zone.getId()));
+    RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
+    checkResponse(resp);
+    return resp.getResult();
+  }
+
+  /**
    * Retrieves DNS records for the specified second-level domain (SLD) within a zone.
    *
    * @param zone the zone entity representing the DNS zone to query
@@ -192,49 +219,31 @@ public class CfDnsClient extends CfBasicHttpClient {
 
   /**
    * Retrieves DNS records for the specified second-level domain (SLD) within a zone.
-   * Optionally filters by one or more DNS record types.
+   * Optionally, filters by one or more DNS getRecord types.
    *
    * @param zone  The zone entity containing information about the domain zone.
    * @param sld   The second-level domain (SLD) for which to retrieve DNS records.
-   * @param types Optional parameter specifying one or more DNS record types to filter the results.
+   * @param types Optional parameter specifying one or more DNS getRecord types to filter the results.
    * @return A list of {@code RecordEntity} objects representing the DNS records for the specified domain.
    * @throws CloudflareNotFoundException if the specified SLD is not found in the zone
    * @throws CloudflareApiException      if an error occurs while interacting with the Cloudflare API
    */
   public List<RecordEntity> recordList(ZoneEntity zone, String sld, @Nullable RecordType... types)
       throws CloudflareApiException {
-    PagingRequest pagingRequest = PagingRequest.defaultPaging();
-    List<RecordEntity> recs = recordList(zone, sld, pagingRequest);
-    return filterAndSetZoneRecords(zone, types, recs);
-  }
-
-
-  /**
-   * Retrieves all record entities for a specific second-level domain (SLD) within a given DNS
-   * zone using the provided paging request parameters.
-   *
-   * @param zone          The DNS zone entity for which the SLD records are to be fetched.
-   * @param sld           The second-level domain name for which the records are retrieved.
-   * @param pagingRequest The paging request.
-   * @return A list of {@code RecordEntity} associated with the desired SLD.
-   * @throws CloudflareApiException If an error occurs while interacting with the Cloudflare API.
-   */
-  public List<RecordEntity> recordList(ZoneEntity zone, String sld, PagingRequest pagingRequest)
-      throws CloudflareApiException {
     String fqdn = buildFqdn(zone, sld);
-    String endpoint =
-        pagingRequest.addQueryString(CfRequest.RECORD_INFO_NAME.buildPath(zone.getId(), fqdn));
+    String endpoint = CfRequest.RECORD_LIST_NAME.buildPath(zone.getId(), fqdn);
     RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
-    checkResponse(resp);
-    return resp.getResult();
+    checkResponse(resp, false);
+    List<RecordEntity> recs = resp.getResult();
+    return filterAndSetZoneRecords(zone, types, recs);
   }
 
   /**
    * Retrieves a list of all DNS records for a given zone.
-   * Optionally filters by one or more DNS record types.
+   * Optionally, filters by one or more DNS getRecord types.
    *
    * @param zone  The zone entity containing information about the domain zone.
-   * @param types Optional parameter specifying one or more DNS record types to filter the results.
+   * @param types Optional parameter specifying one or more DNS getRecord types to filter the results.
    * @return A list of {@code RecordEntity} objects representing the DNS records for the specified zone.
    * @throws CloudflareApiException if an error occurs while interacting with the Cloudflare API
    */
@@ -248,17 +257,17 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Creates a new DNS record for a given second-level domain (SLD) within the specified zone.
+   * Creates a new DNS getRecord for a given second-level domain (SLD) within the specified zone.
    *
-   * @param zone    The ZoneEntity representing the DNS zone where the record is to be created.
-   * @param sld     The second-level domain (SLD) for which the DNS record is being created.
-   * @param ttl     The time-to-live (TTL) value for the DNS record in seconds.
-   * @param type    The RecordType specifying the type of the DNS record (e.g., A, AAAA, CNAME).
-   * @param content The content of the DNS record (e.g., IP address for A/AAAA records, target
+   * @param zone    The ZoneEntity representing the DNS zone where the getRecord is to be created.
+   * @param sld     The second-level domain (SLD) for which the DNS getRecord is being created.
+   * @param ttl     The time-to-live (TTL) value for the DNS getRecord in seconds.
+   * @param type    The RecordType specifying the type of the DNS getRecord (e.g., A, AAAA, CNAME).
+   * @param content The content of the DNS getRecord (e.g., IP address for A/AAAA records, target
    *                domain for CNAME).
-   * @return The created RecordEntity object containing details of the newly created DNS record.
+   * @return The created RecordEntity object containing details of the newly created DNS getRecord.
    * @throws CloudflareApiException If an error occurs while communicating with the Cloudflare API
-   *                                or creating the record.
+   *                                or creating the getRecord.
    */
   public RecordEntity recordCreateSld(ZoneEntity zone, String sld, int ttl, RecordType type,
                                       String content) throws CloudflareApiException {
@@ -267,14 +276,14 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Creates a DNS record in the specified DNS zone with the provided details.
+   * Creates a DNS getRecord in the specified DNS zone with the provided details.
    *
-   * @param zone    the DNS zone in which the record will be created
-   * @param name    the name of the DNS record (e.g., www.example.com)
-   * @param ttl     the time-to-live (TTL) value for the DNS record
-   * @param type    the type of the DNS record (e.g., A, AAAA, CNAME)
-   * @param content the content or value of the DNS record
-   * @return the created DNS record as a {@link RecordEntity} object
+   * @param zone    the DNS zone in which the getRecord will be created
+   * @param name    the name of the DNS getRecord (e.g., www.example.com)
+   * @param ttl     the time-to-live (TTL) value for the DNS getRecord
+   * @param type    the type of the DNS getRecord (e.g., A, AAAA, CNAME)
+   * @param content the content or value of the DNS getRecord
+   * @return the created DNS getRecord as a {@link RecordEntity} object
    * @throws CloudflareApiException if an error occurs while interacting with the Cloudflare API
    */
   public RecordEntity recordCreate(ZoneEntity zone, String name, int ttl, RecordType type,
@@ -284,13 +293,13 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Creates a new DNS record in the specified zone using the Cloudflare API.
+   * Creates a new DNS getRecord in the specified zone using the Cloudflare API.
    *
-   * @param zone The zone entity where the record will be created. Contains details such as zone
+   * @param zone The zone entity where the getRecord will be created. Contains details such as zone
    *             ID.
-   * @param rec  The record entity representing the DNS record to be created, including its
+   * @param rec  The getRecord entity representing the DNS getRecord to be created, including its
    *             attributes.
-   * @return The created record entity as returned by the Cloudflare API.
+   * @return The created getRecord entity as returned by the Cloudflare API.
    * @throws CloudflareApiException If an error occurs while interacting with the Cloudflare API.
    */
   public RecordEntity recordCreate(ZoneEntity zone, RecordEntity rec)
@@ -305,11 +314,11 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Deletes a DNS record of the specified type within a given zone on the Cloudflare API.
+   * Deletes a DNS getRecord of the specified type within a given zone on the Cloudflare API.
    *
-   * @param zone The zone entity that specifies the zone in which the record exists.
-   * @param rec  The record entity that represents the DNS record to be deleted.
-   * @return {@code true} if the DNS record was successfully deleted; {@code false} otherwise.
+   * @param zone The zone entity that specifies the zone in which the getRecord exists.
+   * @param rec  The getRecord entity that represents the DNS getRecord to be deleted.
+   * @return {@code true} if the DNS getRecord was successfully deleted; {@code false} otherwise.
    * @throws CloudflareApiException if there is an issue during the API communication, or the
    *                                request fails for any reason.
    */
@@ -324,11 +333,11 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Deletes a DNS record of the specified type within a given zone on the Cloudflare API.
+   * Deletes a DNS getRecord of the specified type within a given zone on the Cloudflare API.
    *
-   * @param zone The zone entity that specifies the zone in which the record exists.
-   * @param id   The record entity that represents the DNS record to be deleted.
-   * @return {@code true} if the DNS record was successfully deleted; {@code false} otherwise.
+   * @param zone The zone entity that specifies the zone in which the getRecord exists.
+   * @param id   The getRecord entity that represents the DNS getRecord to be deleted.
+   * @return {@code true} if the DNS getRecord was successfully deleted; {@code false} otherwise.
    * @throws CloudflareApiException if there is an issue during the API communication or the request
    *                                fails for any reason.
    */
@@ -341,12 +350,12 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Updates an existing DNS record in a specified Cloudflare zone.
+   * Updates an existing DNS getRecord in a specified Cloudflare zone.
    *
    * @param zone the zone entity containing the ID of the target zone
-   * @param rec  the record entity containing the ID of the DNS record to be updated and its updated
+   * @param rec  the getRecord entity containing the ID of the DNS getRecord to be updated and its updated
    *             data
-   * @return the updated record entity as returned by the Cloudflare API
+   * @return the updated getRecord entity as returned by the Cloudflare API
    * @throws CloudflareApiException if an error occurs while interacting with the Cloudflare API
    */
   public RecordEntity recordUpdate(ZoneEntity zone, RecordEntity rec)
@@ -362,11 +371,11 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Deletes DNS records of a specific type within a given zone if they exist. If no record of the
+   * Deletes DNS records of a specific type within a given zone if they exist. If no getRecord of the
    * specified type exists, it logs this occurrence without throwing an exception.
    *
-   * @param zone        The DNS zone entity in which the record exists.
-   * @param sld         The second-level domain for which the record is being checked.
+   * @param zone        The DNS zone entity in which the getRecord exists.
+   * @param sld         The second-level domain for which the getRecord is being checked.
    * @param recordTypes The types of DNS records that should be deleted if they exist.
    * @throws CloudflareApiException If an error occurs during API communication.
    */
@@ -377,7 +386,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     try {
       recs = recordList(zone, sld, recordTypes);
     } catch (CloudflareNotFoundException e) {
-      log.trace("No record of type {} found for domain {}.", recordTypes, fqdn);
+      log.trace("No getRecord of type {} found for domain {}.", recordTypes, fqdn);
       return;
     }
     for (RecordEntity rec : recs) {
@@ -385,13 +394,13 @@ public class CfDnsClient extends CfBasicHttpClient {
         recordDelete(zone, rec);
         log.info("Record {} of type {} successful deleted.", fqdn, recordTypes);
       } catch (CloudflareApiException e) {
-        log.error("Failed to delete record {} of type {} for zone {}: {}", fqdn, recordTypes, zone.getName(), e.getMessage());
+        log.error("Failed to delete getRecord {} of type {} for zone {}: {}", fqdn, recordTypes, zone.getName(), e.getMessage());
       }
     }
   }
 
   /**
-   * Processes a batch of DNS record operations (POST, PUT, PATCH, DELETE) for a specified zone.
+   * Processes a batch of DNS getRecord operations (POST, PUT, PATCH, DELETE) for a specified zone.
    * This method builds and cleans the input records, sends the batch request to the Cloudflare API,
    * and returns a result containing processed batch entries.
    *
@@ -407,7 +416,7 @@ public class CfDnsClient extends CfBasicHttpClient {
                                 @Nullable List<RecordEntity> patchRecords, @Nullable List<RecordEntity> deleteRecords)
       throws CloudflareApiException {
     BatchEntry batchEntry = new BatchEntry();
-    // build 'clean' record entries
+    // build 'clean' getRecord entries
     if (postRecords != null) {
       batchEntry.setPosts(cleanRecordsForPostOrPut(postRecords));
     }
@@ -437,8 +446,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     if (types != null && types.length > 0) {
       Set<RecordType> allowedTypes = new HashSet<>(Arrays.asList(types));
       filtered = recs.stream()
-          .filter(rec -> allowedTypes.contains(RecordType.valueOf(rec.getType())))
-          .collect(Collectors.toList());;
+          .filter(rec -> allowedTypes.contains(RecordType.valueOf(rec.getType()))).toList();
     } else {
       filtered = new ArrayList<>(recs);
     }

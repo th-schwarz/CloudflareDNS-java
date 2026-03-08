@@ -1,0 +1,29 @@
+name: "Setup Maven with GitHub Packages"
+
+description: "Sets up JDK, caches Maven dependencies, and configures GitHub Packages for Maven repositories."
+
+inputs:
+  java-version:
+    description: "Java version to install"
+    default: "17"
+    required: true
+  java-distribution:
+    description: "Java distribution to use"
+    default: "corretto"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: ${{ inputs.java-distribution }}
+        java-version: ${{ inputs.java-version }}
+
+    - name: Cache Maven Repository
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-

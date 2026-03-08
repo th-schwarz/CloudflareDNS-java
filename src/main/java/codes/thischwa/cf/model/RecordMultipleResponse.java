@@ -9,7 +9,7 @@ public class RecordMultipleResponse extends AbstractMultipleResponse<RecordEntit
   /**
    * Constructs an instance of RecordMultipleResponse.
    *
-   * <p>This class represents a response containing multiple DNS record entities from the
+   * <p>This class represents a response containing multiple DNS getRecord entities from the
    * Cloudflare API. It inherits functionality from AbstractMultipleResponse to handle multiple
    * records of type RecordEntity.
    */
