@@ -50,6 +50,8 @@ The dependency is:
 
 ## Changelog
 
+- 0.4.0-SNAPSHOT:
+  - **Breaking Change**: renamed `client.zone().record()` to `client.zone().getRecord()`
 - 0.3.0:
   - **Breaking Change**:
     - **New Fluent API**: Changed the initialization of the client(`new CfDnsClientBuilder().withApiTokenAuth("your-api-token").build()`)
