@@ -198,7 +198,6 @@ public class CfClientTest {
       // test recordList with types without SLD
       List<RecordEntity> aList = client.recordList(z, RecordType.A);
       assertFalse(aList.isEmpty());
-      assertTrue(aList.size() >= 1);
       assertTrue(aList.stream().anyMatch(re -> re.getId().equals(createdRe1.getId())));
       assertTrue(aList.stream().noneMatch(re -> re.getId().equals(createdRe2.getId())));
       assertTrue(aList.stream().allMatch(re -> re.getType().equals(RecordType.A.getType())));

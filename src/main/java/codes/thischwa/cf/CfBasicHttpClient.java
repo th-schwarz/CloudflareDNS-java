@@ -33,6 +33,9 @@ abstract class CfBasicHttpClient {
   private final CfDnsClientBuilder.CfAuth auth;
   private final ObjectMapper objectMapper;
 
+  private record ResultWrapper(int statusCode, String responseBody) {
+  }
+
   /**
    * Creates a new Cloudflare HTTP client with the specified base URL and authentication.
    *
@@ -97,7 +100,7 @@ abstract class CfBasicHttpClient {
       log.error("JSON parsing error for request to {}", logUri, e);
       throw new CloudflareApiException("Error processing JSON response", e);
     } catch (Exception e) {
-      throw new CloudflareApiException("Server error!", e);
+      throw new CloudflareApiException("Unexpected error!", e);
     }
   }
 
@@ -186,8 +189,5 @@ abstract class CfBasicHttpClient {
 
   private String buildUrl(String endpoint) {
     return baseUrl + endpoint;
-  }
-
-  private record ResultWrapper(int statusCode, String responseBody) {
   }
 }
