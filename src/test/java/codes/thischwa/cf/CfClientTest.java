@@ -9,14 +9,18 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import codes.thischwa.cf.model.BatchEntry;
+import codes.thischwa.cf.model.PagingRequest;
 import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ZoneEntity;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -89,6 +93,19 @@ public class CfClientTest {
         client.recordDeleteTypeIfExists(zone, SLD_STR, RecordType.A, RecordType.AAAA);
       } catch (Exception e) { /* ignore */ }
     }
+  }
+
+  @Test
+  void testZoneList() throws CloudflareApiException {
+    List<ZoneEntity> zones = client.zoneList();
+    assertNotNull(zones);
+    assertFalse(zones.isEmpty());
+    assertEquals(ZONE_STR, zones.get(0).getName());
+
+    zones = client.zoneList(PagingRequest.of(1, 100));
+    assertNotNull(zones);
+    assertFalse(zones.isEmpty());
+    assertEquals(ZONE_STR, zones.get(0).getName());
   }
 
   @Test
@@ -444,5 +461,69 @@ public class CfClientTest {
     assertEquals(2, groupedRecords.get("example.com.").size(), "The key 'example.com.' should have 2 records.");
   }
 
+
+  @Test
+  void testPaging() throws Exception {
+    ZoneEntity zone = client.zoneGet(ZONE_STR);
+    String pagingSld = "paging-" + System.currentTimeMillis();
+
+    try {
+      int existingCount = 0;
+      try {
+        List<RecordEntity> allRecords = client.recordList(zone);
+        existingCount = allRecords.size();
+      } catch (CloudflareApiException e) {
+        // ignore
+      }
+
+      // Calculate how many records we need to create to reach at least 12 total A records
+      // (to test paging with pageSize 5: page 1 = 5, page 2 = 5, page 3 = 2+)
+      int targetCount = 12;
+      int recordsToCreate = Math.max(0, targetCount - existingCount);
+
+      // Create additional A records if needed
+      List<RecordEntity> createdRecords = new ArrayList<>();
+      for (int i = 1; i <= recordsToCreate; i++) {
+        RecordEntity record = RecordEntity.build(pagingSld, RecordType.A, TTL, "127.0.0." + i);
+        RecordEntity created = client.recordCreate(zone, record);
+        createdRecords.add(created);
+        assertNotNull(created.getId());
+      }
+
+      // Test paging with page size of 5
+      PagingRequest page1Request = PagingRequest.of(1, 5);
+      List<RecordEntity> page1Records = client.recordList(zone, page1Request);
+      assertEquals(5, page1Records.size(), "First page should contain 5 records");
+
+      // 2nd page should also contain 5 records (if we have at least 12 total)
+      PagingRequest page2Request = PagingRequest.of(2, 5);
+      List<RecordEntity> page2Records = client.recordList(zone, page2Request);
+      assertEquals(5, page2Records.size(), "Second page should contain at least 5 records");
+
+      // 3rd page should contain 2 records
+      PagingRequest page3Request = PagingRequest.of(3, 5);
+      List<RecordEntity> page3Records = client.recordList(zone, page3Request);
+      assertEquals(2, page3Records.size(), "Third page should contain 2 records");
+
+      // Verify no overlap between pages
+      List<String> page1Ids = page1Records.stream().map(RecordEntity::getId).toList();
+      List<String> page2Ids = page2Records.stream().map(RecordEntity::getId).toList();
+      List<String> page3Ids = page3Records.stream().map(RecordEntity::getId).toList();
+      Set<String> generatedRecordIds = new HashSet<>(page1Ids);
+      generatedRecordIds.addAll(page2Ids);
+      generatedRecordIds.addAll(page3Ids);
+      assertEquals(createdRecords.size(), generatedRecordIds.size());
+
+      // Verify our created records are in the zone
+      List<RecordEntity> allRecords = client.recordList(zone);
+      Set<String> allRecordIds = allRecords.stream().map(RecordEntity::getId).collect(Collectors.toSet());
+      assertEquals(createdRecords.size(), allRecordIds.size());
+      assertTrue(allRecordIds.containsAll(generatedRecordIds));
+    } finally {
+      try {
+        client.recordDeleteTypeIfExists(zone, pagingSld, RecordType.A);
+      } catch (Exception e) { /* ignore */ }
+    }
+  }
 
 }

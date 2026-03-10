@@ -116,7 +116,7 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
-   * Provides fluent API access to operations on a specific zone.
+   * Provides fluent API access to operations in a specific zone.
    * This method returns a ZoneOperations interface that allows chaining operations
    * on DNS records within the specified zone.
    *
@@ -178,6 +178,33 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
   /**
+   * Retrieves a list of DNS records for a specified zone, with optional paging support.
+   *
+   * @param zone          The zone entity containing information about the target zone.
+   * @return A list of RecordEntity objects representing the DNS records of the specified zone.
+   * @throws CloudflareApiException If an error occurs during the API request or response processing.
+   */
+  public List<RecordEntity> recordList(ZoneEntity zone) throws CloudflareApiException {
+    return recordList(zone, (PagingRequest) null);
+  }
+
+  /**
+   * Retrieves a list of DNS records for a specified zone, with optional paging support.
+   *
+   * @param zone          The zone entity containing information about the target zone.
+   * @param pagingRequest The paging request containing parameters such as page size and number.
+   * @return A list of RecordEntity objects representing the DNS records of the specified zone.
+   * @throws CloudflareApiException If an error occurs during the API request or response processing.
+   */
+  public List<RecordEntity> recordList(ZoneEntity zone, @Nullable PagingRequest pagingRequest) throws CloudflareApiException {
+    PagingRequest pr = pagingRequest == null ? PagingRequest.defaultPaging() : pagingRequest;
+    String endpoint = pr.addQueryString(CfRequest.RECORD_LIST.buildPath(zone.getId()));
+    RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
+    checkResponse(resp);
+    return resp.getResult();
+  }
+
+  /**
    * Retrieves DNS records for the specified second-level domain (SLD) within a zone.
    *
    * @param zone the zone entity representing the DNS zone to query
@@ -203,35 +230,17 @@ public class CfDnsClient extends CfBasicHttpClient {
    */
   public List<RecordEntity> recordList(ZoneEntity zone, String sld, @Nullable RecordType... types)
       throws CloudflareApiException {
-    PagingRequest pagingRequest = PagingRequest.defaultPaging();
-    List<RecordEntity> recs = recordList(zone, sld, pagingRequest);
-    return filterAndSetZoneRecords(zone, types, recs);
-  }
-
-
-  /**
-   * Retrieves all getRecord entities for a specific second-level domain (SLD) within a given DNS
-   * zone using the provided paging request parameters.
-   *
-   * @param zone          The DNS zone entity for which the SLD records are to be fetched.
-   * @param sld           The second-level domain name for which the records are retrieved.
-   * @param pagingRequest The paging request.
-   * @return A list of {@code RecordEntity} associated with the desired SLD.
-   * @throws CloudflareApiException If an error occurs while interacting with the Cloudflare API.
-   */
-  public List<RecordEntity> recordList(ZoneEntity zone, String sld, PagingRequest pagingRequest)
-      throws CloudflareApiException {
     String fqdn = buildFqdn(zone, sld);
-    String endpoint =
-        pagingRequest.addQueryString(CfRequest.RECORD_INFO_NAME.buildPath(zone.getId(), fqdn));
+    String endpoint = CfRequest.RECORD_LIST_NAME.buildPath(zone.getId(), fqdn);
     RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
-    checkResponse(resp);
-    return resp.getResult();
+    checkResponse(resp, false);
+    List<RecordEntity> recs = resp.getResult();
+    return filterAndSetZoneRecords(zone, types, recs);
   }
 
   /**
    * Retrieves a list of all DNS records for a given zone.
-   * Optionally filters by one or more DNS getRecord types.
+   * Optionally, filters by one or more DNS getRecord types.
    *
    * @param zone  The zone entity containing information about the domain zone.
    * @param types Optional parameter specifying one or more DNS getRecord types to filter the results.
@@ -438,7 +447,7 @@ public class CfDnsClient extends CfBasicHttpClient {
       Set<RecordType> allowedTypes = new HashSet<>(Arrays.asList(types));
       filtered = recs.stream()
           .filter(rec -> allowedTypes.contains(RecordType.valueOf(rec.getType())))
-          .collect(Collectors.toList());;
+          .collect(Collectors.toList());
     } else {
       filtered = new ArrayList<>(recs);
     }

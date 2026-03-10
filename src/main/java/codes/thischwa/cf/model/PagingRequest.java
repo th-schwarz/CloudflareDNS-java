@@ -25,7 +25,7 @@ public class PagingRequest {
    * Default page size for retrieving all records in a single request.
    * Set to a very high value to effectively disable pagination when fetching all records.
    */
-  private static final int DEFAULT_ALL_RECORDS_PAGE_SIZE = 5_000_000;
+  private static final int DEFAULT_ALL_RECORDS_PAGE_SIZE = 1000;
 
   private int page;
   private int perPage;
@@ -77,7 +77,7 @@ public class PagingRequest {
   }
 
   private String queryString(boolean add) {
-    String qs = "page=" + page + "&perPage=" + perPage;
+    String qs = "page=" + page + "&per_page=" + perPage;
     return add ? "&" + qs : "?" + qs;
   }
 }

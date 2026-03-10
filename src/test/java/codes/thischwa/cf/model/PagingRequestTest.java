@@ -9,13 +9,13 @@ public class PagingRequestTest {
     @Test
     void testBuildPath() {
         String result = PagingRequest.defaultPaging().addQueryString("/zones");
-        assertEquals("/zones?page=1&perPage=5000000", result);
+        assertEquals("/zones?page=1&per_page=1000", result);
     }
 
     @Test
     void testBuildPathAdditional() {
         String result = new PagingRequest( 10, 100).addQueryString("/zones?foo=bar");
-        assertEquals("/zones?foo=bar&page=10&perPage=100", result);
+        assertEquals("/zones?foo=bar&page=10&per_page=100", result);
     }
 
     @Test
