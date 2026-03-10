@@ -82,7 +82,7 @@ class CfBasicHttpClientTest {
     assertTrue(exception.getMessage().contains("Unexpected error"));
     Throwable cause = exception.getCause();
     assertInstanceOf(CloudflareApiException.class, cause);
-    assertTrue(cause.getMessage().contains("API error: 10404: No route for that URI"), "Expected error message No route for that URI");
+    assertTrue(cause.getMessage().contains("API error: 10404: No route for that URI"), "Expected error message: No route for that URI∞ but it was: " + cause.getMessage());
   }
 
   @Test
