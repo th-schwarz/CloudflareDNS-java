@@ -219,7 +219,7 @@ public class CfDnsClient extends CfBasicHttpClient {
 
   /**
    * Retrieves DNS records for the specified second-level domain (SLD) within a zone.
-   * Optionally filters by one or more DNS getRecord types.
+   * Optionally, filters by one or more DNS getRecord types.
    *
    * @param zone  The zone entity containing information about the domain zone.
    * @param sld   The second-level domain (SLD) for which to retrieve DNS records.
@@ -446,8 +446,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     if (types != null && types.length > 0) {
       Set<RecordType> allowedTypes = new HashSet<>(Arrays.asList(types));
       filtered = recs.stream()
-          .filter(rec -> allowedTypes.contains(RecordType.valueOf(rec.getType())))
-          .collect(Collectors.toList());
+          .filter(rec -> allowedTypes.contains(RecordType.valueOf(rec.getType()))).toList();
     } else {
       filtered = new ArrayList<>(recs);
     }
