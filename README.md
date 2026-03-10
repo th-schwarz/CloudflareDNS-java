@@ -52,6 +52,7 @@ The dependency is:
 
 - 0.4.0-SNAPSHOT:
   - **Breaking Change**: renamed `client.zone().record()` to `client.zone().getRecord()`
+  - Code quality improvements: Increasing test coverage
 - 0.3.0:
   - **Breaking Change**:
     - **New Fluent API**: Changed the initialization of the client(`new CfDnsClientBuilder().withApiTokenAuth("your-api-token").build()`)
@@ -64,7 +65,7 @@ The dependency is:
     - RecordEntity getter methods renamed for clarity: `getName()` → `getSld()`
     - **New Fluent API**: Changed the initialization of the client(`new CfDnsClientBuilder().withApiTokenAuth("your-api-token").build()`) and added chainable method interface for more readable DNS operations (
       `client.zone().record()...`)
-  - Code quality improvements: eliminated duplication in batch operations, improved type safety in HTTP methods,
+  - Code quality improvements: removed duplication in batch operations, improved type safety in HTTP methods,
     optimized string concatenation, removed mutable setters from CfDnsClient
     - Enhanced type validation in `RecordEntity.build()` with better error messages
     - CfClient#recordList must return multiple RecordEntries
