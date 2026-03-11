@@ -50,7 +50,8 @@ The dependency is:
 
 ## Changelog
 
-- 0.4.0-SNAPSHOT:
+- 0.4.0:
+  - fixed some paging issues 
   - **Breaking Change**: renamed `client.zone().record()` to `client.zone().getRecord()`
   - Code quality improvements: Increasing test coverage
 - 0.3.0:
