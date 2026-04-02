@@ -15,10 +15,10 @@ runs:
   using: "composite"
   steps:
     - name: Set up JDK
-      uses: actions/setup-java@v4
       with:
         distribution: ${{ inputs.java-distribution }}
         java-version: ${{ inputs.java-version }}
+      uses: actions/setup-java@v5
 
     - name: Cache Maven Repository
       uses: actions/cache@v4
