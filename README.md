@@ -28,25 +28,7 @@ This guide comes without any warranty. Use at your own risk. The author is not r
 
 ## Get It
 
-The project has its own maven repository. It can be added to the `pom.xml`:
-
-```xml
-<repositories>
-  <repository>
-      <id>gitea</id>
-      <url>https://codeberg.org/api/packages/th-schwarz/maven</url>
-  </repository>
-</repositories>
-```
-
-The dependency is:
-```xml
-<dependency>
-  <groupId>codes.thischwa</groupId>
-  <artifactId>cloudflaredns</artifactId>
-  <version>[version]</version>
-</dependency>
-```
+The project has its own maven repository. Follow the instructions on the  latest [package](https://codeberg.org/th-schwarz/-/packages/maven/codes.thischwa:cloudflaredns/) to add the repository to your project.
 
 ## Changelog
 
