@@ -8,15 +8,13 @@
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
 
-[![codeberg.png](docs/codeberg.png)](https://codeberg.org/th-schwarz/CloudflareDNS-java)
-
 ## Preface
 
 This project provides a java client for minimalistic access to the Cloudflare API version 4, which is mainly used for
 managing DNS settings such as creating, updating and deleting DNS records.
 
 If you encounter any bugs or find missing features, feel free to report them on
-the [Codeberg Issues page](https://codeberg.org/th-schwarz/CloudflareDNS-java/issues).
+the [Gitea Issues page](https://git.mein-gateway.de/thischwa/CloudflareDNS-java/issues).
 
 ---
 
@@ -28,7 +26,7 @@ This guide comes without any warranty. Use at your own risk. The author is not r
 
 ## Get It
 
-The project has its own maven repository. Follow the instructions on the  latest [package](https://codeberg.org/th-schwarz/-/packages/maven/codes.thischwa:cloudflaredns/) to add the repository to your project.
+The project has its own maven repository. Follow the instructions on the latest [package](https://git.mein-gateway.de/thischwa/-/packages) to add the repository to your project.
 
 ## Changelog
 

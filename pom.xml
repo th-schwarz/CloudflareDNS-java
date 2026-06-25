@@ -10,8 +10,8 @@
     <packaging>jar</packaging>
 
     <issueManagement>
-        <url>https://codeberg.org/th-schwarz/CloudflareDNS-java/issues</url>
-        <system>Codeberg Issues</system>
+        <url>https://git.mein-gateway.de/thischwa/CloudflareDNS-java/issues</url>
+        <system>Gitea Issues</system>
     </issueManagement>
 
     <properties>
@@ -55,23 +55,23 @@
     </properties>
 
     <scm>
-        <developerConnection>scm:git:git@codeberg.org:th-schwarz/CloudflareDNS-java.git</developerConnection>
-        <connection>scm:git:git@codeberg.org:th-schwarz/CloudflareDNS-java.git</connection>
-        <url>https://codeberg.org/th-schwarz/CloudflareDNS-java</url>
-        <tag>v0.1.0</tag>
+        <developerConnection>scm:git:https://git.mein-gateway.de/thischwa/CloudflareDNS-java.git</developerConnection>
+        <connection>scm:git:https://git.mein-gateway.de/thischwa/CloudflareDNS-java.git</connection>
+        <url>https://git.mein-gateway.de/thischwa/CloudflareDNS-java</url>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
         <repository>
-            <id>codeberg-cloudflaredns</id>
-            <url>https://codeberg.org/api/packages/th-schwarz/maven</url>
+            <id>mygitea</id>
+            <url>https://git.mein-gateway.de/api/packages/thischwa/maven</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
         </repository>
         <snapshotRepository>
-            <id>codeberg-cloudflaredns</id>
-            <url>https://codeberg.org/api/packages/th-schwarz/maven</url>
+            <id>mygitea</id>
+            <url>https://git.mein-gateway.de/api/packages/thischwa/maven</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
