@@ -1,13 +1,5 @@
 # CloudflareDNS-java
 
-[![pipeline-badge](https://ci.codeberg.org/api/badges/16522/status.svg?events=push%2Cmanual%2Cpull_request%2Cpull_request_closed)](https://ci.codeberg.org/repos/16522)
-
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)   
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=coverage)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=th-schwarz_CloudflareDNS-java&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=th-schwarz_CloudflareDNS-java)
-
 ## Preface
 
 This project provides a java client for minimalistic access to the Cloudflare API version 4, which is mainly used for
