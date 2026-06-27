@@ -24,25 +24,55 @@ runs:
           cp "$f" "junit-short/${short}"
         done
 
-    - name: Generate HTML Report
+    - name: Generate Markdown Report
       shell: bash
       run: |
-        pip install junit2html --quiet
         python3 - <<'EOF'
         import glob, xml.etree.ElementTree as ET
+        
         files = glob.glob("junit-short/*.xml")
-        root = ET.Element("testsuites")
-        for f in files:
+        total_tests = total_failures = total_errors = total_skipped = 0
+        rows = []
+        
+        for f in sorted(files):
             tree = ET.parse(f)
             r = tree.getroot()
-            if r.tag == "testsuites":
-                root.extend(r)
-            else:
-                root.append(r)
-        ET.ElementTree(root).write("junit-short/merged.xml")
-        EOF
-        mkdir -p reports
-        junit2html junit-short/merged.xml reports/index.html
+            suites = r.findall("testsuite") if r.tag == "testsuites" else [r]
+            for ts in suites:
+                name = ts.get("name", f)
+                tests    = int(ts.get("tests",    0))
+                failures = int(ts.get("failures", 0))
+                errors   = int(ts.get("errors",   0))
+                skipped  = int(ts.get("skipped",  0))
+                passed   = tests - failures - errors - skipped
+                status   = "✅" if (failures + errors) == 0 else "❌"
+                total_tests    += tests
+                total_failures += failures
+                total_errors   += errors
+                total_skipped  += skipped
+                rows.append(f"| {status} | {name} | {tests} | {passed} | {failures + errors} | {skipped} |")
+        
+        total_passed = total_tests - total_failures - total_errors - total_skipped
+        overall = "✅ All tests passed" if (total_failures + total_errors) == 0 else "❌ Some tests failed"
+        
+        md = f"""# Test Report
+
+    **{overall}**
+
+    | | Tests | Passed | Failed | Skipped |
+    |---|---|---|---|---|
+    | **Total** | {total_tests} | {total_passed} | {total_failures + total_errors} | {total_skipped} |
+  
+  ## Details
+    
+    | Status | Suite | Tests | Passed | Failed | Skipped |
+    |---|---|---|---|---|---|
+    """ + "\n".join(rows) + "\n"
+  
+  with open("reports/index.md", "w") as out:
+    out.write(md)
+    print(md)
+    EOF
 
     - name: Commit Report to Repo
       shell: bash
