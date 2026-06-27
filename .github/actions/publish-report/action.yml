@@ -16,7 +16,6 @@ runs:
         for f in **/target/*-reports/TEST-*.xml; do
           base="$(basename "$f")"
           short="${base#TEST-}"
-          short="${short%.xml}"
           cp "$f" "junit-short/${short}"
         done
 
