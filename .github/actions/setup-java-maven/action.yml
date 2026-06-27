@@ -1,6 +1,6 @@
 name: "Setup Maven with GitHub Packages"
 
-description: "Sets up JDK, caches Maven dependencies, and configures GitHub Packages for Maven repositories."
+description: "Sets up JDK and caches Maven dependencies."
 
 inputs:
   java-version:
