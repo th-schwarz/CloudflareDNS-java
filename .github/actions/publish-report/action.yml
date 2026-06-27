@@ -24,30 +24,32 @@ runs:
           cp "$f" "junit-short/${short}"
         done
 
-    - name: Publish Test Report
-      uses: dorny/test-reporter@v3
-      with:
-        name: ${{ inputs.report-name }}
-        path: "*"
-        reporter: java-junit
-        only-summary: true
-        working-directory: "junit-short"
-        use-actions-summary: true
-        token: ${{ inputs.token }}
-
     - name: Generate HTML Report
       shell: bash
       run: |
         pip install junit2html --quiet
+        python3 - <<'EOF'
+        import glob, xml.etree.ElementTree as ET
+        files = glob.glob("junit-short/*.xml")
+        root = ET.Element("testsuites")
+        for f in files:
+            tree = ET.parse(f)
+            r = tree.getroot()
+            if r.tag == "testsuites":
+                root.extend(r)
+            else:
+                root.append(r)
+        ET.ElementTree(root).write("junit-short/merged.xml")
+        EOF
         mkdir -p reports
-        junit2html junit-short/*.xml reports/index.html
+        junit2html junit-short/merged.xml reports/index.html
 
     - name: Commit Report to Repo
       shell: bash
       env:
         GIT_USER: gitea-actions-bot
-        GIT_EMAIL: osp@thischwa.codes
-        GITEA_TOKEN: ${{ secrets.REPORT_TOKEN }}
+        GIT_EMAIL: bot@mein-gateway.de
+        GITEA_TOKEN: ${{ inputs.token }}
       run: |
         git config user.name "$GIT_USER"
         git config user.email "$GIT_EMAIL"
