@@ -19,7 +19,7 @@ runs:
           cp "$f" "junit-short/${short}"
         done
 
-    - name: Generate Markdown Report
+    - name: Generate Markdown Test Report
       shell: bash
       run: |
         mkdir -p reports
@@ -67,7 +67,7 @@ runs:
         print(md)
         EOF
 
-    - name: Commit Report to Repo
+    - name: Commit Test-Report to Repo
       shell: bash
       env:
         GIT_USER: gitea-actions-bot
