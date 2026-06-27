@@ -19,16 +19,17 @@ runs:
           cp "$f" "junit-short/${short}"
         done
 
-    - name: Generate Markdown Report
+    - name: Generate Markdown Test Report
       shell: bash
       run: |
         mkdir -p reports
         python3 - <<'EOF'
         import glob, xml.etree.ElementTree as ET
 
+        # --- JUnit ---
         files = glob.glob("junit-short/*.xml")
         total_tests = total_failures = total_errors = total_skipped = 0
-        rows = []
+        test_rows = []
 
         for f in sorted(files):
             tree = ET.parse(f)
@@ -46,28 +47,62 @@ runs:
                 total_failures += failures
                 total_errors   += errors
                 total_skipped  += skipped
-                rows.append(f"| {status} | {name} | {tests} | {passed} | {failures + errors} | {skipped} |")
+                test_rows.append(f"| {status} | {name} | {tests} | {passed} | {failures + errors} | {skipped} |")
 
         total_passed = total_tests - total_failures - total_errors - total_skipped
         overall = "✅ All tests passed" if (total_failures + total_errors) == 0 else "❌ Some tests failed"
 
+        # --- JaCoCo ---
+        def counter(el, type_):
+            c = next((x for x in el.findall("counter") if x.get("type") == type_), None)
+            if c is None:
+                return 0, 0
+            covered = int(c.get("covered", 0))
+            missed  = int(c.get("missed",  0))
+            return covered, covered + missed
+
+        cov_rows = []
+        jacoco_files = glob.glob("**/target/site/jacoco/jacoco.xml", recursive=True)
+
+        for jf in sorted(jacoco_files):
+            tree = ET.parse(jf)
+            root = tree.getroot()
+            for pkg in root.findall("package"):
+                name = pkg.get("name", "").replace("/", ".")
+                line_cov,   line_total   = counter(pkg, "LINE")
+                branch_cov, branch_total = counter(pkg, "BRANCH")
+                line_pct   = f"{100 * line_cov   / line_total:.0f}%"   if line_total   else "n/a"
+                branch_pct = f"{100 * branch_cov / branch_total:.0f}%" if branch_total else "n/a"
+                cov_rows.append(f"| {name} | {line_pct} ({line_cov}/{line_total}) | {branch_pct} ({branch_cov}/{branch_total}) |")
+
+        # --- Markdown zusammenbauen ---
         md = (
             "# Test Report\n\n"
             f"**{overall}**\n\n"
+            "## Test Results\n\n"
             "| | Tests | Passed | Failed | Skipped |\n"
             "|---|---|---|---|---|\n"
             f"| **Total** | {total_tests} | {total_passed} | {total_failures + total_errors} | {total_skipped} |\n\n"
-            "## Details\n\n"
+            "### Details\n\n"
             "| Status | Suite | Tests | Passed | Failed | Skipped |\n"
             "|---|---|---|---|---|---|\n"
-        ) + "\n".join(rows) + "\n"
+        ) + "\n".join(test_rows) + "\n\n"
 
-        with open("reports/index.md", "w") as out:
+        if cov_rows:
+            md += (
+                "## Coverage\n\n"
+                "| Package | Line Coverage | Branch Coverage |\n"
+                "|---|---|---|\n"
+            ) + "\n".join(cov_rows) + "\n"
+        else:
+            md += "_No JaCoCo report found._\n"
+
+        with open("reports/test.md", "w") as out:
             out.write(md)
         print(md)
         EOF
 
-    - name: Commit Report to Repo
+    - name: Commit Test-Report to Repo
       shell: bash
       env:
         GIT_USER: gitea-actions-bot
