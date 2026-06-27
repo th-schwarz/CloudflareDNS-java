@@ -27,9 +27,10 @@ runs:
     - name: Publish Test Report
       uses: dorny/test-reporter@v3
       with:
-        token: ${{ inputs.token }}
         name: ${{ inputs.report-name }}
         path: "*"
         reporter: java-junit
         only-summary: true
         working-directory: "junit-short"
+        use-actions-summary: true
+        token: ${{ inputs.token }}
