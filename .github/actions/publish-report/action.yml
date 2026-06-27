@@ -34,3 +34,27 @@ runs:
         working-directory: "junit-short"
         use-actions-summary: true
         token: ${{ inputs.token }}
+
+    - name: Generate HTML Report
+      shell: bash
+      run: |
+        pip install junit2html --quiet
+        mkdir -p reports
+        junit2html junit-short/*.xml reports/index.html
+
+    - name: Commit Report to Repo
+      shell: bash
+      env:
+        GIT_USER: gitea-actions-bot
+        GIT_EMAIL: osp@thischwa.codes
+        GITEA_TOKEN: ${{ secrets.REPORT_TOKEN }}
+      run: |
+        git config user.name "$GIT_USER"
+        git config user.email "$GIT_EMAIL"
+        git remote set-url origin https://$GIT_USER:$GITEA_TOKEN@git.mein-gateway.de/${{ github.repository }}.git
+        git fetch origin
+        git checkout ${{ github.ref_name }}
+        git add reports/
+        git diff --cached --quiet && echo "No changes" && exit 0
+        git commit -m "ci: update test report [skip ci]"
+        git push origin ${{ github.ref_name }}
