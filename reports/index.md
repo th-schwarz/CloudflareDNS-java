@@ -2,11 +2,13 @@
 
 **✅ All tests passed**
 
+## Test Results
+
 | | Tests | Passed | Failed | Skipped |
 |---|---|---|---|---|
 | **Total** | 90 | 90 | 0 | 0 |
 
-## Details
+### Details
 
 | Status | Suite | Tests | Passed | Failed | Skipped |
 |---|---|---|---|---|---|
@@ -24,3 +26,11 @@
 | ✅ | codes.thischwa.cf.model.RecordEntityTest | 6 | 6 | 0 | 0 |
 | ✅ | codes.thischwa.cf.model.RecordTypeTest | 3 | 3 | 0 | 0 |
 | ✅ | codes.thischwa.cf.model.ZoneEntityTest | 1 | 1 | 0 | 0 |
+
+## Coverage
+
+| Package | Line Coverage | Branch Coverage |
+|---|---|---|
+| codes.thischwa.cf.fluent | 100% (25/25) | 100% (4/4) |
+| codes.thischwa.cf.model | 100% (93/93) | 90% (9/10) |
+| codes.thischwa.cf | 89% (249/279) | 71% (51/72) |
