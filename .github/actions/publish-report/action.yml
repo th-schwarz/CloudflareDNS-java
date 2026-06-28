@@ -97,7 +97,7 @@ runs:
         else:
             md += "_No JaCoCo report found._\n"
         
-        with open("reports/index.md", "w") as out:
+        with open("reports/test.md", "w") as out:
             out.write(md)
         print(md)
         EOF
