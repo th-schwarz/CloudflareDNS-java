@@ -17,19 +17,18 @@ jobs:
   build-and-analyse:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Setup Java and Maven
-        uses: ./.github/actions/setup-java-maven
+        uses: ./.gitea/actions/setup-java-maven
 
       - name: Build and test
         run: mvn -B verify
 
       - name: Publish Test Report
-        uses: ./.github/actions/publish-report/
+        uses: ./.gitea/actions/publish-report
         if: ${{ always() }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          report-name: Summary of JUnit Tests
