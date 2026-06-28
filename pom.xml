@@ -275,33 +275,4 @@
             </plugin>
         </plugins>
     </build>
-    
-    <profiles>
-        <profile>
-            <id>javadoc</id>
-            <!-- mvn prepare-package -Pjavadoc -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>generate-javadoc</id>
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>javadoc</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.basedir}/docs</outputDirectory>
-                                    <sourcepath>${project.build.directory}/delombok</sourcepath>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
 </project>
