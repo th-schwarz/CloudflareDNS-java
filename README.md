@@ -18,7 +18,7 @@ This guide comes without any warranty. Use at your own risk. The author is not r
 
 ## Get It
 
-The project has its own maven repository. Follow the instructions on the latest [package](https://git.mein-gateway.de/thischwa/-/packages) to add the repository to your project.
+The project has its own maven repository. Follow the instructions on the latest [package](https://git.mein-gateway.de/thischwa/-/packages/maven/codes.thischwa:cloudflaredns) to add the repository to your project.
 
 ## Changelog
 
