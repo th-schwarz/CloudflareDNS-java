@@ -37,7 +37,8 @@ The API provides two styles for working with DNS records:
 2. **Fluent API**: Chainable method calls for more readable code
 
 The following text focuses on the basic methods. For further information, take a look at
-the [javadoc of the CfDnsClient](https://javadoc.mein-gateway.de/CloudflareDNS-java/index.html).
+the \
+[![javadoc](https://javadoc.mein-gateway.de/badge/CloudflareDNS-java)](https://javadoc.mein-gateway.de/CloudflareDNS-java/index.html)
 
 ### Instantiation of `CfDnsClient`
 
