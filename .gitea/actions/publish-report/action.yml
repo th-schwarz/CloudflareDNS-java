@@ -25,6 +25,9 @@ runs:
         mkdir -p reports
         python3 - <<'EOF'
         import glob, xml.etree.ElementTree as ET
+        from datetime import datetime, timezone
+
+        generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
         # --- JUnit ---
         files = glob.glob("junit-short/*.xml")
@@ -78,6 +81,7 @@ runs:
         # --- Markdown zusammenbauen ---
         md = (
             "# Test Report\n\n"
+            f"_Generated on {generated_at}_\n\n"
             f"**{overall}**\n\n"
             "## Test Results\n\n"
             "| | Tests | Passed | Failed | Skipped |\n"
