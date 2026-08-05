@@ -11,18 +11,18 @@ import codes.thischwa.cf.model.RecordMultipleResponse;
 import codes.thischwa.cf.model.RecordSingleResponse;
 import codes.thischwa.cf.model.ResponseResultInfo;
 import codes.thischwa.cf.model.ZoneMultipleResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 public class ObjectMapperTest {
 
   private final ObjectMapper mapper = JsonConf.initObjectMapper();
 
   @Test
-  void testObjectMapper() throws IOException {
+  void testObjectMapper() {
     ZoneMultipleResponse resp =
         mapper.readValue(this.getClass().getResourceAsStream("/zone-list-response.json"),
             ZoneMultipleResponse.class);
@@ -30,7 +30,7 @@ public class ObjectMapperTest {
   }
 
   @Test
-  void testErrorResponse() throws IOException {
+  void testErrorResponse() {
     List<Class<? extends AbstractResponse>> respClasses =
         List.of(RecordSingleResponse.class, RecordMultipleResponse.class, ZoneMultipleResponse.class, BatchResponse.class);
     respClasses.forEach(this::assertErrorResponse);
@@ -46,7 +46,7 @@ public class ObjectMapperTest {
       assertFalse(resultInfo.isSuccess());
       assertEquals(1, resultInfo.getErrors().size());
       assertEquals(81053, resultInfo.getErrors().get(0).getCode());
-    } catch (IOException e) {
+    } catch (JacksonException e) {
       fail("fail for " + clazz + ": " + e.getMessage());
     }
   }

@@ -1,8 +1,6 @@
 package codes.thischwa.cf;
 
 import codes.thischwa.cf.model.AbstractResponse;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.client5.http.classic.methods.HttpDelete;
@@ -20,6 +18,8 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.jetbrains.annotations.NotNull;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Abstract base class for creating HTTP clients to interact with the Cloudflare API. Provides
@@ -96,7 +96,7 @@ abstract class CfBasicHttpClient {
         throw new CloudflareApiException(
             request.getMethod() + " request failed with status code: " + result.statusCode);
       }
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       log.error("JSON parsing error for request to {}", logUri, e);
       throw new CloudflareApiException("Error processing JSON response", e);
     } catch (Exception e) {
@@ -182,7 +182,7 @@ abstract class CfBasicHttpClient {
       log.trace("Request methode [{}] payload: {}", request.getMethod(), jsonPayload);
       request.setEntity(new StringEntity(jsonPayload,
           ContentType.APPLICATION_JSON));
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new CloudflareApiException("Error serializing JSON payload", e);
     }
   }

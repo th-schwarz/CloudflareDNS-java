@@ -3,6 +3,7 @@
 - 0.5.0-SNAPSHOT:
   - moved the project to git.mein-gateway.de
   - replaced sonarqube with own actions
+  - migrate to jackson 3.x
 - 0.4.0:
     - fixed some paging issues
     - **Breaking Change**: renamed `client.zone().record()` to `client.zone().getRecord()`

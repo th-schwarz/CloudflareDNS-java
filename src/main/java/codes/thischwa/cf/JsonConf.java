@@ -1,10 +1,10 @@
 package codes.thischwa.cf;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * The JsonConf class provides a utility method for initializing and configuring a shared
@@ -16,11 +16,11 @@ class JsonConf {
   }
 
   static ObjectMapper initObjectMapper() {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new JavaTimeModule());
-    mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
-    return mapper;
+    return JsonMapper.builder()
+        .changeDefaultPropertyInclusion(
+            incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+        .build();
   }
 }
