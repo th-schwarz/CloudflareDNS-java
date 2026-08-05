@@ -10,8 +10,8 @@
     <packaging>jar</packaging>
 
     <issueManagement>
-        <url>https://git.mein-gateway.de/thischwa/CloudflareDNS-java/issues</url>
-        <system>Gitea Issues</system>
+        <url>https://github.com/th-schwarz/CloudflareDNS-java/issues</url>
+        <system>GitHub Issues</system>
     </issueManagement>
 
     <properties>
