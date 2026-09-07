@@ -125,4 +125,4 @@ runs:
         git add reports/
         git diff --cached --quiet && echo "No changes" && exit 0
         git commit -m "ci: update test report [skip ci]"
-        git push origin ${{ github.ref_name }}
+        git --force push origin ${{ github.ref_name }}
