@@ -3,6 +3,9 @@ name: "Setup Maven with GitHub Packages"
 description: "Sets up JDK and caches Maven dependencies."
 
 inputs:
+  java-distribution:
+    description: "Java distribution to use"
+    default: "temurin"
   java-version:
     description: "Java version to use"
     default: "17"
@@ -13,5 +16,6 @@ runs:
   steps:
     - name: Set up JDK
       with:
+        distribution: ${{ inputs.java-distribution }}
         java-version: ${{ inputs.java-version }}
       uses: actions/setup-java@v5
