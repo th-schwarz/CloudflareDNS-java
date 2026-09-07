@@ -1,5 +1,7 @@
 # CloudflareDNS-java
 
+[![Build and Analyse](https://git.mein-gateway.de/thischwa/CloudflareDNS-java/actions/workflows/build-and-analyse.yml/badge.svg?branch=develop)](https://git.mein-gateway.de/thischwa/CloudflareDNS-java/actions?workflow=build-and-analyse.yml)
+
 ## Preface
 
 This project provides a java client for minimalistic access to the Cloudflare API version 4, which is mainly used for
