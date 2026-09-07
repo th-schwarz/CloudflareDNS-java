@@ -4,18 +4,14 @@ description: "Sets up JDK and caches Maven dependencies."
 
 inputs:
   java-version:
-    description: "Java version to install"
+    description: "Java version to use"
     default: "17"
     required: true
-  java-distribution:
-    description: "Java distribution to use"
-    default: "corretto"
 
 runs:
   using: "composite"
   steps:
     - name: Set up JDK
       with:
-        distribution: ${{ inputs.java-distribution }}
         java-version: ${{ inputs.java-version }}
       uses: actions/setup-java@v5
