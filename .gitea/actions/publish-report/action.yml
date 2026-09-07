@@ -8,6 +8,10 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Install python3
+      shell: bash
+      run: apk add --no-cache python3
+
     - name: Normalize JUnit report names
       shell: bash
       run: |
