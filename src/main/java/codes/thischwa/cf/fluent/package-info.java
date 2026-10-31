@@ -6,7 +6,7 @@
  *
  * <p>Example usage:
  * <pre><code>
- * // Create a DNS getRecord
+ * // Create a DNS record
  * client.zone("example.com")
  *       .getRecord("api")
  *       .create(RecordType.A, "192.168.1.1", 60);
@@ -16,7 +16,7 @@
  *                                      .getRecord("www", RecordType.A)
  *                                      .get();
  *
- * // Update a DNS getRecord
+ * // Update a DNS record
  * client.zone("example.com")
  *       .getRecord("api", RecordType.A)
  *       .update("192.168.1.2");

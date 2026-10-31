@@ -3,6 +3,8 @@
 - 0.6.0-SNAPSHOT:
   - updated dependencies: jackson 3.2.4, httpclient5 5.6.4, lombok 1.18.48, logback-classic 1.6.6, mockito-junit-jupiter 5.24.0
   - updated maven plugins: maven-compiler-plugin 3.16.0, maven-surefire-plugin 3.6.0, maven-jar-plugin 3.5.1
+  - README: fixed fluent API examples, documented paging and further methods
+  - fixed "getRecord" wording in javadoc, log and exception messages (e.g. "Invalid record type")
 - 0.5.0:
   - moved the project to git.mein-gateway.de
   - replaced sonarqube with own actions

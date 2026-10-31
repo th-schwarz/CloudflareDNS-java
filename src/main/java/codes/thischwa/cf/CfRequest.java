@@ -27,20 +27,20 @@ public enum CfRequest {
    */
   RECORD_LIST("/zones/%s/dns_records"),
   /**
-   * Represents the API endpoint path for retrieving information about a DNS getRecord within a
+   * Represents the API endpoint path for retrieving information about a DNS record within a
    * specific DNS zone by its name. The endpoint path includes placeholders for the zone identifier
-   * and the getRecord name, which need to be provided to construct the complete path.
+   * and the record name, which need to be provided to construct the complete path.
    */
   RECORD_LIST_NAME("/zones/%s/dns_records?name=%s"),
   /**
-   * Represents the API endpoint path for creating a new DNS getRecord within a specific DNS zone. The
+   * Represents the API endpoint path for creating a new DNS record within a specific DNS zone. The
    * endpoint path includes a placeholder for the zone identifier, which needs to be provided to
    * construct the complete path.
    */
   RECORD_CREATE("/zones/%s/dns_records"),
   /**
-   * Represents the API endpoint path for updating an existing DNS getRecord within a specific DNS
-   * zone. The endpoint path includes placeholders for the zone identifier and the getRecord
+   * Represents the API endpoint path for updating an existing DNS record within a specific DNS
+   * zone. The endpoint path includes placeholders for the zone identifier and the record
    * identifier, which need to be provided to construct the complete path.
    */
   RECORD_UPDATE("/zones/%s/dns_records/%s"),
@@ -51,8 +51,8 @@ public enum CfRequest {
    */
   RECORD_BATCH("/zones/%s/dns_records/batch"),
   /**
-   * Represents the API endpoint path for deleting an existing DNS getRecord within a specific DNS
-   * zone. The endpoint path includes placeholders for the zone identifier and the getRecord
+   * Represents the API endpoint path for deleting an existing DNS record within a specific DNS
+   * zone. The endpoint path includes placeholders for the zone identifier and the record
    * identifier, which need to be provided to construct the complete path.
    */
   RECORD_DELETE("/zones/%s/dns_records/%s");

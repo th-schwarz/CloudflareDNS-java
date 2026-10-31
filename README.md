@@ -22,6 +22,8 @@ This guide comes without any warranty. Use at your own risk. The author is not r
 
 ## Get It
 
+Java 17 or higher is required.
+
 The project has its own maven repository. Follow the instructions on the latest [package](https://git.mein-gateway.de/thischwa/-/packages/maven/codes.thischwa:cloudflaredns) to add the repository to your project.
 
 ## Changelog
@@ -33,7 +35,7 @@ See [changelog](changelog.md)
 The methods can be categorized as follows:
 
 - `Zone`: list, info
-- `Record`: list, info, create, update, delete
+- `Record`: list, info, create, update, delete, batch
 
 The API provides two styles for working with DNS records:
 
@@ -69,6 +71,12 @@ Retrieve all zones within the Cloudflare account.
 ```java
 List<ZoneEntity> zones = cfDnsClient.zoneList();
 zones.forEach(zone -> System.out.println("Zone: " + zone.getName()));
+```
+
+By default, up to 1000 zones are fetched in a single request. Use a `PagingRequest` to control paging:
+
+```java
+List<ZoneEntity> zones = cfDnsClient.zoneList(PagingRequest.of(1, 50)); // page 1, 50 zones per page
 ```
 
 ---
@@ -129,21 +137,45 @@ List<RecordEntity> allZoneRecords = cfDnsClient.recordList(zone);
 
 // Get only A and AAAA records of a zone
 List<RecordEntity> ipZoneRecords = cfDnsClient.recordList(zone, RecordType.A, RecordType.AAAA);
+
+// Get the records of a zone page by page (page 2, 100 records per page)
+List<RecordEntity> pagedRecords = cfDnsClient.recordList(zone, PagingRequest.of(2, 100));
 ```
+
+Without a `PagingRequest`, up to 1000 records are fetched in a single request.
+
+#### Group by FQDN
+
+The static helper `CfDnsClient.groupRecordsByFqdn` groups a list of records by their fully qualified domain name:
+
+```java
+Map<String, List<RecordEntity>> byFqdn = CfDnsClient.groupRecordsByFqdn(cfDnsClient.recordList(zone));
+```
+
 ---
 
-### `recordCreate`
+### `recordCreateSld` / `recordCreate`
 
 Create a new DNS record in a specific zone.
 
 - **Parameters**:
-  - `ZoneEntity zone` - DNS zone object.
-  - `String sld` - The sub-tld of the new record.
-  - `int ttl` - The time-to-live in seconds of the new rcord.
+  - `ZoneEntity zone` - The DNS zone object.
+  - `String sld` - The second-level domain of the new record (e.g., "api" in "api.example.com").
+  - `int ttl` - The time-to-live in seconds of the new record.
+  - `RecordType type` - The record type (e.g., A, AAAA, CNAME).
+  - `String content` - The content of the record (e.g., the IP address of an A record).
+- **Returns**: The created `RecordEntity`.
 
 ```java
-RecordEntity created = client.recordCreateSld(zone, "api", 60, RecordType.A, "192.168.1.1");
+RecordEntity created = cfDnsClient.recordCreateSld(zone, "api", 60, RecordType.A, "192.168.1.1");
 System.out.println("Created Record ID: " + created.getId());
+```
+
+Alternatively, the record can be created with its fully qualified name or from a `RecordEntity`:
+
+```java
+cfDnsClient.recordCreate(zone, "api.example.com", 60, RecordType.A, "192.168.1.1");
+cfDnsClient.recordCreate(zone, RecordEntity.build("api.example.com", RecordType.A, 60, "192.168.1.1"));
 ```
 
 ---
@@ -177,19 +209,25 @@ boolean isDeleted = cfDnsClient.recordDelete(zone, record);
 System.out.println(isDeleted ? "Deletion successful." : "Deletion failed.");
 ```
 
+If only the ID is known, the record can be deleted by its ID:
+
+```java
+cfDnsClient.recordDelete(zone, record.getId());
+```
+
 ---
 
 ### `recordDeleteTypeIfExists`
 
-Delete a DNS record of a specific type if it exists.
+Delete the DNS records of the given types if they exist.
 
 - **Parameters**:
     - `ZoneEntity zone` - Target zone.
     - `String sld` - Second-level domain.
-    - `RecordType type` - Record type.
+    - `RecordType... types` - One or more record types.
 
 ```java
-cfDnsClient.recordDeleteTypeIfExists(zone, "api", RecordType.A);
+cfDnsClient.recordDeleteTypeIfExists(zone, "api", RecordType.A, RecordType.AAAA);
 System.out.println("Deletion attempt completed.");
 ```
 
@@ -320,28 +358,28 @@ that reduces verbosity and improves code readability.
 ### Basic Usage
 
 ```java
-// Create a DNS getRecord
+// Create a DNS record
 client.zone("example.com")
-    .record("api")
+    .getRecord("api")
     .create(RecordType.A, "192.168.1.1",60);
 
 // Get DNS records of a subdomain
 List<RecordEntity> records = client.zone("example.com")
-    .record("www", RecordType.A)
+    .getRecord("www", RecordType.A)
     .get();
 
 // Get all DNS records of a zone
 List<RecordEntity> zoneRecords = client.zone("example.com")
     .list(RecordType.A, RecordType.AAAA);
 
-// Update a DNS getRecord
+// Update a DNS record
 RecordEntity updated = client.zone("example.com")
-    .record("api", RecordType.A)
+    .getRecord("api", RecordType.A)
     .update("192.168.1.2");
 
 // Delete DNS records
 client.zone("example.com") 
-    .record("old-service")
+    .getRecord("old-service")
     .delete(RecordType.A, RecordType.AAAA);
 ```
 
@@ -359,25 +397,25 @@ CfDnsClient client = new CfDnsClientBuilder()
     .withApiTokenAuth("your-api-token")
     .build();
 
-// Create a new getRecord
+// Create a new record
 client.zone("example.com")
-    .record("api")
+    .getRecord("api")
     .create(RecordType.A, "192.168.100.1",60);
 
 // Retrieve and verify
 List<RecordEntity> records = client.zone("example.com")
-    .record("api", RecordType.A)
+    .getRecord("api", RecordType.A)
     .get();
 System.out.println("IP: "+records.get(0).getContent());
 
-// Update the getRecord
+// Update the record
 client.zone("example.com")
-     .record("api",RecordType.A)
+     .getRecord("api",RecordType.A)
      .update("192.168.100.2");
 
 // Clean up
 client.zone("example.com")
-    .record("api")
+    .getRecord("api")
     .delete(RecordType.A);
 ```
 
