@@ -111,6 +111,8 @@ runs:
         EOF
 
     - name: Commit Test-Report to Repo
+      # pull requests have no branch to push to (ref_name is e.g. "1/merge")
+      if: ${{ github.event_name == 'push' }}
       shell: bash
       env:
         GIT_USER: gitea-actions-bot
@@ -125,4 +127,12 @@ runs:
         git add reports/
         git diff --cached --quiet && echo "No changes" && exit 0
         git commit -m "ci: update test report [skip ci]"
-        git push origin ${{ github.ref_name }}
+        # rebase onto commits pushed in the meantime instead of overwriting them;
+        # on conflicts in reports/ the freshly generated report wins
+        for attempt in 1 2 3; do
+          git pull --rebase --autostash -X theirs origin ${{ github.ref_name }}
+          git push origin ${{ github.ref_name }} && exit 0
+          echo "Push rejected (attempt $attempt), retrying..."
+          sleep 5
+        done
+        exit 1

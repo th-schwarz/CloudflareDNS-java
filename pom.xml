@@ -4,7 +4,7 @@
 
     <groupId>codes.thischwa</groupId>
     <artifactId>cloudflaredns</artifactId>
-    <version>0.5.0</version>
+    <version>0.6.0-SNAPSHOT</version>
     <name>CloudflareDNS-java</name>
     <inceptionYear>2025</inceptionYear>
     <packaging>jar</packaging>
@@ -36,21 +36,22 @@
         <linkXRef>false</linkXRef>
 
         <!-- 3rd party dependencies -->
-        <jackson.version>3.2.1</jackson.version>
-        <httpclient5.version>5.6.2</httpclient5.version>
-        <lombok.version>1.18.46</lombok.version>
+        <jackson.version>3.2.4</jackson.version>
+        <httpclient5.version>5.6.4</httpclient5.version>
+        <lombok.version>1.18.48</lombok.version>
         <slf4j.version>2.0.18</slf4j.version>
-        <logback-classic.version>1.5.38</logback-classic.version>
+        <logback-classic.version>1.6.6</logback-classic.version>
         <junit5.version>5.14.2</junit5.version>
-        <mockito-junit5.version>5.23.0</mockito-junit5.version>
+        <mockito-junit5.version>5.24.0</mockito-junit5.version>
         <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
+        <jetbrains-annotations.version>26.1.0</jetbrains-annotations.version>
     </properties>
 
     <scm>
         <developerConnection>scm:git:https://git.mein-gateway.de/thischwa/CloudflareDNS-java.git</developerConnection>
         <connection>scm:git:https://git.mein-gateway.de/thischwa/CloudflareDNS-java.git</connection>
         <url>https://git.mein-gateway.de/thischwa/CloudflareDNS-java</url>
-        <tag>v0.5.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
@@ -102,7 +103,7 @@
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-            <version>26.1.0</version>
+            <version>${jetbrains-annotations.version}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -131,7 +132,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.1</version>
+                <version>3.16.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -220,7 +221,7 @@
                 <!-- to export test summary -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.6</version>
+                <version>3.6.0</version>
             </plugin>
 
             <plugin>
@@ -254,7 +255,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.5.1</version>
                 <executions>
                     <execution>
                         <id>attach-delomboked-sources</id>

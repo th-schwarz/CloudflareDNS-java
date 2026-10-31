@@ -1,6 +1,6 @@
 # Test Report
 
-_Generated on 2026-09-07 06:51:01 UTC_
+_Generated on 2026-10-31 10:34:17 UTC_
 
 **✅ All tests passed**
 
@@ -8,15 +8,15 @@ _Generated on 2026-09-07 06:51:01 UTC_
 
 | | Tests | Passed | Failed | Skipped |
 |---|---|---|---|---|
-| **Total** | 90 | 90 | 0 | 0 |
+| **Total** | 105 | 90 | 0 | 15 |
 
 ### Details
 
 | Status | Suite | Tests | Passed | Failed | Skipped |
 |---|---|---|---|---|---|
 | ✅ | codes.thischwa.cf.CfBasicHttpClientTest | 9 | 9 | 0 | 0 |
-| ✅ | codes.thischwa.cf.CfClientPenTest | 0 | 0 | 0 | 0 |
-| ✅ | codes.thischwa.cf.CfClientTest | 0 | 0 | 0 | 0 |
+| ✅ | codes.thischwa.cf.CfClientPenTest | 4 | 0 | 0 | 4 |
+| ✅ | codes.thischwa.cf.CfClientTest | 11 | 0 | 0 | 11 |
 | ✅ | codes.thischwa.cf.CfDnsClientBuilderTest | 16 | 16 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfDnsClientMockTest | 16 | 16 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfRequestTest | 8 | 8 | 0 | 0 |
