@@ -28,17 +28,17 @@ public class ZoneOperationsImpl implements ZoneOperations {
   }
 
   @Override
-  public RecordOperations getRecord(String sld) throws CloudflareApiException {
-    return new RecordOperationsImpl(client, zone, sld, null);
+  public RecordOperations getRecord(String subdomain) throws CloudflareApiException {
+    return new RecordOperationsImpl(client, zone, subdomain, null);
   }
 
   @Override
-  public RecordOperations getRecord(String sld, @Nullable RecordType... types) throws CloudflareApiException {
-    return new RecordOperationsImpl(client, zone, sld, types);
+  public RecordOperations getRecord(String subdomain, @Nullable RecordType... types) throws CloudflareApiException {
+    return new RecordOperationsImpl(client, zone, subdomain, types);
   }
 
   @Override
   public List<RecordEntity> list(@Nullable RecordType... types) throws CloudflareApiException {
-    return client.recordList(zone, types);
+    return client.recordListByType(zone, types);
   }
 }

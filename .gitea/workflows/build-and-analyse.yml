@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - develop
-      - feature*
+      - 'feature/**'
   pull_request:
     types: [ opened, synchronize, reopened ]
 
@@ -25,6 +25,9 @@ jobs:
         uses: ./.gitea/actions/setup-java-maven
 
       - name: Build and test
+        env:
+          # required by the live tests (CfClientTest, CfClientPenTest), they are skipped if not set
+          API_TOKEN: ${{ secrets.API_TOKEN }}
         run: mvn -B verify
 
       - name: Publish Test Report

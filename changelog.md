@@ -1,10 +1,39 @@
 # Changelog
 
 - 0.6.0-SNAPSHOT:
+  - **Breaking Changes**:
+    - `recordList` overloads replaced, because they were ambiguous (e.g. `recordList(zone, null)` didn't compile):
+      - `recordList(zone, String subdomain, RecordType... types)` and `recordList(zone, String subdomain)` → `recordListBySubdomain(zone, subdomain, types...)`
+      - `recordList(zone, RecordType... types)` → `recordListByType(zone, types...)`
+      - `recordList(zone)` and `recordList(zone, PagingRequest)` remain unchanged
+    - `CfDnsClient#recordCreateSld(...)` was removed; use `recordCreateSubdomain(...)`
+    - `PagingRequest.defaultPaging()` now requests 50 items instead of 1,000. Page numbers and page sizes are validated; zone requests accept 5–50 items per page, while DNS record requests accept 1–5,000,000.
+    - `withBaseUrl` only accepts HTTPS URLs (plain HTTP only for loopback hosts like `localhost`), otherwise an `IllegalArgumentException` is thrown
+    - `build()` throws an `IllegalStateException` if no authentication was configured, `null` credentials throw an `IllegalArgumentException`
+    - zone names and subdomains with whitespace, control characters or `\ ? # & ; | < > " ' `` ` `` are rejected with an `IllegalArgumentException`, zone and record IDs must be alphanumeric
+    - timestamps of `RecordEntity` and `ZoneEntity` (`createdOn`, `modifiedOn`, `activatedOn`) are of type `java.time.Instant` instead of `LocalDateTime`, so the time zone (UTC) isn't lost anymore
+    - Cloudflare responses with HTTP status 404 throw a `CloudflareNotFoundException` (independent of `emptyResultThrowsException`)
+    - unexpected runtime exceptions aren't wrapped into a `CloudflareApiException("Unexpected error!")` anymore
+    - batch DELETE sends only the record IDs, batch PATCH sends all writable attributes which aren't `null` (before: only the content)
+  - security: query values (zone names, subdomains) are URL-encoded and IDs are validated, which prevents query parameter injection and path traversal
+  - connect and response timeouts (defaults: 10 s / 30 s), configurable via `withConnectTimeout` / `withResponseTimeout`
+  - `CfDnsClient` uses one shared HTTP client with connection pooling instead of a new one per request and implements `AutoCloseable`, call `close()` to release the connections
+  - `CloudflareApiException` provides the HTTP status code (`getStatusCode()`) and the errors reported by Cloudflare (`getErrors()`)
+  - `RecordEntity` supports the attributes `priority` (MX, URI), `data` (e.g. SRV incl. its priority, CAA), `comment` and `tags`; they are also considered by batch operations, as is `proxied`
+  - `recordCreate` and `recordUpdate` don't modify the given `RecordEntity` anymore and send only writable attributes
+  - fluent `update(content)` sends only the new content (partial update)
+  - filtering by exactly one record type is done by Cloudflare (`?type=`), unknown record types in responses don't break the client-side filter anymore
   - updated dependencies: jackson 3.2.4, httpclient5 5.6.4, lombok 1.18.48, logback-classic 1.6.6, mockito-junit-jupiter 5.24.0
   - updated maven plugins: maven-compiler-plugin 3.16.0, maven-surefire-plugin 3.6.0, maven-jar-plugin 3.5.1
-  - README: fixed fluent API examples, documented paging and further methods
-  - fixed "getRecord" wording in javadoc, log and exception messages (e.g. "Invalid record type")
+  - fixed "getRecord" wording in log and exception messages (e.g. "Invalid record type")
+  - **Deprecation**: the misleading term "sld" was renamed to "subdomain": `RecordEntity#getSld()` is deprecated for removal; use `RecordEntity#getSubdomain()`
+  - `getSubdomain()` returns `"@"` for the zone apex; `CfDnsClient.APEX` can be used to address the zone apex
+  - fixed: API errors were wrapped into a generic "Unexpected error!" exception
+  - fixed: `zoneGet` threw an `IndexOutOfBoundsException` for unknown zones, it now returns `null` or throws a `CloudflareNotFoundException` (depending on `emptyResultThrowsException`)
+  - fixed: `getSubdomain()` failed for apex records and records with multi-level subdomains, batch operations now send the full record name
+  - fixed: `zoneList()` and `recordList(...)` without `PagingRequest` returned only the first page, now all pages are fetched; `recordList(zone, null)` uses the maximum DNS page size of 5,000,000
+  - fixed: DNS records are listed with a stable order (`order=name`), because without it Cloudflare's pages can overlap and miss records; fetched records are de-duplicated and inconsistent pages are fetched again
+  - fixed: `recordDelete` threw a `NullPointerException` for an empty result
 - 0.5.0:
   - moved the project to git.mein-gateway.de
   - replaced sonarqube with own actions

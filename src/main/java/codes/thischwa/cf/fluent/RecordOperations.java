@@ -40,10 +40,15 @@ public interface RecordOperations {
   RecordEntity update(String newContent) throws CloudflareApiException;
 
   /**
-   * Deletes DNS records of the specified types.
+   * Deletes DNS records of the specified types for the selected subdomain. The types passed here
+   * determine which records are deleted, independently of any type filter used to select the
+   * subdomain. If no types are specified, records of all types for that subdomain are selected for
+   * deletion. A {@link CloudflareApiException} from an individual deletion is logged and does not
+   * stop later attempts. No per-record result is returned, so returning normally does not guarantee
+   * that all selected records were deleted.
    *
    * @param types the DNS record types to delete
-   * @throws CloudflareApiException if an error occurs while deleting records
+   * @throws CloudflareApiException if an error occurs while retrieving records to delete
    */
   void delete(RecordType... types) throws CloudflareApiException;
 }

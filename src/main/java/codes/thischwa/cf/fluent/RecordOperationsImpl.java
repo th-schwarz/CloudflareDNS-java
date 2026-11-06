@@ -15,50 +15,49 @@ public class RecordOperationsImpl implements RecordOperations {
 
   private final CfDnsClient client;
   private final ZoneEntity zone;
-  private final String sld;
+  private final String subdomain;
   private final RecordType[] types;
 
   /**
    * Constructs a RecordOperationsImpl instance.
    *
-   * @param client the CfDnsClient instance to use for operations
-   * @param zone   the ZoneEntity representing the DNS zone
-   * @param sld    the subdomain (second-level domain) name
-   * @param types  optional array of RecordType to filter by
+   * @param client    the CfDnsClient instance to use for operations
+   * @param zone      the ZoneEntity representing the DNS zone
+   * @param subdomain the subdomain relative to the zone, or "@" for the zone apex
+   * @param types     optional array of RecordType to filter by
    */
-  public RecordOperationsImpl(CfDnsClient client, ZoneEntity zone, String sld, @Nullable RecordType[] types) {
+  public RecordOperationsImpl(CfDnsClient client, ZoneEntity zone, String subdomain, @Nullable RecordType[] types) {
     this.client = client;
     this.zone = zone;
-    this.sld = sld;
+    this.subdomain = subdomain;
     this.types = types;
   }
 
   @Override
   public List<RecordEntity> get() throws CloudflareApiException {
-    return client.recordList(zone, sld, types);
+    return client.recordListBySubdomain(zone, subdomain, types);
   }
 
   @Override
   public RecordEntity create(RecordType type, String content, int ttl) throws CloudflareApiException {
-    return client.recordCreateSld(zone, sld, ttl, type, content);
+    return client.recordCreateSubdomain(zone, subdomain, ttl, type, content);
   }
 
   @Override
   public RecordEntity update(String newContent) throws CloudflareApiException {
     List<RecordEntity> recs = get();
     if (recs.isEmpty()) {
-      throw new CloudflareApiException("No recs found to update for subdomain: " + sld);
+      throw new CloudflareApiException("No recs found to update for subdomain: " + subdomain);
     }
     if (recs.size() > 1) {
       throw new CloudflareApiException("Multiple recs found. Please use recordUpdate() directly for precise control.");
     }
-    RecordEntity rec = recs.get(0);
-    rec.setContent(newContent);
-    return client.recordUpdate(zone, rec);
+    // partial update: only the content is changed
+    return client.recordUpdate(zone, RecordEntity.build(recs.get(0).getId(), newContent));
   }
 
   @Override
   public void delete(RecordType... types) throws CloudflareApiException {
-    client.recordDeleteTypeIfExists(zone, sld, types);
+    client.recordDeleteTypeIfExists(zone, subdomain, types);
   }
 }

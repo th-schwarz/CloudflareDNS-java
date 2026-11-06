@@ -11,6 +11,8 @@ import codes.thischwa.cf.model.RecordMultipleResponse;
 import codes.thischwa.cf.model.RecordSingleResponse;
 import codes.thischwa.cf.model.ResponseResultInfo;
 import codes.thischwa.cf.model.ResultInfo;
+import codes.thischwa.cf.model.ZoneEntity;
+import codes.thischwa.cf.model.ZoneMultipleResponse;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -129,5 +131,45 @@ class ResponseValidatorTest {
 
     assertDoesNotThrow(() -> validatorWithException.validate(mockSingleResponse, false));
     assertDoesNotThrow(() -> validatorWithoutException.validate(mockSingleResponse, false));
+  }
+
+  private static ZoneMultipleResponse zoneResponse(int count) {
+    ZoneMultipleResponse resp = new ZoneMultipleResponse();
+    ResponseResultInfo info = new ResponseResultInfo();
+    info.setSuccess(true);
+    resp.setResponseResultInfo(info);
+    List<ZoneEntity> zones = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      zones.add(new ZoneEntity());
+    }
+    resp.setResult(zones);
+    return resp;
+  }
+
+  @Test
+  void validateZoneResponseEmptyWithExceptionEnabled() {
+    ZoneMultipleResponse resp = zoneResponse(0);
+    resp.setResultInfo(new ResultInfo(0));
+    assertThrows(CloudflareNotFoundException.class, () -> validatorWithException.validate(resp, true));
+    assertDoesNotThrow(() -> validatorWithoutException.validate(resp, true));
+  }
+
+  @Test
+  void validateZoneResponseMultipleWhenSingleExpected() {
+    ZoneMultipleResponse resp = zoneResponse(2);
+    resp.setResultInfo(new ResultInfo(2));
+    CloudflareApiException exception = assertThrows(CloudflareApiException.class,
+        () -> validatorWithoutException.validate(resp, true));
+    assertTrue(exception.getMessage().contains("Unexpected result count: 2"));
+  }
+
+  @Test
+  void validateMultipleResponseWithoutResultInfoFallsBackToResultSize() {
+    // no result_info -> count is derived from the result list
+    assertThrows(CloudflareNotFoundException.class,
+        () -> validatorWithException.validate(zoneResponse(0), false));
+    assertThrows(CloudflareApiException.class,
+        () -> validatorWithoutException.validate(zoneResponse(2), true));
+    assertDoesNotThrow(() -> validatorWithException.validate(zoneResponse(1), true));
   }
 }

@@ -1,8 +1,8 @@
 package codes.thischwa.cf;
 
+import codes.thischwa.cf.model.AbstractMultipleResponse;
 import codes.thischwa.cf.model.AbstractResponse;
 import codes.thischwa.cf.model.AbstractSingleResponse;
-import codes.thischwa.cf.model.RecordMultipleResponse;
 import codes.thischwa.cf.model.ResponseResultInfo;
 import java.util.stream.Collectors;
 
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * metadata. If the response indicates failure, an exception is thrown with descriptive error
  * messages.
  * <li>It validates the number of results in the API response payload to detect unexpected counts.
- * For {@link RecordMultipleResponse}, it checks if results are empty or if more than one result
+ * For {@link AbstractMultipleResponse}, it checks if results are empty or if more than one result
  * was returned when a single result was expected. For {@link AbstractSingleResponse}, it checks
  * if the result is null. Depending on the parameter 'emptyResultThrowsException', an exception
  * will be triggered or an empty/null result will be returned.
@@ -45,22 +45,33 @@ class ResponseValidator {
 
   private void validateResultCount(AbstractResponse resp, boolean singleResultExpected)
       throws CloudflareApiException {
-    if (resp instanceof RecordMultipleResponse respMulti) {
+    if (resp instanceof AbstractMultipleResponse<?> respMulti) {
       validateMultipleResponse(respMulti, singleResultExpected);
     } else if (resp instanceof AbstractSingleResponse<?> respSingle) {
       validateSingleResponse(respSingle);
     }
   }
 
-  private void validateMultipleResponse(RecordMultipleResponse response, boolean singleResultExpected)
+  private void validateMultipleResponse(AbstractMultipleResponse<?> response, boolean singleResultExpected)
       throws CloudflareApiException {
-    int totalCount = response.getResultInfo().totalCount();
+    int totalCount = getTotalCount(response);
     if (singleResultExpected && totalCount > 1) {
       throw new CloudflareApiException("Unexpected result count: " + totalCount);
     }
     if (emptyResultThrowsException && totalCount == 0) {
       throw new CloudflareNotFoundException("No result found");
     }
+  }
+
+  /**
+   * Determines the total count of the results. Falls back to the size of the result list if the
+   * response contains no result info.
+   */
+  private static int getTotalCount(AbstractMultipleResponse<?> response) {
+    if (response.getResultInfo() != null) {
+      return response.getResultInfo().totalCount();
+    }
+    return response.getResult() == null ? 0 : response.getResult().size();
   }
 
   private void validateSingleResponse(AbstractSingleResponse<?> response)

@@ -3,7 +3,7 @@ package codes.thischwa.cf.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +18,7 @@ public class ZoneEntityTest {
     Set<String> ns = Set.of("ns1.cloudflare.com", "ns2.cloudflare.com");
     zone.setNameServers(ns);
     zone.setOriginalNameServers(ns);
-    LocalDateTime now = LocalDateTime.now();
+    Instant now = Instant.now();
     zone.setCreatedOn(now);
     zone.setModifiedOn(now);
     zone.setActivatedOn(now);

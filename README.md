@@ -62,6 +62,28 @@ CfDnsClient cfDnsClient = new CfDnsClientBuilder()
     .build();
 ```
 
+#### Further options:
+```java
+CfDnsClient cfDnsClient = new CfDnsClientBuilder()
+    .withApiTokenAuth("your-api-token")
+    .withBaseUrl("https://custom-api.example.com/client/v4") // must use HTTPS
+    .withConnectTimeout(Duration.ofSeconds(5))               // default: 10 s
+    .withResponseTimeout(Duration.ofSeconds(15))             // default: 30 s
+    .withEmptyResultThrowsException(true)                    // default: false
+    .build();
+```
+
+`build()` throws an `IllegalStateException` if no authentication is configured.
+
+The client is thread-safe and should be reused, it holds a pool of HTTP connections.
+`CfDnsClient` implements `AutoCloseable`, call `close()` (or use try-with-resources) to release the connections:
+
+```java
+try (CfDnsClient cfDnsClient = new CfDnsClientBuilder().withApiTokenAuth("your-api-token").build()) {
+  // ...
+}
+```
+
 ### `zoneList`
 
 Retrieve all zones within the Cloudflare account.
@@ -73,11 +95,16 @@ List<ZoneEntity> zones = cfDnsClient.zoneList();
 zones.forEach(zone -> System.out.println("Zone: " + zone.getName()));
 ```
 
-By default, up to 1000 zones are fetched in a single request. Use a `PagingRequest` to control paging:
+Without a `PagingRequest`, `zoneList()` fetches zones in pages of 50, requesting further pages as needed.
+Use a `PagingRequest` to retrieve a specific page:
 
 ```java
 List<ZoneEntity> zones = cfDnsClient.zoneList(PagingRequest.of(1, 50)); // page 1, 50 zones per page
 ```
+
+Page numbers start at 1. Cloudflare accepts page sizes from 5 to 50 for zones and from 1 to 5,000,000
+for DNS records. `PagingRequest.defaultPaging()` requests page 1 with 50 items; it does not fetch
+additional pages.
 
 ---
 
@@ -100,49 +127,54 @@ System.out.println("Zone ID: " + zone.getId());
 
 Retrieve records for a given zone. There are two variants:
 
-#### List by SLD
-Retrieve all records for a specific second-level domain (SLD) under a given zone.
+#### List by subdomain (`recordListBySubdomain`)
+Retrieve all records for a specific subdomain under a given zone, optionally filtered by record types.
 
 - **Parameters**:
     - `ZoneEntity zone` - The zone object.
-    - `String sld` - Second-level domain (e.g., "www" in "www.example.com").
+    - `String subdomain` - The subdomain relative to the zone (e.g., "www" in "www.example.com"
+      or "my.sub" in "my.sub.example.com"). Use `CfDnsClient.APEX` (`"@"`) for the zone apex.
+    - `RecordType... types` - Optional record types to filter by. If not specified, returns all record types.
 - **Returns**: A list of `RecordEntity` objects.
 
 ```java
-List<RecordEntity> records = cfDnsClient.recordList(zone, "sld");
-records.forEach(record ->
-    System.out.println("Record Type: "+record.getType() 
-        +", Value: "+record.getContent())
-);
+// Get all records for a specific subdomain
+List<RecordEntity> wwwRecords = cfDnsClient.recordListBySubdomain(zone, "www");
+
+// Get only A records for a specific subdomain
+List<RecordEntity> wwwARecords = cfDnsClient.recordListBySubdomain(zone, "www", RecordType.A);
+
+// Get the records of the zone apex (e.g. "example.com")
+List<RecordEntity> apexRecords = cfDnsClient.recordListBySubdomain(zone, CfDnsClient.APEX);
 ```
 
-#### List by Zone (optional filtering)
-Retrieve DNS record details for a zone or a specific SLD, optionally filtered by record types.
-
-- **Parameters**:
-    - `ZoneEntity zone` - The zone object.
-    - `String sld` - (Optional) The second-level domain.
-    - `RecordType... types` - Optional record types to filter by (e.g., A, CNAME). If not specified, returns all record types.
-- **Returns**: A list of `RecordEntity` objects matching the criteria.
+#### List by type (`recordListByType`)
+Retrieve all records of a zone, optionally filtered by record types.
 
 ```java
-// Get all records for a specific SLD
-List<RecordEntity> allSldRecords = cfDnsClient.recordList(zone, "www");
+// Get only A and AAAA records of a zone
+List<RecordEntity> ipZoneRecords = cfDnsClient.recordListByType(zone, RecordType.A, RecordType.AAAA);
+```
 
-// Get only A records for a specific SLD
-List<RecordEntity> aSldRecords = cfDnsClient.recordList(zone, "www", RecordType.A);
+If exactly one record type is given, the filtering is done by Cloudflare, otherwise by the client.
 
+#### List all records of a zone (`recordList`)
+
+```java
 // Get all records of a zone
 List<RecordEntity> allZoneRecords = cfDnsClient.recordList(zone);
-
-// Get only A and AAAA records of a zone
-List<RecordEntity> ipZoneRecords = cfDnsClient.recordList(zone, RecordType.A, RecordType.AAAA);
 
 // Get the records of a zone page by page (page 2, 100 records per page)
 List<RecordEntity> pagedRecords = cfDnsClient.recordList(zone, PagingRequest.of(2, 100));
 ```
 
-Without a `PagingRequest`, up to 1000 records are fetched in a single request.
+Without a `PagingRequest`, all pages are fetched using up to 5,000,000 records per page and combined into one result.
+This large page size can consume substantial memory. If paging remains inconsistent after three attempts, the client logs a warning and may return an incomplete list. Use a smaller `PagingRequest` to retrieve one page at a time; further pages must be requested explicitly.
+With a `PagingRequest`, exactly the requested page is returned.
+
+`RecordEntity#getSubdomain()` returns the record name relative to its zone, e.g. `my.sub` for
+`my.sub.example.com` and `"@"` for the zone apex. The timestamps `getCreatedOn()` and `getModifiedOn()`
+are of type `java.time.Instant` (UTC).
 
 #### Group by FQDN
 
@@ -154,20 +186,20 @@ Map<String, List<RecordEntity>> byFqdn = CfDnsClient.groupRecordsByFqdn(cfDnsCli
 
 ---
 
-### `recordCreateSld` / `recordCreate`
+### `recordCreateSubdomain` / `recordCreate`
 
 Create a new DNS record in a specific zone.
 
 - **Parameters**:
   - `ZoneEntity zone` - The DNS zone object.
-  - `String sld` - The second-level domain of the new record (e.g., "api" in "api.example.com").
+  - `String subdomain` - The subdomain of the new record relative to the zone (e.g., "api" in "api.example.com").
   - `int ttl` - The time-to-live in seconds of the new record.
   - `RecordType type` - The record type (e.g., A, AAAA, CNAME).
   - `String content` - The content of the record (e.g., the IP address of an A record).
 - **Returns**: The created `RecordEntity`.
 
 ```java
-RecordEntity created = cfDnsClient.recordCreateSld(zone, "api", 60, RecordType.A, "192.168.1.1");
+RecordEntity created = cfDnsClient.recordCreateSubdomain(zone, "api", 60, RecordType.A, "192.168.1.1");
 System.out.println("Created Record ID: " + created.getId());
 ```
 
@@ -178,11 +210,27 @@ cfDnsClient.recordCreate(zone, "api.example.com", 60, RecordType.A, "192.168.1.1
 cfDnsClient.recordCreate(zone, RecordEntity.build("api.example.com", RecordType.A, 60, "192.168.1.1"));
 ```
 
+Records which need more than a content, like MX, SRV or CAA records, can be created from a `RecordEntity`.
+Besides `priority` and `data`, the attributes `proxied`, `comment` and `tags` are supported:
+
+```java
+// MX record with priority
+RecordEntity mx = RecordEntity.build("example.com", RecordType.MX, 3600, "mail.example.com");
+mx.setPriority(10);
+cfDnsClient.recordCreate(zone, mx);
+
+// SRV record with structured data (keys as in the Cloudflare API), the priority is part of the data
+RecordEntity srv = RecordEntity.build("_sip._tcp.example.com", RecordType.SRV, 3600, null);
+srv.setData(Map.of("priority", 10, "weight", 5, "port", 5060, "target", "sip.example.com"));
+cfDnsClient.recordCreate(zone, srv);
+```
+
 ---
 
 ### `recordUpdate`
 
-Update an existing DNS record.
+Update an existing DNS record (partial update: attributes which are `null` remain unchanged).
+Read-only attributes like timestamps are ignored, the given `RecordEntity` isn't modified.
 
 - **Parameters**:
     - `ZoneEntity zone` - The zone that contains the record.
@@ -223,13 +271,15 @@ Delete the DNS records of the given types if they exist.
 
 - **Parameters**:
     - `ZoneEntity zone` - Target zone.
-    - `String sld` - Second-level domain.
+    - `String subdomain` - The subdomain relative to the zone.
     - `RecordType... types` - One or more record types.
 
 ```java
 cfDnsClient.recordDeleteTypeIfExists(zone, "api", RecordType.A, RecordType.AAAA);
 System.out.println("Deletion attempt completed.");
 ```
+
+If no record types are specified, records of all types for the subdomain are selected. Each record deletion is attempted independently: a `CloudflareApiException` from one deletion is logged and later records are still processed. No per-record result is returned, so a normal return does not guarantee that every selected record was deleted. Errors while retrieving the records are still reported; no matching records are treated as a no-op.
 
 ### Batch Operations
 
@@ -266,8 +316,8 @@ Partially update existing records. **Record IDs are required** - fetch them firs
 ```java
 // Step 1: Fetch existing records to get their IDs
 List<RecordEntity> recordsToUpdate = new ArrayList<>();
-recordsToUpdate.add(cfDnsClient.recordList(zone, "api",RecordType.A).get(0));
-recordsToUpdate.add(cfDnsClient.recordList(zone, "cdn",RecordType.A).get(0));
+recordsToUpdate.add(cfDnsClient.recordListBySubdomain(zone, "api",RecordType.A).get(0));
+recordsToUpdate.add(cfDnsClient.recordListBySubdomain(zone, "cdn",RecordType.A).get(0));
 
 // Step 2: Modify only the fields you want to update
 recordsToUpdate.forEach(record ->record.setContent("192.168.2.10"));
@@ -284,8 +334,8 @@ Fully replace existing records. **Record IDs are required** - fetch them first:
 ```java
 // Step 1: Fetch existing records to get their IDs
 List<RecordEntity> recordsToReplace = new ArrayList<>();
-recordsToReplace.add(cfDnsClient.recordList(zone, "mail",RecordType.A).get(0));
-recordsToReplace.add(cfDnsClient.recordList(zone, "cdn",RecordType.A).get(0));
+recordsToReplace.add(cfDnsClient.recordListBySubdomain(zone, "mail",RecordType.A).get(0));
+recordsToReplace.add(cfDnsClient.recordListBySubdomain(zone, "cdn",RecordType.A).get(0));
 
 // Step 2: Modify all fields as needed (full replacement)
 recordsToReplace.get(0).setContent("192.168.3.10");
@@ -305,8 +355,8 @@ Delete existing records. **Record IDs are required** - fetch them first:
 ```java
 // Step 1: Fetch existing records to get their IDs
 List<RecordEntity> recordsToDelete = new ArrayList<>();
-recordsToDelete.add(cfDnsClient.recordList(zone, "cdn",RecordType.A).get(0));
-recordsToDelete.add(cfDnsClient.recordList(zone, "mail",RecordType.A).get(0));
+recordsToDelete.add(cfDnsClient.recordListBySubdomain(zone, "cdn",RecordType.A).get(0));
+recordsToDelete.add(cfDnsClient.recordListBySubdomain(zone, "mail",RecordType.A).get(0));
 
 // Step 2: Send batch delete request
 BatchEntry result = cfDnsClient.recordBatch(zone, null, null, null, recordsToDelete);
@@ -325,12 +375,12 @@ List<RecordEntity> newRecords = Arrays.asList(
 
 // Fetch existing records for update/delete (IDs required)
 List<RecordEntity> recordsToUpdate = Arrays.asList(
-    cfDnsClient.recordList(zone, "existing-api", RecordType.A).get(0)
+    cfDnsClient.recordListBySubdomain(zone, "existing-api", RecordType.A).get(0)
 );
 recordsToUpdate.get(0).setContent("192.168.1.200");
 
 List<RecordEntity> recordsToDelete = Arrays.asList(
-    cfDnsClient.recordList(zone, "old-api", RecordType.A).get(0)
+    cfDnsClient.recordListBySubdomain(zone, "old-api", RecordType.A).get(0)
 );
 
 // Execute all operations in a single batch request
@@ -383,6 +433,8 @@ client.zone("example.com")
     .delete(RecordType.A, RecordType.AAAA);
 ```
 
+The types passed to `delete` determine which record types are selected; a type filter passed to `getRecord` does not restrict deletion. Calling `delete()` without type arguments selects all record types for that subdomain. A `CloudflareApiException` from an individual deletion is logged and does not stop later attempts; no per-record result is returned.
+
 ### Advantages of Fluent API
 
 - **More Readable**: The chain of method calls reads like natural language
@@ -425,7 +477,10 @@ client.zone("example.com")
 
 The `CfDnsClient` provides internal error-handling mechanisms through exceptions. For example:
 - `CloudflareApiException` is thrown for errors during API communication or invalid responses.
-- `CloudflareNotFoundException` is thrown when the requested resource (single or multiple) is not found, if enabled via the `emptyResultThrowsException` flag during initialization. **Default is `false`**, meaning empty results will be returned without throwing an exception.
+  `getStatusCode()` returns the HTTP status code (or `CloudflareApiException.NO_STATUS_CODE` if there was no response)
+  and `getErrors()` the error codes and messages reported by Cloudflare.
+- `CloudflareNotFoundException` is thrown if Cloudflare responds with HTTP status 404 (e.g. deleting a non-existing record).
+- `CloudflareNotFoundException` is also thrown when the requested resource (single or multiple) is not found, if enabled via the `emptyResultThrowsException` flag during initialization. **Default is `false`**, meaning empty results will be returned without throwing an exception.
 
 To enable exception throwing for empty results:
 
@@ -440,13 +495,14 @@ CfDnsClient client = new CfDnsClientBuilder()
 
 ```java
 try {
-  List<RecordEntity> records = cfDnsClient.recordList(zone, "www", RecordType.A);
+  List<RecordEntity> records = cfDnsClient.recordListBySubdomain(zone, "www", RecordType.A);
   System.out.println("Record IP: "+records.get(0).getContent());
 } catch (CloudflareApiException e) {
   if (e instanceof CloudflareNotFoundException) {
-    log.warn("Sld not found: www");
+    log.warn("Subdomain not found: www");
   } else {
-    log.error("Error while getting sld info of www", e);
+    log.error("Error while getting records of subdomain www (HTTP status {}, errors {})",
+        e.getStatusCode(), e.getErrors(), e);
     throw e;
   }
 }

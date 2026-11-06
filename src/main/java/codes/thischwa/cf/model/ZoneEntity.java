@@ -1,6 +1,6 @@
 package codes.thischwa.cf.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
  *   <li>Zone name.
  *   <li>Development mode status.
  *   <li>Active and original name servers linked to the zone.
- *   <li>Timestamps indicating when the zone was created, modified, or activated.
+ *   <li>Timestamps (UTC) indicating when the zone was created, modified, or activated.
  *   <li>Current operational status of the zone (e.g., active, inactive).
  *   <li>Boolean flag indicating whether the zone is paused.
  *   <li>Zone type, representing the nature of the DNS zone (e.g., full, partial).
@@ -31,9 +31,9 @@ public class ZoneEntity extends AbstractEntity {
   private Integer developmentMode;
   private Set<String> nameServers;
   private Set<String> originalNameServers;
-  private LocalDateTime createdOn;
-  private LocalDateTime modifiedOn;
-  private LocalDateTime activatedOn;
+  private Instant createdOn;
+  private Instant modifiedOn;
+  private Instant activatedOn;
   private String status;
   private Boolean paused;
   private String type;

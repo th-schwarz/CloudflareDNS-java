@@ -9,7 +9,26 @@ public class PagingRequestTest {
     @Test
     void testBuildPath() {
         String result = PagingRequest.defaultPaging().addQueryString("/zones");
-        assertEquals("/zones?page=1&per_page=1000", result);
+        assertEquals("/zones?page=1&per_page=50", result);
+    }
+
+    @Test
+    void testPagingRequestBoundaries() {
+        assertDoesNotThrow(() -> PagingRequest.of(1, 1));
+        assertDoesNotThrow(() -> PagingRequest.of(1, 5_000_000));
+        assertThrows(IllegalArgumentException.class, () -> PagingRequest.of(0, 1));
+        assertThrows(IllegalArgumentException.class, () -> PagingRequest.of(1, 0));
+        assertThrows(IllegalArgumentException.class, () -> PagingRequest.of(1, 5_000_001));
+    }
+
+    @Test
+    void testSettersValidatePagingValues() {
+        PagingRequest request = PagingRequest.of(1, 50);
+
+        assertThrows(IllegalArgumentException.class, () -> request.setPage(0));
+        assertThrows(IllegalArgumentException.class, () -> request.setPerPage(5_000_001));
+        assertEquals(1, request.getPage());
+        assertEquals(50, request.getPerPage());
     }
 
     @Test

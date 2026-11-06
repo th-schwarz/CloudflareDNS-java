@@ -12,3 +12,4 @@
 cf.yml
 /docs/apidocs/javadoc.sh
 /.claude/settings.local.json
+/.junie/

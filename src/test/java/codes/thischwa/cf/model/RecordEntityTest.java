@@ -41,19 +41,19 @@ public class RecordEntityTest {
     @Test
     void testGetSld() {
         RecordEntity rec = new RecordEntity();
-        assertNull(rec.getSld());
+        assertNull(rec.getSubdomain());
 
         rec.setName("sub.example.com");
-        assertEquals("sub", rec.getSld());
+        assertEquals("sub", rec.getSubdomain());
 
         rec.setName("example.com");
-        assertEquals("example", rec.getSld());
+        assertEquals("example", rec.getSubdomain());
 
         rec.setName("host");
-        assertEquals("host", rec.getSld());
+        assertEquals("host", rec.getSubdomain());
         
         rec.setName(".dotstart");
-        assertEquals(".dotstart", rec.getSld());
+        assertEquals(".dotstart", rec.getSubdomain());
     }
 
     @Test
@@ -61,10 +61,47 @@ public class RecordEntityTest {
         RecordEntity rec = new RecordEntity();
         rec.setName("sub.example.com");
         rec.setZoneName("example.com");
-        assertEquals("sub", rec.getSld());
+        assertEquals("sub", rec.getSubdomain());
 
         rec.setName("my.sub.example.com");
         rec.setZoneName("example.com");
-        assertEquals("my.sub", rec.getSld());
+        assertEquals("my.sub", rec.getSubdomain());
+    }
+
+    @Test
+    void testGetSldApexWithZoneName() {
+        RecordEntity rec = new RecordEntity();
+        rec.setName("example.com");
+        rec.setZoneName("example.com");
+        assertEquals("@", rec.getSubdomain());
+
+        rec.setName("Example.COM");
+        assertEquals("@", rec.getSubdomain());
+    }
+
+    @Test
+    void testGetSldZoneNameIsNoLabelSuffix() {
+        // "notexample.com" ends with "example.com", but is not part of the zone
+        RecordEntity rec = new RecordEntity();
+        rec.setName("notexample.com");
+        rec.setZoneName("example.com");
+        assertEquals("notexample", rec.getSubdomain());
+    }
+
+    @Test
+    void testGetSldCaseInsensitive() {
+        RecordEntity rec = new RecordEntity();
+        rec.setName("WWW.Example.com");
+        rec.setZoneName("example.com");
+        assertEquals("WWW", rec.getSubdomain());
+    }
+
+    @Test
+    @SuppressWarnings("removal")
+    void testDeprecatedGetSldDelegatesToGetSubdomain() {
+        RecordEntity rec = new RecordEntity();
+        rec.setName("my.sub.example.com");
+        rec.setZoneName("example.com");
+        assertEquals(rec.getSubdomain(), rec.getSld());
     }
 }

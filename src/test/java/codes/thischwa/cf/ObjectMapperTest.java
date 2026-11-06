@@ -3,12 +3,15 @@ package codes.thischwa.cf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import codes.thischwa.cf.model.AbstractResponse;
 import codes.thischwa.cf.model.BatchResponse;
+import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordMultipleResponse;
 import codes.thischwa.cf.model.RecordSingleResponse;
+import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ResponseResultInfo;
 import codes.thischwa.cf.model.ZoneMultipleResponse;
 import java.io.InputStream;
@@ -49,5 +52,36 @@ public class ObjectMapperTest {
     } catch (JacksonException e) {
       fail("fail for " + clazz + ": " + e.getMessage());
     }
+  }
+
+  @Test
+  void testSubdomainIsNotSerialized() {
+    RecordEntity rec = RecordEntity.build("www.example.com", RecordType.A, 60, "1.2.3.4");
+    rec.setZoneName("example.com");
+    String json = mapper.writeValueAsString(rec);
+    assertTrue(json.contains("\"name\":\"www.example.com\""), json);
+    assertFalse(json.contains("subdomain"), json);
+    assertFalse(json.contains("sld"), json);
+  }
+
+  @Test
+  void testRecordFieldsAreMappedInSnakeCase() {
+    String json = """
+        {"id":"r1","name":"_sip._tcp.example.com","type":"SRV","ttl":300,"priority":10,
+         "comment":"sip","tags":["env:prod"],
+         "data":{"weight":5,"port":5060,"target":"sip.example.com"},
+         "created_on":"2025-01-20T08:56:34.736214Z","modified_on":"2025-01-21T08:56:34Z"}
+        """;
+    RecordEntity rec = mapper.readValue(json, RecordEntity.class);
+    assertEquals(10, rec.getPriority());
+    assertEquals("sip", rec.getComment());
+    assertEquals(List.of("env:prod"), rec.getTags());
+    assertEquals(5060, rec.getData().get("port"));
+    assertEquals(java.time.Instant.parse("2025-01-20T08:56:34.736214Z"), rec.getCreatedOn());
+    assertEquals(java.time.Instant.parse("2025-01-21T08:56:34Z"), rec.getModifiedOn());
+
+    String out = mapper.writeValueAsString(rec);
+    assertTrue(out.contains("\"priority\":10"), out);
+    assertTrue(out.contains("\"created_on\":\"2025-01-20T08:56:34.736214Z\""), out);
   }
 }

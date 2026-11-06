@@ -55,4 +55,32 @@ public class CfRequestTest {
                 IllegalArgumentException.class,
             () -> CfRequest.RECORD_UPDATE.buildPath("zone123"));
     }
+
+    @Test
+    public void testQueryValueIsUrlEncoded() {
+        assertEquals("/zones?name=example.com%26account.id%3D1",
+            CfRequest.ZONE_INFO.buildPath("example.com&account.id=1"));
+        assertEquals("/zones/zone123/dns_records?name=..%2F..%2Fx.example.com",
+            CfRequest.RECORD_LIST_NAME.buildPath("zone123", "../../x.example.com"));
+        assertEquals("/zones/zone123/dns_records?name=%24%28reboot%29.example.com",
+            CfRequest.RECORD_LIST_NAME.buildPath("zone123", "$(reboot).example.com"));
+        assertEquals("/zones/zone123/dns_records?name=%F0%9F%A5%B7.example.com",
+            CfRequest.RECORD_LIST_NAME.buildPath("zone123", "\uD83E\uDD77.example.com"));
+        assertEquals("/zones/zone123/dns_records?name=*.example.com",
+            CfRequest.RECORD_LIST_NAME.buildPath("zone123", "*.example.com"));
+    }
+
+    @Test
+    public void testInvalidIdentifiersAreRejected() {
+        for (String id : new String[] {"..", "../..", "a/b", "a b", "id?x=1", "id#x", "", "%2e%2e",
+            "a".repeat(65)}) {
+            assertThrows(IllegalArgumentException.class,
+                () -> CfRequest.RECORD_DELETE.buildPath("zone123", id), "id: " + id);
+            assertThrows(IllegalArgumentException.class,
+                () -> CfRequest.RECORD_LIST.buildPath(id), "zone id: " + id);
+        }
+        assertThrows(IllegalArgumentException.class, () -> CfRequest.RECORD_LIST.buildPath((Object) null));
+        assertEquals("/zones/0123456789abcdef0123456789abcdef/dns_records",
+            CfRequest.RECORD_LIST.buildPath("0123456789abcdef0123456789abcdef"));
+    }
 }

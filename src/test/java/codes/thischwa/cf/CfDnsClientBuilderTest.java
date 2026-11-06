@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -146,5 +147,58 @@ class CfDnsClientBuilderTest {
         .build();
 
     assertNotNull(client);
+  }
+
+  @Test
+  void testBaseUrlMustUseHttps() {
+    CfDnsClientBuilder builder = new CfDnsClientBuilder().withApiTokenAuth("test-token");
+    assertThrows(IllegalArgumentException.class, () -> builder.withBaseUrl("http://api.example.com"));
+    assertThrows(IllegalArgumentException.class, () -> builder.withBaseUrl("ftp://api.example.com"));
+    assertThrows(IllegalArgumentException.class, () -> builder.withBaseUrl("api.example.com"));
+    assertThrows(IllegalArgumentException.class, () -> builder.withBaseUrl("https://"));
+    assertThrows(IllegalArgumentException.class, () -> builder.withBaseUrl("https://api example.com"));
+    assertThrows(IllegalArgumentException.class, () -> builder.withBaseUrl("https://api.example.com/v4?x=1"));
+    assertThrows(IllegalArgumentException.class, () -> builder.withBaseUrl("https://api.example.com/v4#x"));
+  }
+
+  @Test
+  void testBaseUrlAllowsHttpForLoopbackOnly() {
+    assertNotNull(new CfDnsClientBuilder().withApiTokenAuth("t").withBaseUrl("http://localhost:8080").build());
+    assertNotNull(new CfDnsClientBuilder().withApiTokenAuth("t").withBaseUrl("http://127.0.0.1:8080/v4").build());
+    assertNotNull(new CfDnsClientBuilder().withApiTokenAuth("t").withBaseUrl("HTTPS://API.example.com/").build());
+    assertNotNull(new CfDnsClientBuilder().withApiTokenAuth("t").withBaseUrl(null).build());
+  }
+
+  @Test
+  void testInvalidTimeoutsAreRejected() {
+    CfDnsClientBuilder builder = new CfDnsClientBuilder();
+    assertThrows(IllegalArgumentException.class, () -> builder.withConnectTimeout(null));
+    assertThrows(IllegalArgumentException.class, () -> builder.withConnectTimeout(Duration.ZERO));
+    assertThrows(IllegalArgumentException.class, () -> builder.withResponseTimeout(Duration.ofSeconds(-1)));
+    // would become 0 ms = no timeout at all
+    assertThrows(IllegalArgumentException.class, () -> builder.withResponseTimeout(Duration.ofNanos(500_000)));
+    assertThrows(IllegalArgumentException.class, () -> builder.withConnectTimeout(Duration.ofNanos(1)));
+    // would overflow when converted to milliseconds
+    assertThrows(IllegalArgumentException.class,
+        () -> builder.withResponseTimeout(Duration.ofSeconds(Long.MAX_VALUE)));
+    assertNotNull(builder.withApiTokenAuth("t").withResponseTimeout(Duration.ofMillis(1)).build());
+    assertNotNull(builder.withApiTokenAuth("t")
+        .withConnectTimeout(Duration.ofSeconds(1))
+        .withResponseTimeout(Duration.ofSeconds(2))
+        .build());
+  }
+
+  @Test
+  void testNullCredentialsAreRejected() {
+    assertThrows(IllegalArgumentException.class, () -> new CfDnsClientBuilder().withApiTokenAuth(null));
+    assertThrows(IllegalArgumentException.class, () -> new CfDnsClientBuilder().withEmailKeyAuth(null, "key"));
+    assertThrows(IllegalArgumentException.class, () -> new CfDnsClientBuilder().withEmailKeyAuth("a@b.de", null));
+  }
+
+  @Test
+  void testBuildWithoutAuthFails() {
+    assertThrows(IllegalStateException.class, () -> new CfDnsClientBuilder().build());
+    assertThrows(IllegalStateException.class,
+        () -> new CfDnsClientBuilder().withBaseUrl("https://api.example.com").build());
   }
 }

@@ -1,6 +1,10 @@
 package codes.thischwa.cf.model;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.time.Instant;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.jetbrains.annotations.Nullable;
@@ -16,9 +20,12 @@ import org.jetbrains.annotations.Nullable;
  *   <li>Content of the DNS record, such as an IP address.
  *   <li>Flags indicating whether the record is proxiable or proxied.
  *   <li>TTL (Time-To-Live) for the DNS record.
+ *   <li>Priority, required for MX and URI records (for SRV records it's part of the data).
+ *   <li>Structured data, required for e.g. SRV, CAA, LOC or TLSA records instead of content.
+ *   <li>An optional comment and tags.
  *   <li>A locked status to indicate the immutability of the record.
  *   <li>Zone-specific metadata including zone ID and name.
- *   <li>Timestamps for creation and modification.
+ *   <li>Timestamps for creation and modification (UTC).
  * </ul>
  *
  * <p>Provides a static factory method {@code build} for creating a DNS record with specific
@@ -27,21 +34,46 @@ import org.jetbrains.annotations.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class RecordEntity extends AbstractEntity {
+  private static final String APEX = "@";
+
   private String type;
   private String name;
   private String content;
   private Boolean proxiable;
   private Boolean proxied;
   private Integer ttl;
+  /**
+   * Priority of the record, required for MX and URI records. For SRV records the priority is
+   * part of {@link #data}.
+   */
+  @Nullable
+  private Integer priority;
+  /**
+   * Comment of the record, only used by Cloudflare.
+   */
+  @Nullable
+  private String comment;
+  /**
+   * Custom tags of the record in the form "name:value", only used by Cloudflare.
+   */
+  @Nullable
+  private List<String> tags;
+  /**
+   * Structured content of the record, e.g. for SRV records the keys "priority", "weight", "port"
+   * and "target".
+   * The keys are the same as in the Cloudflare API.
+   */
+  @Nullable
+  private Map<String, Object> data;
   private Boolean locked;
   @Nullable
   private String zoneId;
   @Nullable
   private String zoneName;
   @Nullable
-  private LocalDateTime modifiedOn;
+  private Instant modifiedOn;
   @Nullable
-  private LocalDateTime createdOn;
+  private Instant createdOn;
 
   /**
    * Initializes a new instance of the RecordEntity class and invokes the parent constructor from
@@ -114,22 +146,31 @@ public class RecordEntity extends AbstractEntity {
   }
 
   /**
-   * Retrieves the short name (subdomain) of the DNS record.
-   * If the name contains a dot ('.'), only the substring before the first dot is returned.
-   * This is useful for getting the subdomain part of a fully qualified domain name.
+   * Retrieves the subdomain of the DNS record, i.e. the record name relative to its zone.
    *
-   * @return the short name of the DNS record (substring before the first dot),
-   *     or the full name if no dot is present
+   * <p>If the zone name is known, the zone name is stripped from the record name, e.g.
+   * {@code my.sub.example.com} results in {@code my.sub}. A record at the zone apex results in
+   * {@code "@"}. If the zone name is unknown, only the substring before the first dot is returned.
+   *
+   * @return the short name of the DNS record, {@code "@"} for the zone apex, or the full name if
+   *     no dot is present
    */
-  public String getSld() {
+  @JsonIgnore
+  @Nullable
+  public String getSubdomain() {
     if (name == null) {
       return null;
     }
 
-    if (zoneName != null && name.endsWith(zoneName)) {
-      int zoneNameLength = zoneName.length();
-      int dotSeparatorLength = 1;
-      return name.substring(0, name.length() - zoneNameLength - dotSeparatorLength);
+    if (zoneName != null && !zoneName.isEmpty()) {
+      String lowerName = name.toLowerCase(Locale.ROOT);
+      String lowerZone = zoneName.toLowerCase(Locale.ROOT);
+      if (lowerName.equals(lowerZone)) {
+        return APEX;
+      }
+      if (lowerName.endsWith("." + lowerZone)) {
+        return name.substring(0, name.length() - zoneName.length() - 1);
+      }
     }
 
     int firstDotPosition = name.indexOf('.');
@@ -138,5 +179,18 @@ public class RecordEntity extends AbstractEntity {
     }
 
     return name;
+  }
+
+  /**
+   * Retrieves the subdomain of the DNS record.
+   *
+   * @return the subdomain of the DNS record
+   * @deprecated The name was misleading, use {@link #getSubdomain()} instead.
+   */
+  @Deprecated(since = "0.6.0", forRemoval = true)
+  @JsonIgnore
+  @Nullable
+  public String getSld() {
+    return getSubdomain();
   }
 }

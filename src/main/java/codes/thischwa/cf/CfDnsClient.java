@@ -2,6 +2,7 @@ package codes.thischwa.cf;
 
 import codes.thischwa.cf.fluent.ZoneOperations;
 import codes.thischwa.cf.fluent.ZoneOperationsImpl;
+import codes.thischwa.cf.model.AbstractMultipleResponse;
 import codes.thischwa.cf.model.AbstractResponse;
 import codes.thischwa.cf.model.BatchEntry;
 import codes.thischwa.cf.model.BatchResponse;
@@ -10,15 +11,20 @@ import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordMultipleResponse;
 import codes.thischwa.cf.model.RecordSingleResponse;
 import codes.thischwa.cf.model.RecordType;
+import codes.thischwa.cf.model.ResponseEntity;
+import codes.thischwa.cf.model.ResultInfo;
 import codes.thischwa.cf.model.ZoneEntity;
 import codes.thischwa.cf.model.ZoneMultipleResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
@@ -28,26 +34,30 @@ import org.jetbrains.annotations.Nullable;
  * records and zones within the Cloudflare system, including creating, updating, retrieving, and
  * deleting DNS records.
  *
+ * <p>The client is thread-safe and should be reused. It holds a pool of HTTP connections, which is
+ * released by {@link #close()}.
+ *
  * <p>Example with API token authentication (recommended):
  * <pre><code>
  * // Create a new CfDnsClient instance with API token
- * CfDnsClient cfDnsClient = new CfDnsClientBuilder()
+ * try (CfDnsClient cfDnsClient = new CfDnsClientBuilder()
  *     .withApiTokenAuth("your-api-token")
- *     .build();
+ *     .build()) {
  *
- * // Retrieve a zone
- * ZoneEntity zone = cfDnsClient.zoneGet("example.com");
- * System.out.println("Zone ID: " + zone.getId());
+ *   // Retrieve a zone
+ *   ZoneEntity zone = cfDnsClient.zoneGet("example.com");
+ *   System.out.println("Zone ID: " + zone.getId());
  *
- * // Retrieve records of a subdomain
- * List&lt;RecordEntity&gt; records = cfDnsClient.recordList(zone, "sld");
- * records.forEach(record ->
- *     System.out.println("Record Type: " + record.getType() + ", Value: " + record.getContent())
- * );
+ *   // Retrieve records of a subdomain
+ *   List&lt;RecordEntity&gt; records = cfDnsClient.recordListBySubdomain(zone, "www");
+ *   records.forEach(record ->
+ *       System.out.println("Record Type: " + record.getType() + ", Value: " + record.getContent())
+ *   );
  *
- * // Create a record for the subdomain "api"
- * RecordEntity created = cfDnsClient.recordCreateSld(zone, "api", 60, RecordType.A, "192.168.1.10");
- * System.out.println("Created Record ID: " + created.getId());
+ *   // Create a record for the subdomain "api"
+ *   RecordEntity created = cfDnsClient.recordCreateSubdomain(zone, "api", 60, RecordType.A, "192.168.1.10");
+ *   System.out.println("Created Record ID: " + created.getId());
+ * }
  * </code></pre>
  *
  * <p>Example with email/key authentication (legacy):
@@ -77,9 +87,39 @@ import org.jetbrains.annotations.Nullable;
 @Slf4j
 public class CfDnsClient extends CfBasicHttpClient {
 
+  /**
+   * Page size used when fetching all zones. Cloudflare allows 5 to 50 zones per page.
+   */
+  static final int ZONES_PER_PAGE = 50;
+
+  private static final int MIN_ZONES_PER_PAGE = 5;
+
+  /**
+   * Page size used when fetching all DNS records.
+   */
+  static final int MAX_RECORDS_PER_PAGE = 1000;
+
+  /**
+   * Sort order for listing DNS records. Cloudflare doesn't guarantee a stable order without it,
+   * so pages could overlap or miss records.
+   */
+  static final String RECORD_ORDER = "order=name&direction=asc";
+
+  /**
+   * Max. attempts to fetch all pages consistently.
+   */
+  private static final int MAX_PAGING_ATTEMPTS = 3;
+
+  /**
+   * Conventional name for the zone apex (the zone name itself).
+   */
+  public static final String APEX = "@";
+
   private final ResponseValidator responseValidator;
 
   private final boolean emptyResultThrowsException;
+
+  private final int recordsPerPage;
 
   /**
    * Constructs a new instance of {@code CfDnsClient}.
@@ -91,13 +131,59 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @param auth                       The authentication mechanism to use (ApiTokenAuth or EmailKeyAuth)
    */
   CfDnsClient(boolean emptyResultThrowsException, String baseUrl, CfDnsClientBuilder.CfAuth auth) {
-    super(baseUrl, auth);
-    this.responseValidator = new ResponseValidator(emptyResultThrowsException);
-    this.emptyResultThrowsException = emptyResultThrowsException;
+    this(emptyResultThrowsException, baseUrl, auth, MAX_RECORDS_PER_PAGE);
   }
 
-  private static String buildFqdn(ZoneEntity zone, String sld) {
-    return sld + "." + zone.getName();
+  /**
+   * Constructs a new instance of {@code CfDnsClient} with a custom page size for fetching all DNS
+   * records. Intended for tests, which need to fetch multiple pages with only a few records.
+   */
+  CfDnsClient(boolean emptyResultThrowsException, String baseUrl, CfDnsClientBuilder.CfAuth auth,
+              int recordsPerPage) {
+    this(emptyResultThrowsException, baseUrl, auth, recordsPerPage,
+        CfDnsClientBuilder.DEFAULT_CONNECT_TIMEOUT, CfDnsClientBuilder.DEFAULT_RESPONSE_TIMEOUT);
+  }
+
+  /**
+   * Constructs a new instance of {@code CfDnsClient} with all settings.
+   */
+  CfDnsClient(boolean emptyResultThrowsException, String baseUrl, CfDnsClientBuilder.CfAuth auth,
+              int recordsPerPage, Duration connectTimeout, Duration responseTimeout) {
+    super(baseUrl, auth, connectTimeout, responseTimeout);
+    this.responseValidator = new ResponseValidator(emptyResultThrowsException);
+    this.emptyResultThrowsException = emptyResultThrowsException;
+    this.recordsPerPage = recordsPerPage;
+  }
+
+  /**
+   * Characters which can't be part of a DNS name, but are typical for injection attempts. Further
+   * validation is done by Cloudflare; the values are URL-encoded anyway. A slash isn't rejected,
+   * because it's valid in classless reverse delegation names (RFC 2317).
+   */
+  private static final Pattern INVALID_NAME_CHARS = Pattern.compile("[\\s\\p{Cntrl}\\\\?#&;|<>\"'`]");
+
+  /**
+   * Validates a zone name or subdomain before it's used in a request.
+   *
+   * @throws IllegalArgumentException if the name is {@code null}, blank or contains invalid
+   *                                  characters
+   */
+  private static String validateName(String name, String kind) {
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException(kind + " must not be null or blank");
+    }
+    if (INVALID_NAME_CHARS.matcher(name).find()) {
+      throw new IllegalArgumentException("Invalid characters in " + kind + ": " + name);
+    }
+    return name;
+  }
+
+  private static String buildFqdn(ZoneEntity zone, String subdomain) {
+    validateName(subdomain, "subdomain");
+    if (APEX.equals(subdomain)) {
+      return zone.getName();
+    }
+    return subdomain + "." + zone.getName();
   }
 
   /**
@@ -129,33 +215,46 @@ public class CfDnsClient extends CfBasicHttpClient {
    *
    * @param zoneName the name of the DNS zone (e.g., "example.com")
    * @return a ZoneOperations instance for chaining operations
-   * @throws CloudflareApiException if the zone cannot be found or accessed
+   * @throws CloudflareNotFoundException if the zone doesn't exist
+   * @throws CloudflareApiException      if the zone cannot be accessed
+   * @throws IllegalArgumentException if the name is blank or contains invalid characters
    */
   public ZoneOperations zone(String zoneName) throws CloudflareApiException {
     ZoneEntity zoneEntity = zoneGet(zoneName);
+    if (zoneEntity == null) {
+      throw new CloudflareNotFoundException("Zone not found: " + zoneName);
+    }
     return new ZoneOperationsImpl(this, zoneEntity);
   }
 
   /**
-   * Retrieves a list of all zones from the Cloudflare API.
+   * Retrieves a list of all zones from the Cloudflare API. If there are more zones than fit on one
+   * page, all pages are fetched.
    *
    * @return A list of ZoneEntity objects representing the zones retrieved from the Cloudflare API.
    * @throws CloudflareApiException If an error occurs during the API request or response handling.
    */
   public List<ZoneEntity> zoneList() throws CloudflareApiException {
-    return zoneList(PagingRequest.defaultPaging());
+    return getAllPages(CfRequest.ZONE_LIST.buildPath(), ZoneMultipleResponse.class, ZONES_PER_PAGE);
   }
 
   /**
-   * Retrieves a list of all DNS zones using the provided paging request parameters.
+   * Retrieves a single page of DNS zones using the provided paging request parameters.
+   * Cloudflare requires a page size between 5 and 50 for this endpoint.
    *
    * @param pagingRequest the pagination request object containing parameters for paging and
    *                      filtering zone data
    * @return a list of {@code ZoneEntity} objects representing the DNS zones retrieved from the API
    * @throws CloudflareApiException if there is an error during the API request or response
    *                                processing
+   * @throws IllegalArgumentException if the page size is outside the range 5 to 50
    */
   public List<ZoneEntity> zoneList(PagingRequest pagingRequest) throws CloudflareApiException {
+    if (pagingRequest.getPerPage() < MIN_ZONES_PER_PAGE
+        || pagingRequest.getPerPage() > ZONES_PER_PAGE) {
+      throw new IllegalArgumentException("Zone page size must be between " + MIN_ZONES_PER_PAGE
+          + " and " + ZONES_PER_PAGE);
+    }
     String endpoint = pagingRequest.addQueryString(CfRequest.ZONE_LIST.buildPath());
     ZoneMultipleResponse response = getRequest(endpoint, ZoneMultipleResponse.class);
     checkResponse(response);
@@ -166,112 +265,119 @@ public class CfDnsClient extends CfBasicHttpClient {
    * Retrieves detailed information about a specific zone by its name.
    *
    * @param name The name of the zone to retrieve information for.
-   * @return A {@link ZoneEntity} object that contains details of the specified zone.
-   * @throws CloudflareApiException If an error occurs while making the API request or processing
-   *                                the response.
+   * @return A {@link ZoneEntity} object that contains details of the specified zone, or
+   *     {@code null} if the zone doesn't exist and 'emptyResultThrowsException' is disabled.
+   * @throws CloudflareNotFoundException If the zone doesn't exist and 'emptyResultThrowsException'
+   *                                     is enabled.
+   * @throws CloudflareApiException      If an error occurs while making the API request or
+   *                                     processing the response.
+   * @throws IllegalArgumentException if the name is blank or contains invalid characters
    */
+  @Nullable
   public ZoneEntity zoneGet(String name) throws CloudflareApiException {
-    String endpoint = CfRequest.ZONE_INFO.buildPath(name);
+    String endpoint = CfRequest.ZONE_INFO.buildPath(validateName(name, "zone name"));
     ZoneMultipleResponse response = getRequest(endpoint, ZoneMultipleResponse.class);
     checkResponse(response, true);
-    return response.getResult().get(0);
+    List<ZoneEntity> zones = response.getResult();
+    return (zones == null || zones.isEmpty()) ? null : zones.get(0);
   }
 
   /**
-   * Retrieves a list of DNS records for a specified zone, with optional paging support.
+   * Retrieves all DNS records for a specified zone. If there are more records than fit on one
+   * page, all pages are fetched.
    *
-   * @param zone          The zone entity containing information about the target zone.
+   * @param zone The zone entity containing information about the target zone.
    * @return A list of RecordEntity objects representing the DNS records of the specified zone.
    * @throws CloudflareApiException If an error occurs during the API request or response processing.
    */
   public List<RecordEntity> recordList(ZoneEntity zone) throws CloudflareApiException {
-    return recordList(zone, (PagingRequest) null);
+    return recordList(zone, null);
   }
 
   /**
-   * Retrieves a list of DNS records for a specified zone, with optional paging support.
+   * Retrieves DNS records for a specified zone, with optional paging support.
    *
    * @param zone          The zone entity containing information about the target zone.
    * @param pagingRequest The paging request containing parameters such as page size and number.
+   *                      If {@code null}, all pages are fetched using the maximum supported page size.
+   *                      For a specific page, Cloudflare allows a page size between 1 and 5,000,000.
    * @return A list of RecordEntity objects representing the DNS records of the specified zone.
    * @throws CloudflareApiException If an error occurs during the API request or response processing.
    */
-  public List<RecordEntity> recordList(ZoneEntity zone, @Nullable PagingRequest pagingRequest) throws CloudflareApiException {
-    PagingRequest pr = pagingRequest == null ? PagingRequest.defaultPaging() : pagingRequest;
-    String endpoint = pr.addQueryString(CfRequest.RECORD_LIST.buildPath(zone.getId()));
-    RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
+  public List<RecordEntity> recordList(ZoneEntity zone, @Nullable PagingRequest pagingRequest)
+      throws CloudflareApiException {
+    String path = appendQuery(CfRequest.RECORD_LIST.buildPath(zone.getId()), RECORD_ORDER);
+    if (pagingRequest == null) {
+      return filterAndSetZoneRecords(zone, null,
+          getAllPages(path, RecordMultipleResponse.class, PagingRequest.MAX_PER_PAGE));
+    }
+    RecordMultipleResponse resp = getRequest(pagingRequest.addQueryString(path), RecordMultipleResponse.class);
     checkResponse(resp);
-    return resp.getResult();
+    return filterAndSetZoneRecords(zone, null, resp.getResult());
   }
 
   /**
-   * Retrieves DNS records for the specified second-level domain (SLD) within a zone.
-   *
-   * @param zone the zone entity representing the DNS zone to query
-   * @param sld  the second-level domain (SLD) to filter the records
-   * @return a list of RecordEntity objects that match the specified SLD within the zone
-   * @throws CloudflareNotFoundException if the specified SLD is not found in the zone
-   * @throws CloudflareApiException      if an error occurs while interacting with the Cloudflare API
-   */
-  public List<RecordEntity> recordList(ZoneEntity zone, String sld) throws CloudflareApiException {
-    return recordList(zone, sld, (RecordType[]) null);
-  }
-
-  /**
-   * Retrieves DNS records for the specified second-level domain (SLD) within a zone.
+   * Retrieves DNS records for the specified subdomain within a zone.
    * Optionally, filters by one or more DNS record types.
    *
-   * @param zone  The zone entity containing information about the domain zone.
-   * @param sld   The second-level domain (SLD) for which to retrieve DNS records.
-   * @param types Optional parameter specifying one or more DNS record types to filter the results.
+   * @param zone      The zone entity containing information about the domain zone.
+   * @param subdomain The subdomain relative to the zone (e.g. "www" for "www.example.com"),
+   *                  or {@link #APEX} for the zone apex.
+   * @param types     Optional DNS record types to filter the results. If none are given, records of
+   *                  all types are returned.
    * @return A list of {@code RecordEntity} objects representing the DNS records for the specified domain.
-   * @throws CloudflareNotFoundException if the specified SLD is not found in the zone
+   * @throws CloudflareNotFoundException if no records were found and 'emptyResultThrowsException'
+   *                                     is enabled
    * @throws CloudflareApiException      if an error occurs while interacting with the Cloudflare API
+   * @throws IllegalArgumentException if the subdomain is blank or contains invalid characters
    */
-  public List<RecordEntity> recordList(ZoneEntity zone, String sld, @Nullable RecordType... types)
+  public List<RecordEntity> recordListBySubdomain(ZoneEntity zone, String subdomain,
+                                                  @Nullable RecordType... types)
       throws CloudflareApiException {
-    String fqdn = buildFqdn(zone, sld);
-    String endpoint = CfRequest.RECORD_LIST_NAME.buildPath(zone.getId(), fqdn);
-    RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
-    checkResponse(resp, false);
-    List<RecordEntity> recs = resp.getResult();
+    String fqdn = buildFqdn(zone, subdomain);
+    String endpoint = appendQuery(
+        addTypeFilter(CfRequest.RECORD_LIST_NAME.buildPath(zone.getId(), fqdn), types), RECORD_ORDER);
+    List<RecordEntity> recs = getAllPages(endpoint, RecordMultipleResponse.class, recordsPerPage);
     return filterAndSetZoneRecords(zone, types, recs);
   }
 
   /**
-   * Retrieves a list of all DNS records for a given zone.
-   * Optionally, filters by one or more DNS record types.
+   * Retrieves all DNS records of the given types for a zone.
    *
    * @param zone  The zone entity containing information about the domain zone.
-   * @param types Optional parameter specifying one or more DNS record types to filter the results.
+   * @param types Optional DNS record types to filter the results. If none are given, records of all
+   *              types are returned.
    * @return A list of {@code RecordEntity} objects representing the DNS records for the specified zone.
-   * @throws CloudflareApiException if an error occurs while interacting with the Cloudflare API
+   * @throws CloudflareNotFoundException if no records were found and 'emptyResultThrowsException'
+   *                                     is enabled
+   * @throws CloudflareApiException      if an error occurs while interacting with the Cloudflare API
    */
-  public List<RecordEntity> recordList(ZoneEntity zone, RecordType... types)
+  public List<RecordEntity> recordListByType(ZoneEntity zone, @Nullable RecordType... types)
       throws CloudflareApiException {
-    String endpoint = CfRequest.RECORD_LIST.buildPath(zone.getId());
-    RecordMultipleResponse resp = getRequest(endpoint, RecordMultipleResponse.class);
-    checkResponse(resp, false);
-    List<RecordEntity> recs = resp.getResult();
+    String endpoint = appendQuery(
+        addTypeFilter(CfRequest.RECORD_LIST.buildPath(zone.getId()), types), RECORD_ORDER);
+    List<RecordEntity> recs = getAllPages(endpoint, RecordMultipleResponse.class, recordsPerPage);
     return filterAndSetZoneRecords(zone, types, recs);
   }
 
   /**
-   * Creates a new DNS record for a given second-level domain (SLD) within the specified zone.
+   * Creates a new DNS record for a given subdomain within the specified zone.
    *
-   * @param zone    The ZoneEntity representing the DNS zone where the record is to be created.
-   * @param sld     The second-level domain (SLD) for which the DNS record is being created.
-   * @param ttl     The time-to-live (TTL) value for the DNS record in seconds.
-   * @param type    The RecordType specifying the type of the DNS record (e.g., A, AAAA, CNAME).
-   * @param content The content of the DNS record (e.g., IP address for A/AAAA records, target
-   *                domain for CNAME).
+   * @param zone      The ZoneEntity representing the DNS zone where the record is to be created.
+   * @param subdomain The subdomain relative to the zone (e.g. "api" for "api.example.com"),
+   *                  or {@link #APEX} for the zone apex.
+   * @param ttl       The time-to-live (TTL) value for the DNS record in seconds.
+   * @param type      The RecordType specifying the type of the DNS record (e.g., A, AAAA, CNAME).
+   * @param content   The content of the DNS record (e.g., IP address for A/AAAA records, target
+   *                  domain for CNAME).
    * @return The created RecordEntity object containing details of the newly created DNS record.
    * @throws CloudflareApiException If an error occurs while communicating with the Cloudflare API
    *                                or creating the record.
+   * @throws IllegalArgumentException if the subdomain is blank or contains invalid characters
    */
-  public RecordEntity recordCreateSld(ZoneEntity zone, String sld, int ttl, RecordType type,
-                                      String content) throws CloudflareApiException {
-    String fqdn = buildFqdn(zone, sld);
+  public RecordEntity recordCreateSubdomain(ZoneEntity zone, String subdomain, int ttl, RecordType type,
+                                            String content) throws CloudflareApiException {
+    String fqdn = buildFqdn(zone, subdomain);
     return recordCreate(zone, fqdn, ttl, type, content);
   }
 
@@ -298,18 +404,20 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @param zone The zone entity where the record will be created. Contains details such as zone
    *             ID.
    * @param rec  The record entity representing the DNS record to be created, including its
-   *             attributes.
+   *             attributes. Read-only attributes (e.g. ID, timestamps) are ignored, the given
+   *             object isn't modified.
    * @return The created record entity as returned by the Cloudflare API.
    * @throws CloudflareApiException If an error occurs while interacting with the Cloudflare API.
    */
   public RecordEntity recordCreate(ZoneEntity zone, RecordEntity rec)
       throws CloudflareApiException {
     String endpoint = CfRequest.RECORD_CREATE.buildPath(zone.getId());
-    RecordSingleResponse resp = postRequest(endpoint, rec, RecordSingleResponse.class);
+    RecordEntity payload = writableCopy(rec, false);
+    RecordSingleResponse resp = postRequest(endpoint, payload, RecordSingleResponse.class);
     checkResponse(resp);
-    log.info("Record {} of type {} successful created.", rec.getSld(), rec.getType());
+    log.info("Record {} of type {} successful created.", rec.getSubdomain(), rec.getType());
     RecordEntity retRec = resp.getResult();
-    retRec.setZoneId(zone.getId());
+    assignZone(retRec, zone);
     return retRec;
   }
 
@@ -325,9 +433,9 @@ public class CfDnsClient extends CfBasicHttpClient {
   public boolean recordDelete(ZoneEntity zone, RecordEntity rec) throws CloudflareApiException {
     boolean changed = recordDelete(zone, rec.getId());
     if (changed) {
-      log.debug("Record {} of the type [{}] successful deleted.", rec.getSld(), rec.getType());
+      log.debug("Record {} of the type [{}] successful deleted.", rec.getSubdomain(), rec.getType());
     } else {
-      log.warn("Record {} of the type [{}] was not deleted.", rec.getSld(), rec.getType());
+      log.warn("Record {} of the type [{}] was not deleted.", rec.getSubdomain(), rec.getType());
     }
     return changed;
   }
@@ -336,8 +444,9 @@ public class CfDnsClient extends CfBasicHttpClient {
    * Deletes a DNS record of the specified type within a given zone on the Cloudflare API.
    *
    * @param zone The zone entity that specifies the zone in which the record exists.
-   * @param id   The record entity that represents the DNS record to be deleted.
-   * @return {@code true} if the DNS record was successfully deleted; {@code false} otherwise.
+   * @param id   The ID of the DNS record to be deleted.
+   * @return {@code true} if the API confirms the deletion of the record with the given ID;
+   *     {@code false} otherwise.
    * @throws CloudflareApiException if there is an issue during the API communication or the request
    *                                fails for any reason.
    */
@@ -345,46 +454,56 @@ public class CfDnsClient extends CfBasicHttpClient {
     String endpoint = CfRequest.RECORD_DELETE.buildPath(zone.getId(), id);
     RecordSingleResponse resp = deleteRequest(endpoint, RecordSingleResponse.class);
     checkResponse(resp);
-    log.debug("Record id#{} successful deleted.", id);
-    return resp.getResult().getId().equals(id);
+    RecordEntity deleted = resp.getResult();
+    boolean confirmed = deleted != null && id.equals(deleted.getId());
+    if (confirmed) {
+      log.debug("Record id#{} successfully deleted.", id);
+    }
+    return confirmed;
   }
 
   /**
-   * Updates an existing DNS record in a specified Cloudflare zone.
+   * Updates an existing DNS record in a specified Cloudflare zone (partial update, attributes
+   * which are {@code null} remain unchanged).
    *
    * @param zone the zone entity containing the ID of the target zone
    * @param rec  the record entity containing the ID of the DNS record to be updated and its updated
-   *             data
+   *             data. Read-only attributes (e.g. timestamps) are ignored, the given object isn't
+   *             modified.
    * @return the updated record entity as returned by the Cloudflare API
    * @throws CloudflareApiException if an error occurs while interacting with the Cloudflare API
    */
   public RecordEntity recordUpdate(ZoneEntity zone, RecordEntity rec)
       throws CloudflareApiException {
-    // reset all dates, it causes an API issue
-    rec.setModifiedOn(null);
-    rec.setCreatedOn(null);
     String endpoint = CfRequest.RECORD_UPDATE.buildPath(zone.getId(), rec.getId());
-    RecordSingleResponse resp = patchRequest(endpoint, rec, RecordSingleResponse.class);
+    RecordEntity payload = writableCopy(rec, false);
+    RecordSingleResponse resp = patchRequest(endpoint, payload, RecordSingleResponse.class);
     checkResponse(resp);
-    log.info("Record {} of type {} successful updated.", rec.getSld(), rec.getType());
-    return resp.getResult();
+    log.info("Record {} of type {} successful updated.", rec.getSubdomain(), rec.getType());
+    RecordEntity retRec = resp.getResult();
+    assignZone(retRec, zone);
+    return retRec;
   }
 
   /**
-   * Deletes DNS records of a specific type within a given zone if they exist. If no record of the
-   * specified type exists, it logs this occurrence without throwing an exception.
+   * Attempts to delete DNS records of the specified types within a given zone. If no record types
+   * are specified, all types for the subdomain are selected. If no matching record exists, this is
+   * treated as a no-op. Deletions are attempted independently; an error deleting an individual
+   * record is logged and processing continues. No per-record result is returned, so a normal return
+   * does not guarantee that every selected record was deleted.
    *
    * @param zone        The DNS zone entity in which the record exists.
-   * @param sld         The second-level domain for which the record is being checked.
-   * @param recordTypes The types of DNS records that should be deleted if they exist.
-   * @throws CloudflareApiException If an error occurs during API communication.
+   * @param subdomain   The subdomain relative to the zone for which the records are being checked.
+   * @param recordTypes The DNS record types to delete; if empty or {@code null}, all types are selected.
+   * @throws CloudflareApiException If an error occurs while retrieving the records to delete.
+   * @throws IllegalArgumentException if the subdomain is blank or contains invalid characters
    */
-  public void recordDeleteTypeIfExists(ZoneEntity zone, String sld, RecordType... recordTypes)
+  public void recordDeleteTypeIfExists(ZoneEntity zone, String subdomain, RecordType... recordTypes)
       throws CloudflareApiException {
-    String fqdn = buildFqdn(zone, sld);
+    String fqdn = buildFqdn(zone, subdomain);
     List<RecordEntity> recs;
     try {
-      recs = recordList(zone, sld, recordTypes);
+      recs = recordListBySubdomain(zone, subdomain, recordTypes);
     } catch (CloudflareNotFoundException e) {
       log.trace("No record of type {} found for domain {}.", recordTypes, fqdn);
       return;
@@ -408,7 +527,8 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @param postRecords   A list of DNS records to be created (POST). This parameter is nullable.
    * @param putRecords    A list of DNS records to be fully replaced (PUT). This parameter is nullable.
    * @param patchRecords  A list of DNS records to be partially updated (PATCH). This parameter is nullable.
-   * @param deleteRecords A list of DNS records to be deleted (DELETE). This parameter is nullable.
+   * @param deleteRecords A list of DNS records to be deleted (DELETE), only the IDs are used. This
+   *                      parameter is nullable.
    * @return The resulting {@link BatchEntry} containing the processed records after the batch operation.
    * @throws CloudflareApiException If an error occurs while communicating with the Cloudflare API.
    */
@@ -416,18 +536,18 @@ public class CfDnsClient extends CfBasicHttpClient {
                                 @Nullable List<RecordEntity> patchRecords, @Nullable List<RecordEntity> deleteRecords)
       throws CloudflareApiException {
     BatchEntry batchEntry = new BatchEntry();
-    // build 'clean' record entries
+    // build 'clean' record entries, the given records aren't modified
     if (postRecords != null) {
-      batchEntry.setPosts(cleanRecordsForPostOrPut(postRecords));
+      batchEntry.setPosts(postRecords.stream().map(rec -> writableCopy(rec, false)).toList());
     }
     if (putRecords != null) {
-      batchEntry.setPuts(cleanRecordsForPostOrPut(putRecords));
+      batchEntry.setPuts(putRecords.stream().map(rec -> writableCopy(rec, true)).toList());
     }
     if (patchRecords != null) {
-      batchEntry.setPatches(cleanRecordsForPatch(patchRecords));
+      batchEntry.setPatches(patchRecords.stream().map(rec -> writableCopy(rec, true)).toList());
     }
     if (deleteRecords != null) {
-      batchEntry.setDeletes(cleanRecordsForDelete(deleteRecords));
+      batchEntry.setDeletes(deleteRecords.stream().map(CfDnsClient::idOnly).toList());
     }
 
     String endpoint = CfRequest.RECORD_BATCH.buildPath(zone.getId());
@@ -436,21 +556,27 @@ public class CfDnsClient extends CfBasicHttpClient {
 
     // set zone id
     BatchEntry result = resp.getResult();
-    setZoneIdForBatchResults(result, zone.getId());
+    setZoneForBatchResults(result, zone);
     return result;
   }
 
-  private List<RecordEntity> filterAndSetZoneRecords(ZoneEntity zone, @Nullable RecordType[] types, List<RecordEntity> recs)
+  private List<RecordEntity> filterAndSetZoneRecords(ZoneEntity zone, @Nullable RecordType[] types,
+                                                     @Nullable List<RecordEntity> recs)
       throws CloudflareNotFoundException {
+    if (recs == null) {
+      recs = List.of();
+    }
     List<RecordEntity> filtered;
     if (types != null && types.length > 0) {
-      Set<RecordType> allowedTypes = new HashSet<>(Arrays.asList(types));
+      Set<String> allowedTypes = Arrays.stream(types).filter(Objects::nonNull)
+          .map(RecordType::getType).collect(Collectors.toSet());
       filtered = recs.stream()
-          .filter(rec -> allowedTypes.contains(RecordType.valueOf(rec.getType()))).toList();
+          .filter(rec -> allowedTypes.contains(rec.getType()))
+          .collect(Collectors.toCollection(ArrayList::new));
     } else {
       filtered = new ArrayList<>(recs);
     }
-    filtered.forEach(rec -> rec.setZoneId(zone.getId()));
+    filtered.forEach(rec -> assignZone(rec, zone));
 
     // special exception for an empty result, normally it's done in the RecordValidator
     if (filtered.isEmpty() && emptyResultThrowsException) {
@@ -460,35 +586,130 @@ public class CfDnsClient extends CfBasicHttpClient {
   }
 
 
-  private List<RecordEntity> cleanRecordsForPostOrPut(List<RecordEntity> records) {
-    List<RecordEntity> cleaned = new ArrayList<>();
-    records.forEach(
-        rec -> cleaned.add(RecordEntity.build(rec.getId(), rec.getSld(), rec.getType(), rec.getTtl(), rec.getContent())));
-    return cleaned;
-  }
-
-  private List<RecordEntity> cleanRecordsForPatch(List<RecordEntity> records) {
-    List<RecordEntity> cleaned = new ArrayList<>();
-    records.forEach(rec -> cleaned.add(RecordEntity.build(rec.getId(), rec.getContent())));
-    return cleaned;
-  }
-
-  private List<RecordEntity> cleanRecordsForDelete(List<RecordEntity> records) {
-    List<RecordEntity> cleaned = new ArrayList<>();
-    records.forEach(
-        rec -> cleaned.add(RecordEntity.build(rec.getId(), rec.getSld(), rec.getType(), null, rec.getContent())));
-    return cleaned;
-  }
-
-  private void setZoneIdForBatchResults(BatchEntry result, String zoneId) {
-    if (result.getPosts() != null) {
-      result.getPosts().forEach(rec -> rec.setZoneId(zoneId));
+  /**
+   * Creates a copy of the record containing only the attributes which can be written to the API.
+   * Read-only attributes like timestamps, zone info, 'proxiable' or 'locked' are omitted.
+   */
+  private static RecordEntity writableCopy(RecordEntity rec, boolean withId) {
+    RecordEntity copy = new RecordEntity();
+    if (withId) {
+      copy.setId(rec.getId());
     }
-    if (result.getPuts() != null) {
-      result.getPuts().forEach(rec -> rec.setZoneId(zoneId));
+    copy.setName(rec.getName());
+    copy.setType(rec.getType());
+    copy.setContent(rec.getContent());
+    copy.setTtl(rec.getTtl());
+    copy.setProxied(rec.getProxied());
+    copy.setPriority(rec.getPriority());
+    copy.setComment(rec.getComment());
+    copy.setTags(rec.getTags() == null ? null : new ArrayList<>(rec.getTags()));
+    copy.setData(rec.getData() == null ? null : new LinkedHashMap<>(rec.getData()));
+    return copy;
+  }
+
+  private static RecordEntity idOnly(RecordEntity rec) {
+    RecordEntity copy = new RecordEntity();
+    copy.setId(rec.getId());
+    return copy;
+  }
+
+  /**
+   * Adds the server-side type filter to the endpoint. The API supports only one type, so the
+   * filter is only added if exactly one type is given. Multiple types are filtered client-side.
+   */
+  private static String addTypeFilter(String endpoint, @Nullable RecordType[] types) {
+    if (types == null || types.length != 1 || types[0] == null) {
+      return endpoint;
     }
-    if (result.getPatches() != null) {
-      result.getPatches().forEach(rec -> rec.setZoneId(zoneId));
+    return appendQuery(endpoint, "type=" + types[0].getType());
+  }
+
+  private static String appendQuery(String endpoint, String query) {
+    return endpoint + (endpoint.contains("?") ? "&" : "?") + query;
+  }
+
+  private void setZoneForBatchResults(@Nullable BatchEntry result, ZoneEntity zone) {
+    if (result == null) {
+      return;
+    }
+    for (List<RecordEntity> recs : Arrays.asList(result.getPosts(), result.getPuts(),
+        result.getPatches(), result.getDeletes())) {
+      if (recs != null) {
+        recs.forEach(rec -> assignZone(rec, zone));
+      }
+    }
+  }
+
+  private static void assignZone(@Nullable RecordEntity rec, ZoneEntity zone) {
+    if (rec != null) {
+      rec.setZoneId(zone.getId());
+      rec.setZoneName(zone.getName());
+    }
+  }
+
+  /**
+   * Fetches all pages of a paginated endpoint and returns the combined results.
+   *
+   * <p>Entries are de-duplicated by their ID. If fewer entries than announced by the API were
+   * fetched (e.g. because of concurrent changes), the pages are fetched again, up to
+   * {@value #MAX_PAGING_ATTEMPTS} times.
+   *
+   * @param endpoint     the endpoint path, may already contain a query string
+   * @param responseType the expected response type
+   * @param perPage      the page size to request
+   */
+  private <E extends ResponseEntity, R extends AbstractMultipleResponse<E>> List<E> getAllPages(
+      String endpoint, Class<R> responseType, int perPage) throws CloudflareApiException {
+    List<E> result = List.of();
+    for (int attempt = 1; attempt <= MAX_PAGING_ATTEMPTS; attempt++) {
+      PagingResult<E> paged = fetchAllPagesOnce(endpoint, responseType, perPage);
+      result = paged.entries();
+      if (paged.expectedCount() < 0 || result.size() >= paged.expectedCount()) {
+        return result;
+      }
+      log.debug("Fetched {} of {} entries from {} (attempt {}), fetching again.", result.size(),
+          paged.expectedCount(), endpoint, attempt);
+    }
+    log.warn("Paging of {} was inconsistent, the result may be incomplete.", endpoint);
+    return result;
+  }
+
+  private record PagingResult<E>(List<E> entries, int expectedCount) {
+  }
+
+  private <E extends ResponseEntity, R extends AbstractMultipleResponse<E>> PagingResult<E> fetchAllPagesOnce(
+      String endpoint, Class<R> responseType, int perPage) throws CloudflareApiException {
+    Map<String, E> byId = new LinkedHashMap<>();
+    List<E> withoutId = new ArrayList<>();
+    int expectedCount = -1;
+    int page = 1;
+    while (true) {
+      String pagedEndpoint = PagingRequest.of(page, perPage).addQueryString(endpoint);
+      R resp = getRequest(pagedEndpoint, responseType);
+      checkResponse(resp);
+      List<E> pageResult = resp.getResult();
+      if (pageResult != null) {
+        for (E entry : pageResult) {
+          if (entry.getId() == null) {
+            withoutId.add(entry);
+          } else {
+            byId.putIfAbsent(entry.getId(), entry);
+          }
+        }
+      }
+      ResultInfo info = resp.getResultInfo();
+      if (info != null && page == 1) {
+        expectedCount = info.totalCount();
+      }
+      log.debug("Fetched page {} of {} from {}: {} entries, total {}", page,
+          info == null ? "?" : info.totalPages(), endpoint,
+          pageResult == null ? 0 : pageResult.size(), info == null ? "?" : info.totalCount());
+      if (info == null || pageResult == null || pageResult.isEmpty() || page >= info.totalPages()) {
+        List<E> all = new ArrayList<>(byId.values());
+        all.addAll(withoutId);
+        return new PagingResult<>(all, info == null || page == 1 ? -1 : expectedCount);
+      }
+      page++;
     }
   }
 

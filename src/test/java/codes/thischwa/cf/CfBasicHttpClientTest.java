@@ -1,7 +1,7 @@
 package codes.thischwa.cf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,10 +79,10 @@ class CfBasicHttpClientTest {
     });
 
     assertNotNull(exception);
-    assertTrue(exception.getMessage().contains("Unexpected error"));
-    Throwable cause = exception.getCause();
-    assertInstanceOf(CloudflareApiException.class, cause);
-    assertTrue(cause.getMessage().contains("No route for that URI"), "Expected error message: No route for that URI, but it was: " + cause.getMessage());
+    // the API error must not be wrapped into a generic "Unexpected error"
+    assertTrue(exception.getMessage().contains("No route for that URI"),
+        "Expected error message: No route for that URI, but it was: " + exception.getMessage());
+    assertNull(exception.getCause());
   }
 
   @Test

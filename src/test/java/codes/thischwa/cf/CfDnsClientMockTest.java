@@ -5,6 +5,7 @@ import codes.thischwa.cf.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -119,6 +120,34 @@ class CfDnsClientMockTest {
     }
 
     @Test
+    void testZoneList_WithPagingEnforcesApiLimits() throws Exception {
+        ZoneMultipleResponse mockResponse = new ZoneMultipleResponse();
+        mockResponse.setResult(List.of());
+        mockResponse.setResponseResultInfo(createSuccessResultInfo());
+
+        CfDnsClient spyClient = spy(client);
+        doReturn(mockResponse).when(spyClient).getRequest(anyString(), eq(ZoneMultipleResponse.class));
+
+        spyClient.zoneList(PagingRequest.of(1, 5));
+        spyClient.zoneList(PagingRequest.of(1, 50));
+
+        verify(spyClient).getRequest(eq("/zones?page=1&per_page=5"), eq(ZoneMultipleResponse.class));
+        verify(spyClient).getRequest(eq("/zones?page=1&per_page=50"), eq(ZoneMultipleResponse.class));
+    }
+
+    @Test
+    void testZoneList_WithPagingRejectsOutOfRangePageSizes() throws Exception {
+        CfDnsClient spyClient = spy(client);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> spyClient.zoneList(PagingRequest.of(1, 4)));
+        assertThrows(IllegalArgumentException.class,
+                () -> spyClient.zoneList(PagingRequest.of(1, 51)));
+
+        verify(spyClient, never()).getRequest(anyString(), eq(ZoneMultipleResponse.class));
+    }
+
+    @Test
     void testZoneGet() throws Exception {
         // Create mock zone response
         ZoneMultipleResponse mockResponse = new ZoneMultipleResponse();
@@ -218,7 +247,7 @@ class CfDnsClientMockTest {
         CfDnsClient spyClient = spy(client);
         doReturn(mockResponse).when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
 
-        List<RecordEntity> records = spyClient.recordList(zone, "test");
+        List<RecordEntity> records = spyClient.recordListBySubdomain(zone, "test");
 
         assertNotNull(records);
         assertEquals(1, records.size());
@@ -239,7 +268,7 @@ class CfDnsClientMockTest {
         CfDnsClient spyClient = spy(client);
         doReturn(mockResponse).when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
 
-        List<RecordEntity> records = spyClient.recordList(zone, "test", RecordType.A);
+        List<RecordEntity> records = spyClient.recordListBySubdomain(zone, "test", RecordType.A);
 
         assertNotNull(records);
         assertEquals(1, records.size());
@@ -260,7 +289,7 @@ class CfDnsClientMockTest {
         CfDnsClient spyClient = spy(client);
         doReturn(mockResponse).when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
 
-        List<RecordEntity> records = spyClient.recordList(zone, RecordType.A);
+        List<RecordEntity> records = spyClient.recordListByType(zone, RecordType.A);
 
         assertNotNull(records);
         assertEquals(1, records.size());
@@ -360,7 +389,7 @@ class CfDnsClientMockTest {
         ZoneEntity zone = createTestZone();
 
         CfDnsClient spyClient = spy(client);
-        doThrow(new CloudflareNotFoundException("Not found")).when(spyClient).recordList(any(), anyString(), any());
+        doThrow(new CloudflareNotFoundException("Not found")).when(spyClient).recordListBySubdomain(any(), anyString(), any());
 
         // Should not throw exception when record doesn't exist
         assertDoesNotThrow(() -> spyClient.recordDeleteTypeIfExists(zone, "test", RecordType.A));
@@ -395,5 +424,448 @@ class CfDnsClientMockTest {
         assertNotNull(result.getPosts());
         assertEquals(1, result.getPosts().size());
         assertEquals(TEST_ZONE_ID, result.getPosts().get(0).getZoneId());
+    }
+
+    private ZoneMultipleResponse zoneResponse(List<ZoneEntity> zones, ResultInfo resultInfo) {
+        ZoneMultipleResponse resp = new ZoneMultipleResponse();
+        resp.setResult(zones);
+        resp.setResultInfo(resultInfo);
+        resp.setResponseResultInfo(createSuccessResultInfo());
+        return resp;
+    }
+
+    private RecordMultipleResponse recordResponse(List<RecordEntity> records, ResultInfo resultInfo) {
+        RecordMultipleResponse resp = new RecordMultipleResponse();
+        resp.setResult(records);
+        resp.setResultInfo(resultInfo);
+        resp.setResponseResultInfo(createSuccessResultInfo());
+        return resp;
+    }
+
+    private static ZoneEntity zone(String id, String name) {
+        ZoneEntity zone = new ZoneEntity();
+        zone.setId(id);
+        zone.setName(name);
+        return zone;
+    }
+
+    @Test
+    void testZoneGet_NotFound_ReturnsNull() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        doReturn(zoneResponse(List.of(), new ResultInfo(0)))
+                .when(spyClient).getRequest(anyString(), eq(ZoneMultipleResponse.class));
+
+        assertNull(spyClient.zoneGet("unknown.com"));
+    }
+
+    @Test
+    void testZoneGet_NotFound_ThrowsIfEnabled() throws Exception {
+        CfDnsClient throwingClient = spy(new CfDnsClientBuilder()
+                .withApiTokenAuth("test-token")
+                .withEmptyResultThrowsException(true)
+                .build());
+        doReturn(zoneResponse(List.of(), new ResultInfo(0)))
+                .when(throwingClient).getRequest(anyString(), eq(ZoneMultipleResponse.class));
+
+        assertThrows(CloudflareNotFoundException.class, () -> throwingClient.zoneGet("unknown.com"));
+    }
+
+    @Test
+    void testZone_NotFound_Throws() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        doReturn(zoneResponse(List.of(), new ResultInfo(0)))
+                .when(spyClient).getRequest(anyString(), eq(ZoneMultipleResponse.class));
+
+        assertThrows(CloudflareNotFoundException.class, () -> spyClient.zone("unknown.com"));
+    }
+
+    @Test
+    void testZoneList_FetchesAllPages() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        doReturn(zoneResponse(List.of(zone("z1", "a.com"), zone("z2", "b.com")),
+                new ResultInfo(1, 2, 2, 2, 3)))
+                .when(spyClient).getRequest(eq("/zones?page=1&per_page=" + CfDnsClient.ZONES_PER_PAGE),
+                        eq(ZoneMultipleResponse.class));
+        doReturn(zoneResponse(List.of(zone("z3", "c.com")), new ResultInfo(2, 2, 2, 1, 3)))
+                .when(spyClient).getRequest(eq("/zones?page=2&per_page=" + CfDnsClient.ZONES_PER_PAGE),
+                        eq(ZoneMultipleResponse.class));
+
+        List<ZoneEntity> zones = spyClient.zoneList();
+
+        assertEquals(List.of("a.com", "b.com", "c.com"), zones.stream().map(ZoneEntity::getName).toList());
+        verify(spyClient, times(2)).getRequest(anyString(), eq(ZoneMultipleResponse.class));
+    }
+
+    @Test
+    void testRecordListByType_FetchesAllPages() throws Exception {
+        ZoneEntity zone = createTestZone();
+        String base = "/zones/" + TEST_ZONE_ID + "/dns_records?type=A&order=name&direction=asc&page=%d&per_page=" + CfDnsClient.MAX_RECORDS_PER_PAGE;
+        CfDnsClient spyClient = spy(client);
+        doReturn(recordResponse(List.of(RecordEntity.build("a.example.com", RecordType.A, 60, "1.1.1.1")),
+                new ResultInfo(1, 1, 2, 1, 2)))
+                .when(spyClient).getRequest(eq(String.format(base, 1)), eq(RecordMultipleResponse.class));
+        doReturn(recordResponse(List.of(RecordEntity.build("b.example.com", RecordType.A, 60, "2.2.2.2")),
+                new ResultInfo(2, 1, 2, 1, 2)))
+                .when(spyClient).getRequest(eq(String.format(base, 2)), eq(RecordMultipleResponse.class));
+
+        List<RecordEntity> records = spyClient.recordListByType(zone, RecordType.A);
+
+        assertEquals(2, records.size());
+        assertEquals("b.example.com", records.get(1).getName());
+    }
+
+    @Test
+    void testRecordListBySld_FetchesAllPages() throws Exception {
+        ZoneEntity zone = createTestZone();
+        String base = "/zones/" + TEST_ZONE_ID + "/dns_records?name=test.example.com&order=name&direction=asc&page=%d&per_page="
+                + CfDnsClient.MAX_RECORDS_PER_PAGE;
+        CfDnsClient spyClient = spy(client);
+        doReturn(recordResponse(List.of(RecordEntity.build("test.example.com", RecordType.A, 60, "1.1.1.1")),
+                new ResultInfo(1, 1, 2, 1, 2)))
+                .when(spyClient).getRequest(eq(String.format(base, 1)), eq(RecordMultipleResponse.class));
+        doReturn(recordResponse(List.of(RecordEntity.build("test.example.com", RecordType.AAAA, 60, "::1")),
+                new ResultInfo(2, 1, 2, 1, 2)))
+                .when(spyClient).getRequest(eq(String.format(base, 2)), eq(RecordMultipleResponse.class));
+
+        assertEquals(2, spyClient.recordListBySubdomain(zone, "test").size());
+    }
+
+    @Test
+    void testRecordList_SetsZoneNameForSld() throws Exception {
+        ZoneEntity zone = createTestZone();
+        CfDnsClient spyClient = spy(client);
+        doReturn(recordResponse(List.of(
+                RecordEntity.build("example.com", RecordType.A, 60, "1.1.1.1"),
+                RecordEntity.build("my.sub.example.com", RecordType.A, 60, "2.2.2.2")),
+                new ResultInfo(2)))
+                .when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
+
+        List<RecordEntity> records = spyClient.recordList(zone);
+
+        assertEquals(TEST_ZONE_NAME, records.get(0).getZoneName());
+        assertEquals("@", records.get(0).getSubdomain());
+        assertEquals("my.sub", records.get(1).getSubdomain());
+    }
+
+    @Test
+    void testRecordListByApex() throws Exception {
+        ZoneEntity zone = createTestZone();
+        CfDnsClient spyClient = spy(client);
+        doReturn(recordResponse(List.of(), new ResultInfo(0)))
+                .when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
+
+        spyClient.recordListBySubdomain(zone, CfDnsClient.APEX);
+
+        verify(spyClient).getRequest(
+                eq("/zones/" + TEST_ZONE_ID + "/dns_records?name=example.com&order=name&direction=asc&page=1&per_page="
+                        + CfDnsClient.MAX_RECORDS_PER_PAGE),
+                eq(RecordMultipleResponse.class));
+    }
+
+    @Test
+    void testRecordDelete_NoResult_ReturnsFalse() throws Exception {
+        RecordSingleResponse mockResponse = new RecordSingleResponse();
+        mockResponse.setResponseResultInfo(createSuccessResultInfo());
+        CfDnsClient spyClient = spy(client);
+        doReturn(mockResponse).when(spyClient).deleteRequest(anyString(), eq(RecordSingleResponse.class));
+
+        assertFalse(spyClient.recordDelete(createTestZone(), TEST_RECORD_ID));
+    }
+
+    @Test
+    void testRecordDelete_OtherId_ReturnsFalse() throws Exception {
+        RecordSingleResponse mockResponse = new RecordSingleResponse();
+        RecordEntity other = new RecordEntity();
+        other.setId("other");
+        mockResponse.setResult(other);
+        mockResponse.setResponseResultInfo(createSuccessResultInfo());
+        CfDnsClient spyClient = spy(client);
+        doReturn(mockResponse).when(spyClient).deleteRequest(anyString(), eq(RecordSingleResponse.class));
+
+        assertFalse(spyClient.recordDelete(createTestZone(), TEST_RECORD_ID));
+    }
+
+    @Test
+    void testRecordBatch_UsesFullRecordName() throws Exception {
+        ZoneEntity zone = createTestZone();
+        RecordEntity apex = RecordEntity.build("example.com", RecordType.A, 300, "1.2.3.4");
+        RecordEntity multiLevel = RecordEntity.build("a.b.example.com", RecordType.A, 300, "1.2.3.5");
+
+        BatchResponse mockResponse = createBatchResponse();
+        mockResponse.setResult(new BatchEntry());
+        mockResponse.setResponseResultInfo(createSuccessResultInfo());
+        CfDnsClient spyClient = spy(client);
+        doReturn(mockResponse).when(spyClient).postRequest(anyString(), any(), eq(BatchResponse.class));
+
+        spyClient.recordBatch(zone, List.of(apex, multiLevel), List.of(multiLevel), null, List.of(apex));
+
+        ArgumentCaptor<Object> payload = ArgumentCaptor.forClass(Object.class);
+        verify(spyClient).postRequest(anyString(), payload.capture(), eq(BatchResponse.class));
+        BatchEntry sent = (BatchEntry) payload.getValue();
+        assertEquals(List.of("example.com", "a.b.example.com"),
+                sent.getPosts().stream().map(RecordEntity::getName).toList());
+        assertEquals("a.b.example.com", sent.getPuts().get(0).getName());
+        // deletes only need the ID
+        assertNull(sent.getDeletes().get(0).getName());
+    }
+
+    @Test
+    void testRecordList_NullPagingIsUnambiguousAndFetchesAll() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        doReturn(recordResponse(List.of(RecordEntity.build("a.example.com", RecordType.A, 60, "1.1.1.1")),
+                new ResultInfo(1)))
+                .when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
+
+        assertEquals(1, spyClient.recordList(createTestZone(), null).size());
+        verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
+                + "/dns_records?order=name&direction=asc&page=1&per_page=" + PagingRequest.MAX_PER_PAGE),
+                eq(RecordMultipleResponse.class));
+    }
+
+    @Test
+    void testRecordList_ExplicitPagingRequestIsPreserved() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        doReturn(recordResponse(List.of(), new ResultInfo(0)))
+                .when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
+
+        spyClient.recordList(createTestZone(), PagingRequest.of(2, 42));
+
+        verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
+                + "/dns_records?order=name&direction=asc&page=2&per_page=42"),
+                eq(RecordMultipleResponse.class));
+    }
+
+    @Test
+    void testRecordListByType_SingleTypeIsFilteredServerSide() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        doReturn(recordResponse(List.of(), new ResultInfo(0)))
+                .when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
+
+        spyClient.recordListByType(createTestZone(), RecordType.MX);
+        spyClient.recordListBySubdomain(createTestZone(), "www", RecordType.TXT);
+
+        verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID + "/dns_records?type=MX&order=name&direction=asc&page=1&per_page="
+                + CfDnsClient.MAX_RECORDS_PER_PAGE), eq(RecordMultipleResponse.class));
+        verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
+                + "/dns_records?name=www.example.com&type=TXT&order=name&direction=asc&page=1&per_page="
+                + CfDnsClient.MAX_RECORDS_PER_PAGE), eq(RecordMultipleResponse.class));
+    }
+
+    @Test
+    void testRecordListByType_MultipleTypesAreFilteredClientSide() throws Exception {
+        RecordEntity unknownType = new RecordEntity();
+        unknownType.setName("x.example.com");
+        unknownType.setType("UNKNOWN_FUTURE_TYPE");
+        CfDnsClient spyClient = spy(client);
+        doReturn(recordResponse(List.of(
+                RecordEntity.build("a.example.com", RecordType.A, 60, "1.1.1.1"),
+                RecordEntity.build("a.example.com", RecordType.AAAA, 60, "::1"),
+                RecordEntity.build("a.example.com", RecordType.TXT, 60, "txt"),
+                unknownType), new ResultInfo(4)))
+                .when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
+
+        // an unknown record type in the response must not break the filter
+        List<RecordEntity> records = spyClient.recordListByType(createTestZone(), RecordType.A, RecordType.AAAA);
+
+        assertEquals(List.of("A", "AAAA"), records.stream().map(RecordEntity::getType).toList());
+        verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID + "/dns_records?order=name&direction=asc&page=1&per_page="
+                + CfDnsClient.MAX_RECORDS_PER_PAGE), eq(RecordMultipleResponse.class));
+    }
+
+    private static RecordEntity fetchedMxRecord() {
+        RecordEntity rec = RecordEntity.build("example.com", RecordType.MX, 300, "mail.example.com");
+        rec.setId(TEST_RECORD_ID);
+        rec.setPriority(10);
+        rec.setProxied(false);
+        rec.setComment("primary mx");
+        rec.setTags(List.of("env:prod"));
+        rec.setZoneId(TEST_ZONE_ID);
+        rec.setZoneName(TEST_ZONE_NAME);
+        rec.setLocked(false);
+        rec.setProxiable(false);
+        rec.setCreatedOn(java.time.Instant.parse("2025-01-01T00:00:00Z"));
+        rec.setModifiedOn(java.time.Instant.parse("2025-01-02T00:00:00Z"));
+        return rec;
+    }
+
+    private static void assertOnlyWritableFields(RecordEntity sent) {
+        assertEquals("example.com", sent.getName());
+        assertEquals("MX", sent.getType());
+        assertEquals("mail.example.com", sent.getContent());
+        assertEquals(10, sent.getPriority());
+        assertEquals(false, sent.getProxied());
+        assertEquals("primary mx", sent.getComment());
+        assertEquals(List.of("env:prod"), sent.getTags());
+        assertNull(sent.getZoneId());
+        assertNull(sent.getZoneName());
+        assertNull(sent.getLocked());
+        assertNull(sent.getProxiable());
+        assertNull(sent.getCreatedOn());
+        assertNull(sent.getModifiedOn());
+    }
+
+    private RecordSingleResponse singleResponse(RecordEntity rec) {
+        RecordSingleResponse resp = new RecordSingleResponse();
+        resp.setResult(rec);
+        resp.setResponseResultInfo(createSuccessResultInfo());
+        return resp;
+    }
+
+    @Test
+    void testRecordUpdate_DoesNotModifyGivenRecordAndSendsWritableFields() throws Exception {
+        RecordEntity rec = fetchedMxRecord();
+        RecordEntity before = fetchedMxRecord();
+        CfDnsClient spyClient = spy(client);
+        doReturn(singleResponse(fetchedMxRecord()))
+                .when(spyClient).patchRequest(anyString(), any(), eq(RecordSingleResponse.class));
+
+        spyClient.recordUpdate(createTestZone(), rec);
+
+        assertEquals(before, rec);
+        ArgumentCaptor<Object> payload = ArgumentCaptor.forClass(Object.class);
+        verify(spyClient).patchRequest(eq("/zones/" + TEST_ZONE_ID + "/dns_records/" + TEST_RECORD_ID),
+                payload.capture(), eq(RecordSingleResponse.class));
+        assertOnlyWritableFields((RecordEntity) payload.getValue());
+    }
+
+    @Test
+    void testRecordCreate_SendsWritableFieldsWithoutId() throws Exception {
+        RecordEntity rec = fetchedMxRecord();
+        CfDnsClient spyClient = spy(client);
+        doReturn(singleResponse(fetchedMxRecord()))
+                .when(spyClient).postRequest(anyString(), any(), eq(RecordSingleResponse.class));
+
+        spyClient.recordCreate(createTestZone(), rec);
+
+        ArgumentCaptor<Object> payload = ArgumentCaptor.forClass(Object.class);
+        verify(spyClient).postRequest(anyString(), payload.capture(), eq(RecordSingleResponse.class));
+        RecordEntity sent = (RecordEntity) payload.getValue();
+        assertOnlyWritableFields(sent);
+        assertNull(sent.getId());
+        assertEquals(TEST_RECORD_ID, rec.getId());
+    }
+
+    @Test
+    void testRecordBatch_KeepsPriorityDataAndProxied() throws Exception {
+        RecordEntity srv = RecordEntity.build("_sip._tcp.example.com", RecordType.SRV, 300, null);
+        srv.setId("srv1");
+        srv.setPriority(10);
+        srv.setData(Map.of("priority", 10, "weight", 5, "port", 5060, "target", "sip.example.com"));
+        RecordEntity proxied = RecordEntity.build("www.example.com", RecordType.A, 1, "1.2.3.4");
+        proxied.setId("www1");
+        proxied.setProxied(true);
+
+        BatchResponse mockResponse = createBatchResponse();
+        mockResponse.setResult(new BatchEntry());
+        mockResponse.setResponseResultInfo(createSuccessResultInfo());
+        CfDnsClient spyClient = spy(client);
+        doReturn(mockResponse).when(spyClient).postRequest(anyString(), any(), eq(BatchResponse.class));
+
+        spyClient.recordBatch(createTestZone(), List.of(srv), List.of(proxied), List.of(srv), null);
+
+        ArgumentCaptor<Object> payload = ArgumentCaptor.forClass(Object.class);
+        verify(spyClient).postRequest(anyString(), payload.capture(), eq(BatchResponse.class));
+        BatchEntry sent = (BatchEntry) payload.getValue();
+        RecordEntity sentPost = sent.getPosts().get(0);
+        assertNull(sentPost.getId());
+        assertEquals(10, sentPost.getPriority());
+        assertEquals(5060, sentPost.getData().get("port"));
+        assertEquals("www1", sent.getPuts().get(0).getId());
+        assertEquals(true, sent.getPuts().get(0).getProxied());
+        assertEquals("srv1", sent.getPatches().get(0).getId());
+        assertEquals(10, sent.getPatches().get(0).getPriority());
+    }
+
+    @Test
+    void testInvalidSubdomainIsRejectedBeforeRequest() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        ZoneEntity zone = createTestZone();
+        for (String sub : List.of("; rm -rf /", "| cat /etc/passwd", "`shutdown -h now`",
+                "<script>alert('x')</script>", "\"quoted\"", "a b", "x?y", "x#y", "x&y", "x\ty", " ", "")) {
+            assertThrows(IllegalArgumentException.class, () -> spyClient.recordListBySubdomain(zone, sub), sub);
+            assertThrows(IllegalArgumentException.class,
+                    () -> spyClient.recordCreateSubdomain(zone, sub, 60, RecordType.A, "1.2.3.4"), sub);
+        }
+        assertThrows(IllegalArgumentException.class, () -> spyClient.recordListBySubdomain(zone, null));
+        assertThrows(IllegalArgumentException.class, () -> spyClient.zoneGet("example.com&account.id=1"));
+        assertThrows(IllegalArgumentException.class, () -> spyClient.zoneGet(" "));
+        verify(spyClient, never()).getRequest(anyString(), any());
+        verify(spyClient, never()).postRequest(anyString(), any(), any());
+    }
+
+    @Test
+    void testUnusualButValidSubdomainIsEncoded() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        doReturn(recordResponse(List.of(), new ResultInfo(0)))
+                .when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
+
+        spyClient.recordListBySubdomain(createTestZone(), "$(reboot)");
+        spyClient.recordListBySubdomain(createTestZone(), "0/26");
+
+        verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
+                + "/dns_records?name=%24%28reboot%29.example.com&order=name&direction=asc&page=1&per_page=" + CfDnsClient.MAX_RECORDS_PER_PAGE),
+                eq(RecordMultipleResponse.class));
+        verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
+                + "/dns_records?name=0%2F26.example.com&order=name&direction=asc&page=1&per_page=" + CfDnsClient.MAX_RECORDS_PER_PAGE),
+                eq(RecordMultipleResponse.class));
+    }
+
+    @Test
+    void testRecordIdPathTraversalIsRejected() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        ZoneEntity zone = createTestZone();
+        assertThrows(IllegalArgumentException.class, () -> spyClient.recordDelete(zone, "../.."));
+        RecordEntity rec = RecordEntity.build("../..", "1.2.3.4");
+        assertThrows(IllegalArgumentException.class, () -> spyClient.recordUpdate(zone, rec));
+        ZoneEntity badZone = zone("../../accounts", "example.com");
+        assertThrows(IllegalArgumentException.class, () -> spyClient.recordList(badZone));
+        verify(spyClient, never()).deleteRequest(anyString(), any());
+        verify(spyClient, never()).patchRequest(anyString(), any(), any());
+        verify(spyClient, never()).getRequest(anyString(), any());
+    }
+
+    private static RecordEntity rec(String id, String name) {
+        RecordEntity rec = RecordEntity.build(name, RecordType.A, 60, "1.1.1.1");
+        rec.setId(id);
+        return rec;
+    }
+
+    private static String recordsPage(int page) {
+        return "/zones/" + TEST_ZONE_ID + "/dns_records?order=name&direction=asc&page=" + page
+                + "&per_page=" + PagingRequest.MAX_PER_PAGE;
+    }
+
+    @Test
+    void testRecordList_InconsistentPagesAreFetchedAgain() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        // 1st attempt: page 2 repeats a record of page 1 (unstable order), so record c is missing
+        doReturn(recordResponse(List.of(rec("a", "a.example.com"), rec("b", "b.example.com")),
+                new ResultInfo(1, 2, 2, 2, 3)))
+                .when(spyClient).getRequest(eq(recordsPage(1)), eq(RecordMultipleResponse.class));
+        doReturn(recordResponse(List.of(rec("b", "b.example.com")), new ResultInfo(2, 2, 2, 1, 3)),
+                recordResponse(List.of(rec("c", "c.example.com")), new ResultInfo(2, 2, 2, 1, 3)))
+                .when(spyClient).getRequest(eq(recordsPage(2)), eq(RecordMultipleResponse.class));
+
+        List<RecordEntity> records = spyClient.recordList(createTestZone());
+
+        assertEquals(List.of("a", "b", "c"), records.stream().map(RecordEntity::getId).toList());
+        verify(spyClient, times(2)).getRequest(eq(recordsPage(1)), eq(RecordMultipleResponse.class));
+        verify(spyClient, times(2)).getRequest(eq(recordsPage(2)), eq(RecordMultipleResponse.class));
+    }
+
+    @Test
+    void testRecordList_PersistentlyInconsistentPagesReturnDeduplicatedResult() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        doReturn(recordResponse(List.of(rec("a", "a.example.com"), rec("b", "b.example.com")),
+                new ResultInfo(1, 2, 2, 2, 3)))
+                .when(spyClient).getRequest(eq(recordsPage(1)), eq(RecordMultipleResponse.class));
+        doReturn(recordResponse(List.of(rec("b", "b.example.com")), new ResultInfo(2, 2, 2, 1, 3)))
+                .when(spyClient).getRequest(eq(recordsPage(2)), eq(RecordMultipleResponse.class));
+
+        List<RecordEntity> records = spyClient.recordList(createTestZone());
+
+        // no duplicates, after 3 attempts the incomplete result is returned
+        assertEquals(List.of("a", "b"), records.stream().map(RecordEntity::getId).toList());
+        verify(spyClient, times(3)).getRequest(eq(recordsPage(1)), eq(RecordMultipleResponse.class));
     }
 }

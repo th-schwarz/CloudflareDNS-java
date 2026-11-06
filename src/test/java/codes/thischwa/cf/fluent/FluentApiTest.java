@@ -59,7 +59,7 @@ class FluentApiTest {
         RecordEntity rec2 = RecordEntity.build("www.example.com", RecordType.A, 300, "1.2.3.5");
         List<RecordEntity> expectedRecords = List.of(rec1, rec2);
 
-        when(mockClient.recordList(eq(testZone), any(RecordType[].class)))
+        when(mockClient.recordListByType(eq(testZone), any(RecordType[].class)))
                 .thenReturn(expectedRecords);
 
         ZoneOperations zoneOps = new ZoneOperationsImpl(mockClient, testZone);
@@ -67,7 +67,7 @@ class FluentApiTest {
 
         assertNotNull(result);
         assertEquals(2, result.size());
-        verify(mockClient, times(1)).recordList(eq(testZone), any(RecordType[].class));
+        verify(mockClient, times(1)).recordListByType(eq(testZone), any(RecordType[].class));
     }
 
     @Test
@@ -75,7 +75,7 @@ class FluentApiTest {
         RecordEntity rec1 = RecordEntity.build("test.example.com", RecordType.A, 300, "1.2.3.4");
         List<RecordEntity> expectedRecords = List.of(rec1);
 
-        when(mockClient.recordList(eq(testZone), any(RecordType[].class)))
+        when(mockClient.recordListByType(eq(testZone), any(RecordType[].class)))
                 .thenReturn(expectedRecords);
 
         ZoneOperations zoneOps = new ZoneOperationsImpl(mockClient, testZone);
@@ -83,7 +83,7 @@ class FluentApiTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(mockClient, times(1)).recordList(eq(testZone), any(RecordType[].class));
+        verify(mockClient, times(1)).recordListByType(eq(testZone), any(RecordType[].class));
     }
 
     @Test
@@ -91,7 +91,7 @@ class FluentApiTest {
         RecordEntity rec1 = RecordEntity.build("test.example.com", RecordType.A, 300, "1.2.3.4");
         List<RecordEntity> expectedRecords = List.of(rec1);
 
-        when(mockClient.recordList(eq(testZone), eq(TEST_SLD), any()))
+        when(mockClient.recordListBySubdomain(eq(testZone), eq(TEST_SLD), any()))
                 .thenReturn(expectedRecords);
 
         RecordOperations recordOps = new RecordOperationsImpl(mockClient, testZone, TEST_SLD, null);
@@ -100,7 +100,7 @@ class FluentApiTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("1.2.3.4", result.get(0).getContent());
-        verify(mockClient, times(1)).recordList(eq(testZone), eq(TEST_SLD), any());
+        verify(mockClient, times(1)).recordListBySubdomain(eq(testZone), eq(TEST_SLD), any());
     }
 
     @Test
@@ -109,7 +109,7 @@ class FluentApiTest {
         List<RecordEntity> expectedRecords = List.of(rec1);
 
         RecordType[] types = {RecordType.A};
-        when(mockClient.recordList(eq(testZone), eq(TEST_SLD), eq(types)))
+        when(mockClient.recordListBySubdomain(eq(testZone), eq(TEST_SLD), eq(types)))
                 .thenReturn(expectedRecords);
 
         RecordOperations recordOps = new RecordOperationsImpl(mockClient, testZone, TEST_SLD, types);
@@ -117,7 +117,7 @@ class FluentApiTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        verify(mockClient, times(1)).recordList(eq(testZone), eq(TEST_SLD), eq(types));
+        verify(mockClient, times(1)).recordListBySubdomain(eq(testZone), eq(TEST_SLD), eq(types));
     }
 
     @Test
@@ -125,7 +125,7 @@ class FluentApiTest {
         RecordEntity createdRecord = RecordEntity.build("test.example.com", RecordType.A, 300, "1.2.3.4");
         createdRecord.setId(TEST_RECORD_ID);
 
-        when(mockClient.recordCreateSld(eq(testZone), eq(TEST_SLD), eq(300), eq(RecordType.A), eq("1.2.3.4")))
+        when(mockClient.recordCreateSubdomain(eq(testZone), eq(TEST_SLD), eq(300), eq(RecordType.A), eq("1.2.3.4")))
                 .thenReturn(createdRecord);
 
         RecordOperations recordOps = new RecordOperationsImpl(mockClient, testZone, TEST_SLD, null);
@@ -134,7 +134,7 @@ class FluentApiTest {
         assertNotNull(result);
         assertEquals(TEST_RECORD_ID, result.getId());
         assertEquals("1.2.3.4", result.getContent());
-        verify(mockClient, times(1)).recordCreateSld(eq(testZone), eq(TEST_SLD), eq(300), eq(RecordType.A), eq("1.2.3.4"));
+        verify(mockClient, times(1)).recordCreateSubdomain(eq(testZone), eq(TEST_SLD), eq(300), eq(RecordType.A), eq("1.2.3.4"));
     }
 
     @Test
@@ -145,7 +145,7 @@ class FluentApiTest {
         RecordEntity updatedRecord = RecordEntity.build("test.example.com", RecordType.A, 300, "1.2.3.5");
         updatedRecord.setId(TEST_RECORD_ID);
 
-        when(mockClient.recordList(eq(testZone), eq(TEST_SLD), any()))
+        when(mockClient.recordListBySubdomain(eq(testZone), eq(TEST_SLD), any()))
                 .thenReturn(List.of(existingRecord));
         when(mockClient.recordUpdate(eq(testZone), any(RecordEntity.class)))
                 .thenReturn(updatedRecord);
@@ -155,13 +155,17 @@ class FluentApiTest {
 
         assertNotNull(result);
         assertEquals("1.2.3.5", result.getContent());
-        verify(mockClient, times(1)).recordList(eq(testZone), eq(TEST_SLD), any());
-        verify(mockClient, times(1)).recordUpdate(eq(testZone), any(RecordEntity.class));
+        verify(mockClient, times(1)).recordListBySubdomain(eq(testZone), eq(TEST_SLD), any());
+        // only ID and new content are sent (partial update)
+        verify(mockClient, times(1)).recordUpdate(eq(testZone), argThat(rec ->
+                TEST_RECORD_ID.equals(rec.getId()) && "1.2.3.5".equals(rec.getContent())
+                        && rec.getName() == null && rec.getTtl() == null));
+        assertEquals("1.2.3.4", existingRecord.getContent());
     }
 
     @Test
     void testRecordOperations_Update_NoRecordsFound() throws CloudflareApiException {
-        when(mockClient.recordList(eq(testZone), eq(TEST_SLD), any()))
+        when(mockClient.recordListBySubdomain(eq(testZone), eq(TEST_SLD), any()))
                 .thenReturn(List.of());
 
         RecordOperations recordOps = new RecordOperationsImpl(mockClient, testZone, TEST_SLD, null);
@@ -171,7 +175,7 @@ class FluentApiTest {
         });
 
         assertTrue(exception.getMessage().contains("No recs found"));
-        verify(mockClient, times(1)).recordList(eq(testZone), eq(TEST_SLD), any());
+        verify(mockClient, times(1)).recordListBySubdomain(eq(testZone), eq(TEST_SLD), any());
         verify(mockClient, never()).recordUpdate(any(), any());
     }
 
@@ -180,7 +184,7 @@ class FluentApiTest {
         RecordEntity rec1 = RecordEntity.build("test.example.com", RecordType.A, 300, "1.2.3.4");
         RecordEntity rec2 = RecordEntity.build("test.example.com", RecordType.AAAA, 300, "::1");
 
-        when(mockClient.recordList(eq(testZone), eq(TEST_SLD), any()))
+        when(mockClient.recordListBySubdomain(eq(testZone), eq(TEST_SLD), any()))
                 .thenReturn(List.of(rec1, rec2));
 
         RecordOperations recordOps = new RecordOperationsImpl(mockClient, testZone, TEST_SLD, null);
@@ -190,7 +194,7 @@ class FluentApiTest {
         });
 
         assertTrue(exception.getMessage().contains("Multiple recs found"));
-        verify(mockClient, times(1)).recordList(eq(testZone), eq(TEST_SLD), any());
+        verify(mockClient, times(1)).recordListBySubdomain(eq(testZone), eq(TEST_SLD), any());
         verify(mockClient, never()).recordUpdate(any(), any());
     }
 
@@ -220,7 +224,7 @@ class FluentApiTest {
         RecordEntity createdRecord = RecordEntity.build("test.example.com", RecordType.A, 300, "1.2.3.4");
         createdRecord.setId(TEST_RECORD_ID);
 
-        when(mockClient.recordCreateSld(eq(testZone), eq(TEST_SLD), eq(300), eq(RecordType.A), eq("1.2.3.4")))
+        when(mockClient.recordCreateSubdomain(eq(testZone), eq(TEST_SLD), eq(300), eq(RecordType.A), eq("1.2.3.4")))
                 .thenReturn(createdRecord);
 
         ZoneOperations zoneOps = new ZoneOperationsImpl(mockClient, testZone);

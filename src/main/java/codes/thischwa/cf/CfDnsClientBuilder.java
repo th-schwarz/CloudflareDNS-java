@@ -1,7 +1,10 @@
 package codes.thischwa.cf;
 
+import java.net.URI;
+import java.time.Duration;
+import java.util.Locale;
+import java.util.Set;
 import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -16,8 +19,25 @@ public class CfDnsClientBuilder {
    */
   public static final String DEFAULT_BASEURL = "https://api.cloudflare.com/client/v4";
 
+  /**
+   * The default timeout for establishing a connection.
+   */
+  public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(10);
+
+  /**
+   * The default timeout for waiting for the response data.
+   */
+  public static final Duration DEFAULT_RESPONSE_TIMEOUT = Duration.ofSeconds(30);
+
+  /**
+   * Hosts for which plain HTTP is allowed (e.g. for local tests).
+   */
+  private static final Set<String> LOOPBACK_HOSTS = Set.of("localhost", "127.0.0.1", "[::1]", "::1");
+
   private boolean emptyResultThrowsException;
   private CfAuth auth;
+  private Duration connectTimeout = DEFAULT_CONNECT_TIMEOUT;
+  private Duration responseTimeout = DEFAULT_RESPONSE_TIMEOUT;
 
   @Nullable
   private String baseUrl;
@@ -42,12 +62,87 @@ public class CfDnsClientBuilder {
    * Sets the base URL to be used by the {@code CfDnsClient}.
    * This method allows configuring the base URL for API requests, overriding any default value.
    *
-   * @param baseUrl the base URL to be used for API requests
+   * <p>To protect the credentials, the URL must use HTTPS. Plain HTTP is only allowed for
+   * loopback hosts (e.g. {@code localhost}) for testing purposes.
+   *
+   * @param baseUrl the base URL to be used for API requests, {@code null} resets it to
+   *                {@link #DEFAULT_BASEURL}
    * @return the current instance of {@code CfDnsClientBuilder}, enabling method chaining
+   * @throws IllegalArgumentException if the URL is invalid or doesn't use HTTPS
    */
-  public CfDnsClientBuilder withBaseUrl(String baseUrl) {
-    this.baseUrl = baseUrl;
+  public CfDnsClientBuilder withBaseUrl(@Nullable String baseUrl) {
+    this.baseUrl = baseUrl == null ? null : validateBaseUrl(baseUrl);
     return this;
+  }
+
+  /**
+   * Sets the timeout for establishing a connection. Default is {@link #DEFAULT_CONNECT_TIMEOUT}.
+   *
+   * @param connectTimeout the connect timeout, must be positive
+   * @return the current instance of {@code CfDnsClientBuilder}, enabling method chaining
+   * @throws IllegalArgumentException if the timeout is {@code null}, zero or negative
+   */
+  public CfDnsClientBuilder withConnectTimeout(Duration connectTimeout) {
+    this.connectTimeout = validateTimeout(connectTimeout, "Connect timeout");
+    return this;
+  }
+
+  /**
+   * Sets the timeout for waiting for the response data. Default is
+   * {@link #DEFAULT_RESPONSE_TIMEOUT}.
+   *
+   * @param responseTimeout the response timeout, must be positive
+   * @return the current instance of {@code CfDnsClientBuilder}, enabling method chaining
+   * @throws IllegalArgumentException if the timeout is {@code null}, zero or negative
+   */
+  public CfDnsClientBuilder withResponseTimeout(Duration responseTimeout) {
+    this.responseTimeout = validateTimeout(responseTimeout, "Response timeout");
+    return this;
+  }
+
+  private static Duration validateTimeout(Duration timeout, String name) {
+    if (timeout == null || timeout.isZero() || timeout.isNegative()) {
+      throw new IllegalArgumentException(name + " must be positive: " + timeout);
+    }
+    long millis;
+    try {
+      millis = timeout.toMillis();
+    } catch (ArithmeticException e) {
+      throw new IllegalArgumentException(name + " is too large: " + timeout, e);
+    }
+    // the HTTP client works with milliseconds, 0 ms would disable the timeout
+    if (millis < 1) {
+      throw new IllegalArgumentException(name + " must be at least 1 ms: " + timeout);
+    }
+    return timeout;
+  }
+
+  private static String validateBaseUrl(String baseUrl) {
+    URI uri;
+    try {
+      uri = URI.create(baseUrl.strip());
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid base URL: " + baseUrl, e);
+    }
+    String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
+    String host = uri.getHost();
+    if (host == null || host.isBlank()) {
+      throw new IllegalArgumentException("Base URL must contain a host: " + baseUrl);
+    }
+    if (uri.getRawQuery() != null || uri.getRawFragment() != null) {
+      throw new IllegalArgumentException("Base URL must not contain a query or fragment: " + baseUrl);
+    }
+    boolean https = "https".equals(scheme);
+    boolean loopbackHttp = "http".equals(scheme) && LOOPBACK_HOSTS.contains(host.toLowerCase(Locale.ROOT));
+    if (!https && !loopbackHttp) {
+      throw new IllegalArgumentException("Base URL must use HTTPS: " + baseUrl);
+    }
+    String normalized = uri.toString();
+    // avoid double slashes when appending the endpoint paths
+    while (normalized.endsWith("/")) {
+      normalized = normalized.substring(0, normalized.length() - 1);
+    }
+    return normalized;
   }
 
   /**
@@ -92,10 +187,16 @@ public class CfDnsClientBuilder {
    * @return a new instance of {@code CfDnsClient} configured with the
    *         specified options such as base URL, authentication details,
    *         and the exception-handling policy for empty results.
+   * @throws IllegalStateException if no authentication was configured
    */
   public CfDnsClient build() {
+    if (auth == null) {
+      throw new IllegalStateException(
+          "No authentication configured, use withApiTokenAuth(...) or withEmailKeyAuth(...)");
+    }
     String url = baseUrl == null ? DEFAULT_BASEURL : baseUrl;
-    return new CfDnsClient(emptyResultThrowsException, url, auth);
+    return new CfDnsClient(emptyResultThrowsException, url, auth, CfDnsClient.MAX_RECORDS_PER_PAGE,
+        connectTimeout, responseTimeout);
   }
 
   /**
@@ -128,8 +229,8 @@ public class CfDnsClientBuilder {
      * @param apiToken the Cloudflare API token
      * @throws IllegalArgumentException if the API token is null or blank
      */
-    ApiTokenAuth(@NotNull String apiToken) {
-      if (apiToken.isBlank()) {
+    ApiTokenAuth(String apiToken) {
+      if (apiToken == null || apiToken.isBlank()) {
         throw new IllegalArgumentException("API token must not be null or blank!");
       }
       this.apiToken = apiToken;
@@ -157,11 +258,11 @@ public class CfDnsClientBuilder {
      * @param authKey   the API key of the Cloudflare account
      * @throws IllegalArgumentException if email or key is null or blank
      */
-    EmailKeyAuth(@NotNull String authEmail, @NotNull String authKey) {
-      if (authEmail.isBlank()) {
+    EmailKeyAuth(String authEmail, String authKey) {
+      if (authEmail == null || authEmail.isBlank()) {
         throw new IllegalArgumentException("Authentication email must not be null or blank!");
       }
-      if (authKey.isBlank()) {
+      if (authKey == null || authKey.isBlank()) {
         throw new IllegalArgumentException("Authentication key must not be null or blank!");
       }
       this.authEmail = authEmail;
