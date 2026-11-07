@@ -16,6 +16,7 @@ import codes.thischwa.cf.model.PagingRequest;
 import codes.thischwa.cf.model.RecordEntity;
 import codes.thischwa.cf.model.RecordType;
 import codes.thischwa.cf.model.ZoneEntity;
+import java.net.IDN;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +31,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class CfClientTest {
+public class CfClientIntegrationTest {
 
   private static final String ZONE_STR = "mein-d-ns.de";
   private static final String SLD_STR = "devsld";
@@ -639,6 +640,39 @@ public class CfClientTest {
           .anyMatch(r -> r.getId().equals(apex.getId()) && CfDnsClient.APEX.equals(r.getSubdomain())));
     } finally {
       deleteQuietly(zone, created);
+    }
+  }
+
+  @Test
+  void testIdnSubdomain() throws Exception {
+    ZoneEntity zone = client.zoneGet(ZONE_STR);
+    String idnSub = "bücher-" + System.currentTimeMillis();
+    String punycodeSub = IDN.toASCII(idnSub);
+    assertTrue(punycodeSub.startsWith("xn--"), punycodeSub);
+    try {
+      // the Unicode subdomain is sent as Punycode, Cloudflare returns the Punycode name
+      RecordEntity rec = client.recordCreateSubdomain(zone, idnSub, TTL, RecordType.A, "130.0.0.30");
+      assertNotNull(rec.getId());
+      assertEquals(punycodeSub + "." + ZONE_STR, rec.getName());
+      assertEquals(punycodeSub, rec.getSubdomain());
+
+      // the record is found by the Unicode and by the Punycode subdomain
+      List<RecordEntity> byUnicode = client.recordListBySubdomain(zone, idnSub, RecordType.A);
+      assertEquals(1, byUnicode.size());
+      assertEquals(rec.getId(), byUnicode.get(0).getId());
+      assertEquals("130.0.0.30", byUnicode.get(0).getContent());
+      List<RecordEntity> byPunycode = client.recordListBySubdomain(zone, punycodeSub, RecordType.A);
+      assertEquals(1, byPunycode.size());
+      assertEquals(rec.getId(), byPunycode.get(0).getId());
+
+      // delete by the Unicode subdomain
+      client.recordDeleteTypeIfExists(zone, idnSub, RecordType.A);
+      assertThrows(CloudflareNotFoundException.class,
+          () -> client.recordListBySubdomain(zone, idnSub, RecordType.A));
+    } finally {
+      try {
+        client.recordDeleteTypeIfExists(zone, punycodeSub, RecordType.A);
+      } catch (Exception e) { /* ignore */ }
     }
   }
 

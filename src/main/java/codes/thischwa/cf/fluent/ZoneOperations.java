@@ -21,8 +21,7 @@ public interface ZoneOperations {
 
   /**
    * Selects a record with specific types within the zone for further operations.
-   * <p>
-   * The type filter does not restrict a subsequent {@link RecordOperations#delete(RecordType...)} call;
+   * <p>The type filter does not restrict a subsequent {@link RecordOperations#delete(RecordType...)} call;
    * that method uses its own type arguments, and calling it without arguments deletes all record types
    * for the selected subdomain. A {@link CloudflareApiException} from an individual deletion is
    * logged and does not stop later attempts; see {@link RecordOperations#delete(RecordType...)}.

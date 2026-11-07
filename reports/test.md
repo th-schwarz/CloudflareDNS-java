@@ -17,7 +17,7 @@ _Generated on 2026-11-06 13:29:26 UTC_
 | ✅ | codes.thischwa.cf.CfBasicHttpClientErrorTest | 7 | 7 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfBasicHttpClientTest | 9 | 9 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfClientPenTest | 4 | 4 | 0 | 0 |
-| ✅ | codes.thischwa.cf.CfClientTest | 18 | 18 | 0 | 0 |
+| ✅ | codes.thischwa.cf.CfClientIntegrationTest | 18 | 18 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfDnsClientBuilderTest | 21 | 21 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfDnsClientMockTest | 41 | 41 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfRequestTest | 10 | 10 | 0 | 0 |

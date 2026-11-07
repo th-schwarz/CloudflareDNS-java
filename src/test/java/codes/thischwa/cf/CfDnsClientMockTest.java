@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
+import java.net.IDN;
 import java.util.List;
 import java.util.Map;
 
@@ -787,6 +788,12 @@ class CfDnsClientMockTest {
                     () -> spyClient.recordCreateSubdomain(zone, sub, 60, RecordType.A, "1.2.3.4"), sub);
         }
         assertThrows(IllegalArgumentException.class, () -> spyClient.recordListBySubdomain(zone, null));
+        String tooLongIdnLabel = "ä".repeat(64);
+        assertThrows(IllegalArgumentException.class,
+                () -> spyClient.recordListBySubdomain(zone, tooLongIdnLabel));
+        assertThrows(IllegalArgumentException.class,
+                () -> spyClient.recordCreateSubdomain(zone, tooLongIdnLabel, 60, RecordType.A,
+                        "1.2.3.4"));
         assertThrows(IllegalArgumentException.class, () -> spyClient.zoneGet("example.com&account.id=1"));
         assertThrows(IllegalArgumentException.class, () -> spyClient.zoneGet(" "));
         verify(spyClient, never()).getRequest(anyString(), any());
@@ -808,6 +815,40 @@ class CfDnsClientMockTest {
         verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
                 + "/dns_records?name=0%2F26.example.com&order=name&direction=asc&page=1&per_page=" + CfDnsClient.RECORDS_PER_PAGE),
                 eq(RecordMultipleResponse.class));
+    }
+
+    @Test
+    void testIdnSubdomainIsConvertedToPunycode() throws Exception {
+        CfDnsClient spyClient = spy(client);
+        ZoneEntity zone = createTestZone();
+        doReturn(recordResponse(List.of(), new ResultInfo(0)))
+                .when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
+        doReturn(singleResponse(RecordEntity.build(
+                "xn--bcher-kva.example.com", RecordType.A, 60, "1.2.3.4")))
+                .when(spyClient).postRequest(anyString(), any(), eq(RecordSingleResponse.class));
+
+        spyClient.recordListBySubdomain(zone, "bücher");
+        spyClient.recordListBySubdomain(zone, "shop.bücher");
+        spyClient.recordListBySubdomain(zone, "xn--bcher-kva");
+        // code points newer than IDNA2003 (Unicode 3.2) like emojis must not be rejected
+        spyClient.recordListBySubdomain(zone, "emoji-🥷-忍者");
+        spyClient.recordCreateSubdomain(zone, "bücher", 60, RecordType.A, "1.2.3.4");
+
+        String base = "/zones/" + TEST_ZONE_ID + "/dns_records?name=";
+        String suffix = "&order=name&direction=asc&page=1&per_page=" + CfDnsClient.RECORDS_PER_PAGE;
+        verify(spyClient, times(2)).getRequest(eq(base + "xn--bcher-kva.example.com" + suffix),
+                eq(RecordMultipleResponse.class));
+        verify(spyClient).getRequest(eq(base + "shop.xn--bcher-kva.example.com" + suffix),
+                eq(RecordMultipleResponse.class));
+        String emojiPunycode = IDN.toASCII("emoji-🥷-忍者", IDN.ALLOW_UNASSIGNED);
+        assertTrue(emojiPunycode.startsWith("xn--"), emojiPunycode);
+        verify(spyClient).getRequest(eq(base + emojiPunycode + ".example.com" + suffix),
+                eq(RecordMultipleResponse.class));
+
+        ArgumentCaptor<Object> payload = ArgumentCaptor.forClass(Object.class);
+        verify(spyClient).postRequest(eq("/zones/" + TEST_ZONE_ID + "/dns_records"),
+                payload.capture(), eq(RecordSingleResponse.class));
+        assertEquals("xn--bcher-kva.example.com", ((RecordEntity) payload.getValue()).getName());
     }
 
     @Test

@@ -17,6 +17,7 @@
     - unexpected runtime exceptions aren't wrapped into a `CloudflareApiException("Unexpected error!")` anymore
     - batch DELETE sends only the record IDs, batch PATCH sends all writable attributes which aren't `null` (before: only the content)
   - security: query values (zone names, subdomains) are URL-encoded and IDs are validated, which prevents query parameter injection and path traversal
+  - Unicode subdomains are converted to Punycode before requests are sent
   - connect and response timeouts (defaults: 10 s / 30 s), configurable via `withConnectTimeout` / `withResponseTimeout`
   - `CfDnsClient` uses one shared HTTP client with connection pooling instead of a new one per request and implements `AutoCloseable`, call `close()` to release the connections
   - `CloudflareApiException` provides the HTTP status code (`getStatusCode()`) and the errors reported by Cloudflare (`getErrors()`)

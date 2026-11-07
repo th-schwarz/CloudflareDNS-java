@@ -15,6 +15,7 @@ import codes.thischwa.cf.model.ResponseEntity;
 import codes.thischwa.cf.model.ResultInfo;
 import codes.thischwa.cf.model.ZoneEntity;
 import codes.thischwa.cf.model.ZoneMultipleResponse;
+import java.net.IDN;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -176,7 +177,17 @@ public class CfDnsClient extends CfBasicHttpClient {
     if (APEX.equals(subdomain)) {
       return zone.getName();
     }
-    return subdomain + "." + zone.getName();
+    String asciiSubdomain = subdomain;
+    if (!subdomain.chars().allMatch(character -> character <= 0x7f)) {
+      try {
+        // IDN implements IDNA2003 (Unicode 3.2), newer code points (e.g. emojis) must be allowed
+        asciiSubdomain = IDN.toASCII(subdomain, IDN.ALLOW_UNASSIGNED);
+      } catch (IllegalArgumentException exception) {
+        throw new IllegalArgumentException("Invalid internationalized subdomain: " + subdomain,
+            exception);
+      }
+    }
+    return asciiSubdomain + "." + zone.getName();
   }
 
   /**
@@ -318,15 +329,17 @@ public class CfDnsClient extends CfBasicHttpClient {
    * Optionally, filters by one or more DNS record types.
    *
    * @param zone      The zone entity containing information about the domain zone.
-   * @param subdomain The subdomain relative to the zone (e.g. "www" for "www.example.com"),
-   *                  or {@link #APEX} for the zone apex.
+   * @param subdomain The subdomain relative to the zone (e.g. "www" for "www.example.com");
+   *                  Unicode subdomains are converted to Punycode. {@link #APEX} indicates the
+   *                  zone apex.
    * @param types     Optional DNS record types to filter the results. If none are given, records of
    *                  all types are returned.
    * @return A list of {@code RecordEntity} objects representing the DNS records for the specified domain.
    * @throws CloudflareNotFoundException if no records were found and 'emptyResultThrowsException'
    *                                     is enabled
    * @throws CloudflareApiException      if an error occurs while interacting with the Cloudflare API
-   * @throws IllegalArgumentException if the subdomain is blank or contains invalid characters
+   * @throws IllegalArgumentException if the subdomain is blank, contains invalid characters or
+   *                                  cannot be converted to Punycode
    */
   public List<RecordEntity> recordListBySubdomain(ZoneEntity zone, String subdomain,
                                                   @Nullable RecordType... types)
@@ -361,8 +374,9 @@ public class CfDnsClient extends CfBasicHttpClient {
    * Creates a new DNS record for a given subdomain within the specified zone.
    *
    * @param zone      The ZoneEntity representing the DNS zone where the record is to be created.
-   * @param subdomain The subdomain relative to the zone (e.g. "api" for "api.example.com"),
-   *                  or {@link #APEX} for the zone apex.
+   * @param subdomain The subdomain relative to the zone (e.g. "api" for "api.example.com");
+   *                  Unicode subdomains are converted to Punycode. {@link #APEX} indicates the
+   *                  zone apex.
    * @param ttl       The time-to-live (TTL) value for the DNS record in seconds.
    * @param type      The RecordType specifying the type of the DNS record (e.g., A, AAAA, CNAME).
    * @param content   The content of the DNS record (e.g., IP address for A/AAAA records, target
@@ -370,7 +384,8 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @return The created RecordEntity object containing details of the newly created DNS record.
    * @throws CloudflareApiException If an error occurs while communicating with the Cloudflare API
    *                                or creating the record.
-   * @throws IllegalArgumentException if the subdomain is blank or contains invalid characters
+   * @throws IllegalArgumentException if the subdomain is blank, contains invalid characters or
+   *                                  cannot be converted to Punycode
    */
   public RecordEntity recordCreateSubdomain(ZoneEntity zone, String subdomain, int ttl, RecordType type,
                                             String content) throws CloudflareApiException {
