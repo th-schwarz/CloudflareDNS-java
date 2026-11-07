@@ -195,7 +195,7 @@ public class CfDnsClientBuilder {
           "No authentication configured, use withApiTokenAuth(...) or withEmailKeyAuth(...)");
     }
     String url = baseUrl == null ? DEFAULT_BASEURL : baseUrl;
-    return new CfDnsClient(emptyResultThrowsException, url, auth, CfDnsClient.MAX_RECORDS_PER_PAGE,
+    return new CfDnsClient(emptyResultThrowsException, url, auth, CfDnsClient.RECORDS_PER_PAGE,
         connectTimeout, responseTimeout);
   }
 

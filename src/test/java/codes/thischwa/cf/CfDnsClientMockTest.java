@@ -128,8 +128,8 @@ class CfDnsClientMockTest {
         CfDnsClient spyClient = spy(client);
         doReturn(mockResponse).when(spyClient).getRequest(anyString(), eq(ZoneMultipleResponse.class));
 
-        spyClient.zoneList(PagingRequest.of(1, 5));
-        spyClient.zoneList(PagingRequest.of(1, 50));
+        spyClient.zoneList(PagingRequest.forZones(1, 5));
+        spyClient.zoneList(PagingRequest.forZones(1, 50));
 
         verify(spyClient).getRequest(eq("/zones?page=1&per_page=5"), eq(ZoneMultipleResponse.class));
         verify(spyClient).getRequest(eq("/zones?page=1&per_page=50"), eq(ZoneMultipleResponse.class));
@@ -140,9 +140,9 @@ class CfDnsClientMockTest {
         CfDnsClient spyClient = spy(client);
 
         assertThrows(IllegalArgumentException.class,
-                () -> spyClient.zoneList(PagingRequest.of(1, 4)));
+                () -> spyClient.zoneList(new PagingRequest(1, 4)));
         assertThrows(IllegalArgumentException.class,
-                () -> spyClient.zoneList(PagingRequest.of(1, 51)));
+                () -> spyClient.zoneList(new PagingRequest(1, 51)));
 
         verify(spyClient, never()).getRequest(anyString(), eq(ZoneMultipleResponse.class));
     }
@@ -217,7 +217,7 @@ class CfDnsClientMockTest {
     @Test
     void testRecordList_WithPaging() throws Exception {
         ZoneEntity zone = createTestZone();
-        PagingRequest pagingRequest = PagingRequest.of(10, 1);
+        PagingRequest pagingRequest = PagingRequest.forRecords(10, 1);
 
         RecordMultipleResponse mockResponse = new RecordMultipleResponse();
         mockResponse.setResultInfo(createResultInfo(1));
@@ -484,10 +484,10 @@ class CfDnsClientMockTest {
         CfDnsClient spyClient = spy(client);
         doReturn(zoneResponse(List.of(zone("z1", "a.com"), zone("z2", "b.com")),
                 new ResultInfo(1, 2, 2, 2, 3)))
-                .when(spyClient).getRequest(eq("/zones?page=1&per_page=" + CfDnsClient.ZONES_PER_PAGE),
+                .when(spyClient).getRequest(eq("/zones?page=1&per_page=" + PagingRequest.DEFAULT_PAGE_SIZE),
                         eq(ZoneMultipleResponse.class));
         doReturn(zoneResponse(List.of(zone("z3", "c.com")), new ResultInfo(2, 2, 2, 1, 3)))
-                .when(spyClient).getRequest(eq("/zones?page=2&per_page=" + CfDnsClient.ZONES_PER_PAGE),
+                .when(spyClient).getRequest(eq("/zones?page=2&per_page=" + PagingRequest.DEFAULT_PAGE_SIZE),
                         eq(ZoneMultipleResponse.class));
 
         List<ZoneEntity> zones = spyClient.zoneList();
@@ -499,7 +499,7 @@ class CfDnsClientMockTest {
     @Test
     void testRecordListByType_FetchesAllPages() throws Exception {
         ZoneEntity zone = createTestZone();
-        String base = "/zones/" + TEST_ZONE_ID + "/dns_records?type=A&order=name&direction=asc&page=%d&per_page=" + CfDnsClient.MAX_RECORDS_PER_PAGE;
+        String base = "/zones/" + TEST_ZONE_ID + "/dns_records?type=A&order=name&direction=asc&page=%d&per_page=" + CfDnsClient.RECORDS_PER_PAGE;
         CfDnsClient spyClient = spy(client);
         doReturn(recordResponse(List.of(RecordEntity.build("a.example.com", RecordType.A, 60, "1.1.1.1")),
                 new ResultInfo(1, 1, 2, 1, 2)))
@@ -518,7 +518,7 @@ class CfDnsClientMockTest {
     void testRecordListBySld_FetchesAllPages() throws Exception {
         ZoneEntity zone = createTestZone();
         String base = "/zones/" + TEST_ZONE_ID + "/dns_records?name=test.example.com&order=name&direction=asc&page=%d&per_page="
-                + CfDnsClient.MAX_RECORDS_PER_PAGE;
+                + CfDnsClient.RECORDS_PER_PAGE;
         CfDnsClient spyClient = spy(client);
         doReturn(recordResponse(List.of(RecordEntity.build("test.example.com", RecordType.A, 60, "1.1.1.1")),
                 new ResultInfo(1, 1, 2, 1, 2)))
@@ -558,7 +558,7 @@ class CfDnsClientMockTest {
 
         verify(spyClient).getRequest(
                 eq("/zones/" + TEST_ZONE_ID + "/dns_records?name=example.com&order=name&direction=asc&page=1&per_page="
-                        + CfDnsClient.MAX_RECORDS_PER_PAGE),
+                        + CfDnsClient.RECORDS_PER_PAGE),
                 eq(RecordMultipleResponse.class));
     }
 
@@ -618,7 +618,7 @@ class CfDnsClientMockTest {
 
         assertEquals(1, spyClient.recordList(createTestZone(), null).size());
         verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
-                + "/dns_records?order=name&direction=asc&page=1&per_page=" + PagingRequest.MAX_PER_PAGE),
+                + "/dns_records?order=name&direction=asc&page=1&per_page=" + CfDnsClient.RECORDS_PER_PAGE),
                 eq(RecordMultipleResponse.class));
     }
 
@@ -628,7 +628,7 @@ class CfDnsClientMockTest {
         doReturn(recordResponse(List.of(), new ResultInfo(0)))
                 .when(spyClient).getRequest(anyString(), eq(RecordMultipleResponse.class));
 
-        spyClient.recordList(createTestZone(), PagingRequest.of(2, 42));
+        spyClient.recordList(createTestZone(), PagingRequest.forRecords(2, 42));
 
         verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
                 + "/dns_records?order=name&direction=asc&page=2&per_page=42"),
@@ -645,10 +645,10 @@ class CfDnsClientMockTest {
         spyClient.recordListBySubdomain(createTestZone(), "www", RecordType.TXT);
 
         verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID + "/dns_records?type=MX&order=name&direction=asc&page=1&per_page="
-                + CfDnsClient.MAX_RECORDS_PER_PAGE), eq(RecordMultipleResponse.class));
+                + CfDnsClient.RECORDS_PER_PAGE), eq(RecordMultipleResponse.class));
         verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
                 + "/dns_records?name=www.example.com&type=TXT&order=name&direction=asc&page=1&per_page="
-                + CfDnsClient.MAX_RECORDS_PER_PAGE), eq(RecordMultipleResponse.class));
+                + CfDnsClient.RECORDS_PER_PAGE), eq(RecordMultipleResponse.class));
     }
 
     @Test
@@ -669,7 +669,7 @@ class CfDnsClientMockTest {
 
         assertEquals(List.of("A", "AAAA"), records.stream().map(RecordEntity::getType).toList());
         verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID + "/dns_records?order=name&direction=asc&page=1&per_page="
-                + CfDnsClient.MAX_RECORDS_PER_PAGE), eq(RecordMultipleResponse.class));
+                + CfDnsClient.RECORDS_PER_PAGE), eq(RecordMultipleResponse.class));
     }
 
     private static RecordEntity fetchedMxRecord() {
@@ -803,10 +803,10 @@ class CfDnsClientMockTest {
         spyClient.recordListBySubdomain(createTestZone(), "0/26");
 
         verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
-                + "/dns_records?name=%24%28reboot%29.example.com&order=name&direction=asc&page=1&per_page=" + CfDnsClient.MAX_RECORDS_PER_PAGE),
+                + "/dns_records?name=%24%28reboot%29.example.com&order=name&direction=asc&page=1&per_page=" + CfDnsClient.RECORDS_PER_PAGE),
                 eq(RecordMultipleResponse.class));
         verify(spyClient).getRequest(eq("/zones/" + TEST_ZONE_ID
-                + "/dns_records?name=0%2F26.example.com&order=name&direction=asc&page=1&per_page=" + CfDnsClient.MAX_RECORDS_PER_PAGE),
+                + "/dns_records?name=0%2F26.example.com&order=name&direction=asc&page=1&per_page=" + CfDnsClient.RECORDS_PER_PAGE),
                 eq(RecordMultipleResponse.class));
     }
 
@@ -832,7 +832,7 @@ class CfDnsClientMockTest {
 
     private static String recordsPage(int page) {
         return "/zones/" + TEST_ZONE_ID + "/dns_records?order=name&direction=asc&page=" + page
-                + "&per_page=" + PagingRequest.MAX_PER_PAGE;
+                + "&per_page=" + CfDnsClient.RECORDS_PER_PAGE;
     }
 
     @Test

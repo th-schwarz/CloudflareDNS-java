@@ -88,16 +88,9 @@ import org.jetbrains.annotations.Nullable;
 public class CfDnsClient extends CfBasicHttpClient {
 
   /**
-   * Page size used when fetching all zones. Cloudflare allows 5 to 50 zones per page.
-   */
-  static final int ZONES_PER_PAGE = 50;
-
-  private static final int MIN_ZONES_PER_PAGE = 5;
-
-  /**
    * Page size used when fetching all DNS records.
    */
-  static final int MAX_RECORDS_PER_PAGE = 1000;
+  static final int RECORDS_PER_PAGE = 1000;
 
   /**
    * Sort order for listing DNS records. Cloudflare doesn't guarantee a stable order without it,
@@ -131,7 +124,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @param auth                       The authentication mechanism to use (ApiTokenAuth or EmailKeyAuth)
    */
   CfDnsClient(boolean emptyResultThrowsException, String baseUrl, CfDnsClientBuilder.CfAuth auth) {
-    this(emptyResultThrowsException, baseUrl, auth, MAX_RECORDS_PER_PAGE);
+    this(emptyResultThrowsException, baseUrl, auth, RECORDS_PER_PAGE);
   }
 
   /**
@@ -235,7 +228,8 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @throws CloudflareApiException If an error occurs during the API request or response handling.
    */
   public List<ZoneEntity> zoneList() throws CloudflareApiException {
-    return getAllPages(CfRequest.ZONE_LIST.buildPath(), ZoneMultipleResponse.class, ZONES_PER_PAGE);
+    return getAllPages(CfRequest.ZONE_LIST.buildPath(), ZoneMultipleResponse.class,
+        PagingRequest.DEFAULT_PAGE_SIZE);
   }
 
   /**
@@ -250,10 +244,13 @@ public class CfDnsClient extends CfBasicHttpClient {
    * @throws IllegalArgumentException if the page size is outside the range 5 to 50
    */
   public List<ZoneEntity> zoneList(PagingRequest pagingRequest) throws CloudflareApiException {
-    if (pagingRequest.getPerPage() < MIN_ZONES_PER_PAGE
-        || pagingRequest.getPerPage() > ZONES_PER_PAGE) {
-      throw new IllegalArgumentException("Zone page size must be between " + MIN_ZONES_PER_PAGE
-          + " and " + ZONES_PER_PAGE);
+    Objects.requireNonNull(pagingRequest, "pagingRequest must not be null");
+    int perPage = pagingRequest.perPage();
+    if (perPage < PagingRequest.MIN_ZONES_PER_PAGE
+        || perPage > PagingRequest.MAX_ZONES_PER_PAGE) {
+      throw new IllegalArgumentException("Zone page size must be between "
+          + PagingRequest.MIN_ZONES_PER_PAGE + " and " + PagingRequest.MAX_ZONES_PER_PAGE
+          + ", but was " + perPage);
     }
     String endpoint = pagingRequest.addQueryString(CfRequest.ZONE_LIST.buildPath());
     ZoneMultipleResponse response = getRequest(endpoint, ZoneMultipleResponse.class);
@@ -299,7 +296,7 @@ public class CfDnsClient extends CfBasicHttpClient {
    *
    * @param zone          The zone entity containing information about the target zone.
    * @param pagingRequest The paging request containing parameters such as page size and number.
-   *                      If {@code null}, all pages are fetched using the maximum supported page size.
+   *                      If {@code null}, all pages are fetched using an internal page size of 1,000.
    *                      For a specific page, Cloudflare allows a page size between 1 and 5,000,000.
    * @return A list of RecordEntity objects representing the DNS records of the specified zone.
    * @throws CloudflareApiException If an error occurs during the API request or response processing.
@@ -309,7 +306,7 @@ public class CfDnsClient extends CfBasicHttpClient {
     String path = appendQuery(CfRequest.RECORD_LIST.buildPath(zone.getId()), RECORD_ORDER);
     if (pagingRequest == null) {
       return filterAndSetZoneRecords(zone, null,
-          getAllPages(path, RecordMultipleResponse.class, PagingRequest.MAX_PER_PAGE));
+          getAllPages(path, RecordMultipleResponse.class, recordsPerPage));
     }
     RecordMultipleResponse resp = getRequest(pagingRequest.addQueryString(path), RecordMultipleResponse.class);
     checkResponse(resp);
@@ -682,9 +679,10 @@ public class CfDnsClient extends CfBasicHttpClient {
     Map<String, E> byId = new LinkedHashMap<>();
     List<E> withoutId = new ArrayList<>();
     int expectedCount = -1;
-    int page = 1;
+    PagingRequest pagingRequest = new PagingRequest(1, perPage);
     while (true) {
-      String pagedEndpoint = PagingRequest.of(page, perPage).addQueryString(endpoint);
+      int page = pagingRequest.page();
+      String pagedEndpoint = pagingRequest.addQueryString(endpoint);
       R resp = getRequest(pagedEndpoint, responseType);
       checkResponse(resp);
       List<E> pageResult = resp.getResult();
@@ -709,7 +707,7 @@ public class CfDnsClient extends CfBasicHttpClient {
         all.addAll(withoutId);
         return new PagingResult<>(all, info == null || page == 1 ? -1 : expectedCount);
       }
-      page++;
+      pagingRequest = pagingRequest.next();
     }
   }
 

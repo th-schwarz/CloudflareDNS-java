@@ -99,12 +99,13 @@ Without a `PagingRequest`, `zoneList()` fetches zones in pages of 50, requesting
 Use a `PagingRequest` to retrieve a specific page:
 
 ```java
-List<ZoneEntity> zones = cfDnsClient.zoneList(PagingRequest.of(1, 50)); // page 1, 50 zones per page
+List<ZoneEntity> zones = cfDnsClient.zoneList(PagingRequest.forZones(1, 50)); // page 1, 50 zones per page
 ```
 
-Page numbers start at 1. Cloudflare accepts page sizes from 5 to 50 for zones and from 1 to 5,000,000
-for DNS records. `PagingRequest.defaultPaging()` requests page 1 with 50 items; it does not fetch
-additional pages.
+Page numbers start at 1. `PagingRequest` is immutable; use `forRecords(page, perPage)` for DNS records and
+`forZones(page, perPage)` for zones. Cloudflare accepts page sizes from 5 to 50 for zones and from
+1 to 5,000,000 for DNS records. `PagingRequest.defaultPaging()` requests page 1 with 50 items; it
+does not fetch additional pages. Use `next()` or `withPage(page)` to create another page request.
 
 ---
 
@@ -165,10 +166,10 @@ If exactly one record type is given, the filtering is done by Cloudflare, otherw
 List<RecordEntity> allZoneRecords = cfDnsClient.recordList(zone);
 
 // Get the records of a zone page by page (page 2, 100 records per page)
-List<RecordEntity> pagedRecords = cfDnsClient.recordList(zone, PagingRequest.of(2, 100));
+List<RecordEntity> pagedRecords = cfDnsClient.recordList(zone, PagingRequest.forRecords(2, 100));
 ```
 
-Without a `PagingRequest`, all pages are fetched using up to 5,000,000 records per page and combined into one result.
+Without a `PagingRequest`, all pages are fetched using 1,000 records per page and combined into one result.
 This large page size can consume substantial memory. If paging remains inconsistent after three attempts, the client logs a warning and may return an incomplete list. Use a smaller `PagingRequest` to retrieve one page at a time; further pages must be requested explicitly.
 With a `PagingRequest`, exactly the requested page is returned.
 

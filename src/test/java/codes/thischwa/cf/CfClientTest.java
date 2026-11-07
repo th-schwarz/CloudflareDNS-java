@@ -109,7 +109,7 @@ public class CfClientTest {
     assertFalse(zones.isEmpty());
     assertEquals(ZONE_STR, zones.get(0).getName());
 
-    zones = client.zoneList(PagingRequest.of(1, 50));
+    zones = client.zoneList(PagingRequest.forZones(1, 50));
     assertNotNull(zones);
     assertFalse(zones.isEmpty());
     assertEquals(ZONE_STR, zones.get(0).getName());
@@ -502,17 +502,17 @@ public class CfClientTest {
       }
 
       // Test paging with page size of 5
-      PagingRequest page1Request = PagingRequest.of(1, 5);
+      PagingRequest page1Request = PagingRequest.forRecords(1, 5);
       List<RecordEntity> page1Records = client.recordList(zone, page1Request);
       assertEquals(5, page1Records.size(), "First page should contain 5 records");
 
       // 2nd page should also contain 5 records (if we have at least 12 total)
-      PagingRequest page2Request = PagingRequest.of(2, 5);
+      PagingRequest page2Request = PagingRequest.forRecords(2, 5);
       List<RecordEntity> page2Records = client.recordList(zone, page2Request);
       assertEquals(5, page2Records.size(), "Second page should contain at least 5 records");
 
       // 3rd page should contain 2 records
-      PagingRequest page3Request = PagingRequest.of(3, 5);
+      PagingRequest page3Request = PagingRequest.forRecords(3, 5);
       List<RecordEntity> page3Records = client.recordList(zone, page3Request);
       assertEquals(2, page3Records.size(), "Third page should contain 2 records");
 

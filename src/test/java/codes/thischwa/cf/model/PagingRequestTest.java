@@ -1,62 +1,80 @@
 package codes.thischwa.cf.model;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+class PagingRequestTest {
 
-public class PagingRequestTest {
+  @Test
+  void testBuildPath() {
+    String result = PagingRequest.defaultPaging().addQueryString("/zones");
+    assertEquals("/zones?page=1&per_page=50", result);
+  }
 
-    @Test
-    void testBuildPath() {
-        String result = PagingRequest.defaultPaging().addQueryString("/zones");
-        assertEquals("/zones?page=1&per_page=50", result);
-    }
+  @Test
+  void testBuildPathWithExistingQuery() {
+    String result = PagingRequest.forRecords(10, 100).addQueryString("/zones?foo=bar");
+    assertEquals("/zones?foo=bar&page=10&per_page=100", result);
+  }
 
-    @Test
-    void testPagingRequestBoundaries() {
-        assertDoesNotThrow(() -> PagingRequest.of(1, 1));
-        assertDoesNotThrow(() -> PagingRequest.of(1, 5_000_000));
-        assertThrows(IllegalArgumentException.class, () -> PagingRequest.of(0, 1));
-        assertThrows(IllegalArgumentException.class, () -> PagingRequest.of(1, 0));
-        assertThrows(IllegalArgumentException.class, () -> PagingRequest.of(1, 5_000_001));
-    }
+  @Test
+  void testPagingRequestBoundaries() {
+    assertDoesNotThrow(() -> PagingRequest.forRecords(1, 1));
+    assertDoesNotThrow(() -> PagingRequest.forRecords(1, PagingRequest.MAX_RECORDS_PER_PAGE));
+    assertThrows(IllegalArgumentException.class, () -> PagingRequest.forRecords(0, 1));
+    assertThrows(IllegalArgumentException.class, () -> PagingRequest.forRecords(1, 0));
+    assertThrows(IllegalArgumentException.class,
+        () -> PagingRequest.forRecords(1, PagingRequest.MAX_RECORDS_PER_PAGE + 1));
+  }
 
-    @Test
-    void testSettersValidatePagingValues() {
-        PagingRequest request = PagingRequest.of(1, 50);
+  @Test
+  void testZonePageSizeBoundaries() {
+    assertDoesNotThrow(() -> PagingRequest.forZones(1, PagingRequest.MIN_ZONES_PER_PAGE));
+    assertDoesNotThrow(() -> PagingRequest.forZones(1, PagingRequest.MAX_ZONES_PER_PAGE));
+    assertThrows(IllegalArgumentException.class,
+        () -> PagingRequest.forZones(1, PagingRequest.MIN_ZONES_PER_PAGE - 1));
+    assertThrows(IllegalArgumentException.class,
+        () -> PagingRequest.forZones(1, PagingRequest.MAX_ZONES_PER_PAGE + 1));
+  }
 
-        assertThrows(IllegalArgumentException.class, () -> request.setPage(0));
-        assertThrows(IllegalArgumentException.class, () -> request.setPerPage(5_000_001));
-        assertEquals(1, request.getPage());
-        assertEquals(50, request.getPerPage());
-    }
+  @Test
+  void testNextAndWithPageReturnNewRequests() {
+    PagingRequest request = PagingRequest.forRecords(2, 50);
 
-    @Test
-    void testBuildPathAdditional() {
-        String result = new PagingRequest( 10, 100).addQueryString("/zones?foo=bar");
-        assertEquals("/zones?foo=bar&page=10&per_page=100", result);
-    }
+    assertEquals(PagingRequest.forRecords(3, 50), request.next());
+    assertEquals(PagingRequest.forRecords(5, 50), request.withPage(5));
+    assertEquals(PagingRequest.forRecords(2, 50), request);
+  }
 
-    @Test
-    void testGetPagingParams() {
-        PagingRequest request = PagingRequest.of(2, 50);
-        java.util.Map<String, String> params = request.getPagingParams();
-        assertEquals("2", params.get("page"));
-        assertEquals("50", params.get("perPage"));
-    }
+  @Test
+  void testRecordMethods() {
+    PagingRequest first = PagingRequest.forRecords(1, 10);
+    PagingRequest second = PagingRequest.forRecords(1, 10);
 
-    @Test
-    void testLombokMethods() {
-        PagingRequest req1 = PagingRequest.of(1, 10);
-        PagingRequest req2 = PagingRequest.of(1, 10);
-        assertEquals(req1, req2);
-        assertEquals(req1.hashCode(), req2.hashCode());
-        assertTrue(req1.toString().contains("page=1"));
-        
-        req1.setPage(5);
-        assertEquals(5, req1.getPage());
-        req1.setPerPage(20);
-        assertEquals(20, req1.getPerPage());
-    }
+    assertEquals(first, second);
+    assertEquals(first.hashCode(), second.hashCode());
+    assertTrue(first.toString().contains("page=1"));
+    assertEquals(1, first.page());
+    assertEquals(10, first.perPage());
+  }
 
+  @Test
+  void testValidationMessagesContainInvalidValues() {
+    IllegalArgumentException pageException = assertThrows(IllegalArgumentException.class,
+        () -> PagingRequest.forRecords(0, 10));
+    assertTrue(pageException.getMessage().contains("0"));
+
+    IllegalArgumentException perPageException = assertThrows(IllegalArgumentException.class,
+        () -> PagingRequest.forRecords(1, 0));
+    assertTrue(perPageException.getMessage().contains("0"));
+  }
+
+  @Test
+  void testAddQueryStringRejectsNullEndpoint() {
+    assertThrows(NullPointerException.class, () -> PagingRequest.defaultPaging().addQueryString(null));
+  }
 }

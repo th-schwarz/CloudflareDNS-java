@@ -1,130 +1,112 @@
 package codes.thischwa.cf.model;
 
-import java.util.Map;
-import lombok.Data;
+import java.util.Objects;
 
 /**
- * Represents a request model for paginated data.
+ * Immutable pagination parameters for Cloudflare list endpoints. Page numbers start at 1.
  *
- * <p>This class encapsulates the page number and the number of items per page for a paginated
- * request, along with utility methods for constructing and retrieving pagination parameters. Page
- * numbers must be at least 1, and page sizes must be between 1 and 5,000,000 for DNS record requests.
- * Zone requests have the more restrictive Cloudflare limit of 5 to 50 items per page.
+ * <p>Use {@link #forZones(int, int)} for zone requests and {@link #forRecords(int, int)} for DNS
+ * record requests. For example:
  *
- * <p>Key functionalities:
- *
- * <ul>
- *   <li>Creating a {@code PagingRequest} instance with specific pagination values using the {@code
- *       of} method.
- *   <li>Creating a default {@code PagingRequest} with predefined pagination values.
- *   <li>Retrieving pagination parameters as a key-value map.
- *   <li>Generating a query string representation for the pagination parameters.
- * </ul>
+ * <pre>{@code
+ * List<RecordEntity> records = client.recordList(zone, PagingRequest.forRecords(1, 100));
+ * List<ZoneEntity> zones = client.zoneList(PagingRequest.forZones(1, 50));
+ * }</pre>
  */
-@Data
-public class PagingRequest {
-  /**
-   * Default page size for a single request, which is within the limits for zones and DNS records.
-   */
-  private static final int DEFAULT_PAGE_SIZE = 50;
+public record PagingRequest(int page, int perPage) {
 
-  /**
-   * Maximum number of DNS records allowed per page by Cloudflare.
-   */
-  public static final int MAX_PER_PAGE = 5_000_000;
+  /** Default page size, valid for zones and DNS records. */
+  public static final int DEFAULT_PAGE_SIZE = 50;
 
-  private int page;
-  private int perPage;
+  /** Maximum number of DNS records allowed per page by Cloudflare. */
+  public static final int MAX_RECORDS_PER_PAGE = 5_000_000;
 
-  PagingRequest(int page, int perPage) {
-    this.page = validatePage(page);
-    this.perPage = validatePerPage(perPage);
+  /** Minimum number of zones allowed per page by Cloudflare. */
+  public static final int MIN_ZONES_PER_PAGE = 5;
+
+  /** Maximum number of zones allowed per page by Cloudflare. */
+  public static final int MAX_ZONES_PER_PAGE = 50;
+
+  /** Validates the page number and page size. */
+  public PagingRequest {
+    if (page < 1) {
+      throw new IllegalArgumentException("page must be at least 1, but was " + page);
+    }
+    if (perPage < 1 || perPage > MAX_RECORDS_PER_PAGE) {
+      throw new IllegalArgumentException("perPage must be between 1 and " + MAX_RECORDS_PER_PAGE
+          + ", but was " + perPage);
+    }
   }
 
   /**
-   * Creates a new {@code PagingRequest} instance with the specified page number and items per page.
-   * The page must be at least 1, and the page size must be between 1 and 5,000,000. Zone requests
-   * have a more restrictive page-size range of 5 to 50, enforced by {@code zoneList}.
+   * Creates pagination parameters for a DNS record request.
    *
-   * @param page    the page number to be requested
-   * @param perPage the number of items to be included per page
-   * @return a new {@code PagingRequest} instance with the provided parameters
-   * @throws IllegalArgumentException if the page or page size is outside the allowed range
+   * @param page the 1-based page number
+   * @param perPage the number of records per page, from 1 to {@value #MAX_RECORDS_PER_PAGE}
+   * @return the validated pagination request
+   * @throws IllegalArgumentException if either value is outside its allowed range
    */
-  public static PagingRequest of(int page, int perPage) {
+  public static PagingRequest forRecords(int page, int perPage) {
     return new PagingRequest(page, perPage);
   }
 
   /**
-   * Creates a default {@code PagingRequest} instance for page 1 with 50 items per page. This is a
-   * request for one page; it does not fetch additional pages.
+   * Creates pagination parameters for a zone request.
    *
-   * @return a default {@code PagingRequest} instance with predefined pagination parameters
+   * @param page the 1-based page number
+   * @param perPage the number of zones per page, from {@value #MIN_ZONES_PER_PAGE} to
+   *     {@value #MAX_ZONES_PER_PAGE}
+   * @return the validated pagination request
+   * @throws IllegalArgumentException if either value is outside its allowed range
+   */
+  public static PagingRequest forZones(int page, int perPage) {
+    if (perPage < MIN_ZONES_PER_PAGE || perPage > MAX_ZONES_PER_PAGE) {
+      throw new IllegalArgumentException("Zone page size must be between " + MIN_ZONES_PER_PAGE
+          + " and " + MAX_ZONES_PER_PAGE + ", but was " + perPage);
+    }
+    return new PagingRequest(page, perPage);
+  }
+
+  /**
+   * Creates a request for page 1 with {@value #DEFAULT_PAGE_SIZE} items per page.
+   * This requests one page; it does not fetch additional pages.
+   *
+   * @return the default pagination request
    */
   public static PagingRequest defaultPaging() {
     return new PagingRequest(1, DEFAULT_PAGE_SIZE);
   }
 
   /**
-   * Sets the page number.
+   * Returns a request for the next page, retaining the current page size.
    *
-   * @param page the page number, which must be at least 1
-   * @throws IllegalArgumentException if the page number is less than 1
+   * @return the next page request
    */
-  public void setPage(int page) {
-    this.page = validatePage(page);
+  public PagingRequest next() {
+    return new PagingRequest(page + 1, perPage);
   }
 
   /**
-   * Sets the number of items per page.
+   * Returns a copy of this request with the specified page number.
    *
-   * @param perPage the page size, between 1 and 5,000,000 for DNS record requests
-   * @throws IllegalArgumentException if the page size is outside the allowed range
+   * @param page the 1-based page number
+   * @return the updated pagination request
    */
-  public void setPerPage(int perPage) {
-    this.perPage = validatePerPage(perPage);
+  public PagingRequest withPage(int page) {
+    return new PagingRequest(page, perPage);
   }
 
   /**
-   * Retrieves the pagination parameters in a key-value map format.
+   * Appends Cloudflare-compatible pagination parameters ({@code page} and {@code per_page}) to an
+   * endpoint.
    *
-   * @return a map containing the pagination parameters, where the key "page" indicates the current
-   *     page number and the key "perPage" indicates the number of items per page. The map key is
-   *     intentionally named "perPage"; Cloudflare's query parameter is "per_page". Use
-   *     {@link #addQueryString(String)} to build a Cloudflare-compatible query string.
-   */
-  public Map<String, String> getPagingParams() {
-    return Map.of("page", String.valueOf(page), "perPage", String.valueOf(perPage));
-  }
-
-  /**
-   * Appends a query string with pagination parameters ({@code page} and {@code per_page}) to the
-   * provided endpoint. Unlike {@link #getPagingParams()}, this method uses Cloudflare's
-   * {@code per_page} query parameter name.
-   *
-   * @param endpoint the base URL or API endpoint to which the query string will be appended
-   * @return the complete URL with the appended query string for pagination
+   * @param endpoint the base URL or API endpoint, optionally containing a query string
+   * @return the endpoint with pagination parameters appended
+   * @throws NullPointerException if {@code endpoint} is {@code null}
    */
   public String addQueryString(String endpoint) {
-    return endpoint + queryString(endpoint.contains("?"));
-  }
-
-  private String queryString(boolean add) {
-    String qs = "page=" + page + "&per_page=" + perPage;
-    return add ? "&" + qs : "?" + qs;
-  }
-
-  private static int validatePage(int page) {
-    if (page < 1) {
-      throw new IllegalArgumentException("page must be at least 1");
-    }
-    return page;
-  }
-
-  private static int validatePerPage(int perPage) {
-    if (perPage < 1 || perPage > MAX_PER_PAGE) {
-      throw new IllegalArgumentException("perPage must be between 1 and " + MAX_PER_PAGE);
-    }
-    return perPage;
+    Objects.requireNonNull(endpoint, "endpoint must not be null");
+    return endpoint + (endpoint.contains("?") ? "&" : "?")
+        + "page=" + page + "&per_page=" + perPage;
   }
 }

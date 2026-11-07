@@ -37,7 +37,7 @@ public interface ZoneOperations {
   /**
    * Lists all DNS records within the zone, optionally filtered by types.
    *
-   * @param types     optional DNS record types to filter by
+   * @param types optional DNS record types to filter by
    * @return a list of RecordEntity objects matching the criteria
    * @throws CloudflareApiException if an error occurs while retrieving records
    */

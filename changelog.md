@@ -7,6 +7,7 @@
       - `recordList(zone, RecordType... types)` → `recordListByType(zone, types...)`
       - `recordList(zone)` and `recordList(zone, PagingRequest)` remain unchanged
     - `CfDnsClient#recordCreateSld(...)` was removed; use `recordCreateSubdomain(...)`
+    - `PagingRequest` is now an immutable record with `page()` and `perPage()` accessors. The setters and `getPagingParams()` were removed; use `forRecords(...)`, `forZones(...)`, `next()` and `withPage(...)` instead.
     - `PagingRequest.defaultPaging()` now requests 50 items instead of 1,000. Page numbers and page sizes are validated; zone requests accept 5–50 items per page, while DNS record requests accept 1–5,000,000.
     - `withBaseUrl` only accepts HTTPS URLs (plain HTTP only for loopback hosts like `localhost`), otherwise an `IllegalArgumentException` is thrown
     - `build()` throws an `IllegalStateException` if no authentication was configured, `null` credentials throw an `IllegalArgumentException`
@@ -31,7 +32,7 @@
   - fixed: API errors were wrapped into a generic "Unexpected error!" exception
   - fixed: `zoneGet` threw an `IndexOutOfBoundsException` for unknown zones, it now returns `null` or throws a `CloudflareNotFoundException` (depending on `emptyResultThrowsException`)
   - fixed: `getSubdomain()` failed for apex records and records with multi-level subdomains, batch operations now send the full record name
-  - fixed: `zoneList()` and `recordList(...)` without `PagingRequest` returned only the first page, now all pages are fetched; `recordList(zone, null)` uses the maximum DNS page size of 5,000,000
+    - fixed: `zoneList()` and `recordList(...)` without `PagingRequest` returned only the first page, now all pages are fetched; `recordList(zone, null)` uses a page size of 1,000 to limit response memory use
   - fixed: DNS records are listed with a stable order (`order=name`), because without it Cloudflare's pages can overlap and miss records; fetched records are de-duplicated and inconsistent pages are fetched again
   - fixed: `recordDelete` threw a `NullPointerException` for an empty result
 - 0.5.0:
