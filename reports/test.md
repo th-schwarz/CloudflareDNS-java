@@ -1,14 +1,14 @@
 # Test Report
 
-_Generated on 2026-11-06 13:29:26 UTC_
+_Generated on 2026-11-07 13:00:45 UTC_
 
-**✅ All tests passed**
+**❌ Some tests failed**
 
 ## Test Results
 
 | | Tests | Passed | Failed | Skipped |
 |---|---|---|---|---|
-| **Total** | 162 | 162 | 0 | 0 |
+| **Total** | 164 | 162 | 2 | 0 |
 
 ### Details
 
@@ -17,7 +17,7 @@ _Generated on 2026-11-06 13:29:26 UTC_
 | ✅ | codes.thischwa.cf.CfBasicHttpClientErrorTest | 7 | 7 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfBasicHttpClientTest | 9 | 9 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfClientPenTest | 4 | 4 | 0 | 0 |
-| ✅ | codes.thischwa.cf.CfClientIntegrationTest | 18 | 18 | 0 | 0 |
+| ❌ | codes.thischwa.cf.CfClientTest | 18 | 16 | 2 | 0 |
 | ✅ | codes.thischwa.cf.CfDnsClientBuilderTest | 21 | 21 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfDnsClientMockTest | 41 | 41 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfRequestTest | 10 | 10 | 0 | 0 |
@@ -25,15 +25,9 @@ _Generated on 2026-11-06 13:29:26 UTC_
 | ✅ | codes.thischwa.cf.ResponseValidatorTest | 11 | 11 | 0 | 0 |
 | ✅ | codes.thischwa.cf.fluent.FluentApiTest | 15 | 15 | 0 | 0 |
 | ✅ | codes.thischwa.cf.model.BatchEntryTest | 2 | 2 | 0 | 0 |
-| ✅ | codes.thischwa.cf.model.PagingRequestTest | 6 | 6 | 0 | 0 |
+| ✅ | codes.thischwa.cf.model.PagingRequestTest | 8 | 8 | 0 | 0 |
 | ✅ | codes.thischwa.cf.model.RecordEntityTest | 10 | 10 | 0 | 0 |
 | ✅ | codes.thischwa.cf.model.RecordTypeTest | 3 | 3 | 0 | 0 |
 | ✅ | codes.thischwa.cf.model.ZoneEntityTest | 1 | 1 | 0 | 0 |
 
-## Coverage
-
-| Package | Line Coverage | Branch Coverage |
-|---|---|---|
-| codes.thischwa.cf.fluent | 100% (23/23) | 100% (4/4) |
-| codes.thischwa.cf.model | 100% (107/107) | 95% (19/20) |
-| codes.thischwa.cf | 97% (433/447) | 89% (191/214) |
+_No JaCoCo report found._
