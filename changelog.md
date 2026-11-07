@@ -1,6 +1,6 @@
 # Changelog
 
-- 0.6.0-SNAPSHOT:
+- 1.0.0-rc.1-SNAPSHOT:
   - **Breaking Changes**:
     - `recordList` overloads replaced, because they were ambiguous (e.g. `recordList(zone, null)` didn't compile):
       - `recordList(zone, String subdomain, RecordType... types)` and `recordList(zone, String subdomain)` → `recordListBySubdomain(zone, subdomain, types...)`
