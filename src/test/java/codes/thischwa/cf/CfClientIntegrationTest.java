@@ -44,6 +44,9 @@ public class CfClientIntegrationTest {
   private static final String IP_PREFIX = "130.0.0.";
   private static final String UPDATED_IP_PREFIX = "130.1.0.";
 
+  private record PagedResult(int total, Set<String> allIds, List<List<RecordEntity>> pages) {
+  }
+
   @BeforeAll
   static void checkEnv() {
     assumeTrue(API_TOKEN != null && !API_TOKEN.isBlank(), "API_TOKEN not set; skipping client tests");
@@ -471,83 +474,119 @@ public class CfClientIntegrationTest {
     assertEquals(2, groupedRecords.get("example.com.").size(), "The key 'example.com.' should have 2 records.");
   }
 
-
   @Test
   void testPaging() throws Exception {
     ZoneEntity zone = client.zoneGet(ZONE_STR);
     String pagingSld = "paging-" + System.currentTimeMillis();
     List<RecordEntity> createdRecords = new ArrayList<>();
+    Set<String> createdIds = new HashSet<>();
 
     try {
-      int existingCount = 0;
+      List<RecordEntity> staleRecords = List.of();
       try {
-        List<RecordEntity> allRecords = client.recordList(zone);
-        existingCount = allRecords.size();
-      } catch (CloudflareApiException e) {
-        // ignore
+        staleRecords = client.recordList(zone).stream()
+            .filter(record -> record.getName() != null && record.getName().startsWith("paging-"))
+            .toList();
+      } catch (CloudflareNotFoundException ignored) {
+        // The zone is empty.
       }
+      deleteQuietly(zone, staleRecords);
 
-      // Calculate how many records we need to create to reach at least 12 total A records
-      // (to test paging with pageSize 5: page 1 = 5, page 2 = 5, page 3 = 2+)
-      int targetCount = 12;
-      int recordsToCreate = Math.max(0, targetCount - existingCount);
-
-      // Create additional A records if needed. Each record gets its own name, so the order by name
-      // is unambiguous (Cloudflare doesn't guarantee a stable order of records with the same name).
-      for (int i = 1; i <= recordsToCreate; i++) {
+      // Each record gets its own name, so the order by name is unambiguous.
+      for (int i = 1; i <= 12; i++) {
         String name = String.format("%s-%02d.%s", pagingSld, i, ZONE_STR);
         RecordEntity record = RecordEntity.build(name, RecordType.A, TTL, "127.0.0." + i);
         RecordEntity created = client.recordCreate(zone, record);
         createdRecords.add(created);
         assertNotNull(created.getId());
+        createdIds.add(created.getId());
       }
 
-      // Test paging with page size of 5
-      PagingRequest page1Request = PagingRequest.forRecords(1, 5);
-      List<RecordEntity> page1Records = client.recordList(zone, page1Request);
-      assertEquals(5, page1Records.size(), "First page should contain 5 records");
+      PagedResult pagedResult = pageThrough(zone, createdIds, 5);
+      List<String> pagedIds = pagedResult.pages().stream()
+          .flatMap(List::stream)
+          .map(RecordEntity::getId)
+          .toList();
+      Set<String> pagedIdSet = new HashSet<>(pagedIds);
 
-      // 2nd page should also contain 5 records (if we have at least 12 total)
-      PagingRequest page2Request = PagingRequest.forRecords(2, 5);
-      List<RecordEntity> page2Records = client.recordList(zone, page2Request);
-      assertEquals(5, page2Records.size(), "Second page should contain at least 5 records");
+      for (int page = 1; page <= pagedResult.pages().size(); page++) {
+        int expected = Math.max(0, Math.min(5,
+            pagedResult.total() - 5 * (page - 1)));
+        assertEquals(expected, pagedResult.pages().get(page - 1).size(),
+            "Page " + page + " should contain " + expected + " records");
+      }
+      assertTrue(pagedResult.pages().get(pagedResult.pages().size() - 1).isEmpty(),
+          "The page after the last result page should be empty");
+      assertEquals(pagedIds.size(), pagedIdSet.size(), "Pages should not overlap");
+      assertEquals(pagedResult.allIds(), pagedIdSet,
+          "Pages should contain every record in the zone");
+      assertTrue(pagedResult.allIds().containsAll(createdIds),
+          "The paged records should contain all records created by this test");
 
-      // 3rd page should contain 2 records
-      PagingRequest page3Request = PagingRequest.forRecords(3, 5);
-      List<RecordEntity> page3Records = client.recordList(zone, page3Request);
-      assertEquals(2, page3Records.size(), "Third page should contain 2 records");
-
-      // Verify no overlap between pages
-      List<String> page1Ids = page1Records.stream().map(RecordEntity::getId).toList();
-      List<String> page2Ids = page2Records.stream().map(RecordEntity::getId).toList();
-      List<String> page3Ids = page3Records.stream().map(RecordEntity::getId).toList();
-      Set<String> generatedRecordIds = new HashSet<>(page1Ids);
-      generatedRecordIds.addAll(page2Ids);
-      generatedRecordIds.addAll(page3Ids);
-      assertEquals(createdRecords.size(), generatedRecordIds.size());
-
-      // Verify our created records are in the zone
-      List<RecordEntity> allRecords = client.recordList(zone);
-      Set<String> allRecordIds = allRecords.stream().map(RecordEntity::getId).collect(Collectors.toSet());
-      assertEquals(createdRecords.size(), allRecordIds.size());
-      assertTrue(allRecordIds.containsAll(generatedRecordIds));
+      List<String> createdNamesInPageOrder = pagedResult.pages().stream()
+          .flatMap(List::stream)
+          .filter(record -> createdIds.contains(record.getId()))
+          .map(RecordEntity::getName)
+          .toList();
+      assertEquals(createdRecords.stream().map(RecordEntity::getName).toList(),
+          createdNamesInPageOrder, "The test records should be sorted by name");
 
       // Without PagingRequest all pages must be fetched, also if the page size is small
       try (CfDnsClient smallPageClient = new CfDnsClient(true, CfDnsClientBuilder.DEFAULT_BASEURL,
           new CfDnsClientBuilder.ApiTokenAuth(API_TOKEN), 5)) {
-        // a new client (connection) may see a lagging state of the record list for a short time
-        Set<String> smallPageIds = awaitRecords(() -> smallPageClient.recordList(zone),
-            recs -> recs.size() >= allRecordIds.size()).stream()
-            .map(RecordEntity::getId).collect(Collectors.toSet());
-        assertEquals(allRecordIds, smallPageIds);
-        assertEquals(createdRecords.size(), awaitRecords(
+        List<RecordEntity> allRecords = awaitRecords(() -> smallPageClient.recordList(zone),
+            recs -> ids(recs).containsAll(createdIds));
+        assertTrue(ids(allRecords).containsAll(createdIds));
+        List<RecordEntity> aRecords = awaitRecords(
             () -> smallPageClient.recordListByType(zone, RecordType.A),
-            recs -> recs.size() >= createdRecords.size()).size());
+            recs -> ids(recs).containsAll(createdIds));
+        assertTrue(ids(aRecords).containsAll(createdIds));
         assertEquals(1, smallPageClient.recordListBySubdomain(zone, pagingSld + "-01").size());
       }
     } finally {
       deleteQuietly(zone, createdRecords);
     }
+  }
+
+  private static Set<String> ids(List<RecordEntity> records) {
+    return records.stream().map(RecordEntity::getId).collect(Collectors.toSet());
+  }
+
+  private PagedResult pageThrough(ZoneEntity zone, Set<String> createdIds, int pageSize)
+      throws CloudflareApiException, InterruptedException {
+    PagedResult result = null;
+    for (int attempt = 1; attempt <= 3; attempt++) {
+      List<RecordEntity> allRecords = awaitRecords(() -> client.recordList(zone),
+          records -> ids(records).containsAll(createdIds));
+      int total = allRecords.size();
+      Set<String> allIds = ids(allRecords);
+      List<List<RecordEntity>> pages = new ArrayList<>();
+      List<String> pagedIds = new ArrayList<>();
+      int pageCount = (total + pageSize - 1) / pageSize + 1;
+      boolean pageSizesMatch = true;
+
+      for (int page = 1; page <= pageCount; page++) {
+        int currentPage = page;
+        int expected = Math.max(0, Math.min(pageSize, total - pageSize * (page - 1)));
+        List<RecordEntity> pageRecords = awaitRecords(
+            () -> client.recordList(zone, PagingRequest.forRecords(currentPage, pageSize)),
+            records -> records.size() == expected);
+        pages.add(pageRecords);
+        pagedIds.addAll(pageRecords.stream().map(RecordEntity::getId).toList());
+        if (pageRecords.size() != expected) {
+          pageSizesMatch = false;
+        }
+      }
+
+      result = new PagedResult(total, allIds, pages);
+      if (pageSizesMatch && new HashSet<>(pagedIds).equals(allIds)) {
+        return result;
+      }
+      if (attempt < 3) {
+        Thread.sleep(1000);
+      }
+    }
+    return result;
   }
 
   @Test
@@ -787,6 +826,9 @@ public class CfClientIntegrationTest {
         }
       } catch (CloudflareNotFoundException e) {
         recs = List.of();
+        if (condition.test(recs)) {
+          return recs;
+        }
       }
       log.info("Records not yet listed (attempt {}), waiting ...", attempt);
       Thread.sleep(1000);
