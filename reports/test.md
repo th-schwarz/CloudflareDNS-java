@@ -1,14 +1,14 @@
 # Test Report
 
-_Generated on 2026-11-07 13:00:45 UTC_
+_Generated on 2026-11-07 13:08:17 UTC_
 
-**❌ Some tests failed**
+**✅ All tests passed**
 
 ## Test Results
 
 | | Tests | Passed | Failed | Skipped |
 |---|---|---|---|---|
-| **Total** | 164 | 162 | 2 | 0 |
+| **Total** | 166 | 166 | 0 | 0 |
 
 ### Details
 
@@ -16,10 +16,10 @@ _Generated on 2026-11-07 13:00:45 UTC_
 |---|---|---|---|---|---|
 | ✅ | codes.thischwa.cf.CfBasicHttpClientErrorTest | 7 | 7 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfBasicHttpClientTest | 9 | 9 | 0 | 0 |
+| ✅ | codes.thischwa.cf.CfClientIntegrationTest | 19 | 19 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfClientPenTest | 4 | 4 | 0 | 0 |
-| ❌ | codes.thischwa.cf.CfClientTest | 18 | 16 | 2 | 0 |
 | ✅ | codes.thischwa.cf.CfDnsClientBuilderTest | 21 | 21 | 0 | 0 |
-| ✅ | codes.thischwa.cf.CfDnsClientMockTest | 41 | 41 | 0 | 0 |
+| ✅ | codes.thischwa.cf.CfDnsClientMockTest | 42 | 42 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfRequestTest | 10 | 10 | 0 | 0 |
 | ✅ | codes.thischwa.cf.ObjectMapperTest | 4 | 4 | 0 | 0 |
 | ✅ | codes.thischwa.cf.ResponseValidatorTest | 11 | 11 | 0 | 0 |
@@ -30,4 +30,10 @@ _Generated on 2026-11-07 13:00:45 UTC_
 | ✅ | codes.thischwa.cf.model.RecordTypeTest | 3 | 3 | 0 | 0 |
 | ✅ | codes.thischwa.cf.model.ZoneEntityTest | 1 | 1 | 0 | 0 |
 
-_No JaCoCo report found._
+## Coverage
+
+| Package | Line Coverage | Branch Coverage |
+|---|---|---|
+| codes.thischwa.cf.fluent | 100% (23/23) | 100% (4/4) |
+| codes.thischwa.cf.model | 100% (102/102) | 96% (23/24) |
+| codes.thischwa.cf | 97% (441/455) | 89% (195/218) |
