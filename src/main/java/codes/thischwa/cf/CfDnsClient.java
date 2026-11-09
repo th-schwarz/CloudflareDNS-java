@@ -77,11 +77,11 @@ import org.jetbrains.annotations.Nullable;
  *     .build();
  * </code></pre>
  *
- * <p>Example with custom base URL:
+ * <p>Example specifying the Cloudflare API base URL:
  * <pre><code>
  * CfDnsClient cfDnsClient = new CfDnsClientBuilder()
  *     .withApiTokenAuth("your-api-token")
- *     .withBaseUrl("https://custom-api.example.com")
+ *     .withBaseUrl(CfDnsClientBuilder.DEFAULT_BASEURL)
  *     .build();
  * </code></pre>
  */

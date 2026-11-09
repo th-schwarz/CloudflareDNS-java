@@ -1,6 +1,6 @@
 # Changelog
 
-- 1.0.0-rc.1-SNAPSHOT:
+- 1.0.0-SNAPSHOT:
   - **Breaking Changes**:
     - `recordList` overloads replaced, because they were ambiguous (e.g. `recordList(zone, null)` didn't compile):
       - `recordList(zone, String subdomain, RecordType... types)` and `recordList(zone, String subdomain)` → `recordListBySubdomain(zone, subdomain, types...)`
@@ -9,7 +9,7 @@
     - `CfDnsClient#recordCreateSld(...)` was removed; use `recordCreateSubdomain(...)`
     - `PagingRequest` is now an immutable record with `page()` and `perPage()` accessors. The setters and `getPagingParams()` were removed; use `forRecords(...)`, `forZones(...)`, `next()` and `withPage(...)` instead.
     - `PagingRequest.defaultPaging()` now requests 50 items instead of 1,000. Page numbers and page sizes are validated; zone requests accept 5–50 items per page, while DNS record requests accept 1–5,000,000.
-    - `withBaseUrl` only accepts HTTPS URLs (plain HTTP only for loopback hosts like `localhost`), otherwise an `IllegalArgumentException` is thrown
+    - `withBaseUrl` only accepts HTTPS URLs, otherwise an `IllegalArgumentException` is thrown
     - `build()` throws an `IllegalStateException` if no authentication was configured, `null` credentials throw an `IllegalArgumentException`
     - zone names and subdomains with whitespace, control characters or `\ ? # & ; | < > " ' `` ` `` are rejected with an `IllegalArgumentException`, zone and record IDs must be alphanumeric
     - timestamps of `RecordEntity` and `ZoneEntity` (`createdOn`, `modifiedOn`, `activatedOn`) are of type `java.time.Instant` instead of `LocalDateTime`, so the time zone (UTC) isn't lost anymore

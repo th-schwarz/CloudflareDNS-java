@@ -66,7 +66,7 @@ CfDnsClient cfDnsClient = new CfDnsClientBuilder()
 ```java
 CfDnsClient cfDnsClient = new CfDnsClientBuilder()
     .withApiTokenAuth("your-api-token")
-    .withBaseUrl("https://custom-api.example.com/client/v4") // HTTPS required; HTTP allowed only for loopback hosts
+    .withBaseUrl("https://api.cloudflare.com/client/v4") // HTTPS required;
     .withConnectTimeout(Duration.ofSeconds(5))               // default: 10 s
     .withResponseTimeout(Duration.ofSeconds(15))             // default: 30 s
     .withEmptyResultThrowsException(true)                    // default: false

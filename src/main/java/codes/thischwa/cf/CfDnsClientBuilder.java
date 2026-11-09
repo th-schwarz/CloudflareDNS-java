@@ -3,7 +3,6 @@ package codes.thischwa.cf;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Locale;
-import java.util.Set;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,11 +27,6 @@ public class CfDnsClientBuilder {
    * The default timeout for waiting for the response data.
    */
   public static final Duration DEFAULT_RESPONSE_TIMEOUT = Duration.ofSeconds(30);
-
-  /**
-   * Hosts for which plain HTTP is allowed (e.g. for local tests).
-   */
-  private static final Set<String> LOOPBACK_HOSTS = Set.of("localhost", "127.0.0.1", "[::1]", "::1");
 
   private boolean emptyResultThrowsException;
   private CfAuth auth;
@@ -62,13 +56,13 @@ public class CfDnsClientBuilder {
    * Sets the base URL to be used by the {@code CfDnsClient}.
    * This method allows configuring the base URL for API requests, overriding any default value.
    *
-   * <p>To protect the credentials, the URL must use HTTPS. Plain HTTP is only allowed for
-   * loopback hosts (e.g. {@code localhost}) for testing purposes.
+   * <p>To protect the credentials, only HTTPS URLs for {@code api.cloudflare.com} are accepted.
    *
    * @param baseUrl the base URL to be used for API requests, {@code null} resets it to
    *                {@link #DEFAULT_BASEURL}
    * @return the current instance of {@code CfDnsClientBuilder}, enabling method chaining
-   * @throws IllegalArgumentException if the URL is invalid or doesn't use HTTPS
+   * @throws IllegalArgumentException if the URL is invalid, doesn't use HTTPS or doesn't target
+   *                                  {@code api.cloudflare.com}
    */
   public CfDnsClientBuilder withBaseUrl(@Nullable String baseUrl) {
     this.baseUrl = baseUrl == null ? null : validateBaseUrl(baseUrl);
@@ -124,7 +118,6 @@ public class CfDnsClientBuilder {
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("Invalid base URL: " + baseUrl, e);
     }
-    String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
     String host = uri.getHost();
     if (host == null || host.isBlank()) {
       throw new IllegalArgumentException("Base URL must contain a host: " + baseUrl);
@@ -132,9 +125,11 @@ public class CfDnsClientBuilder {
     if (uri.getRawQuery() != null || uri.getRawFragment() != null) {
       throw new IllegalArgumentException("Base URL must not contain a query or fragment: " + baseUrl);
     }
-    boolean https = "https".equals(scheme);
-    boolean loopbackHttp = "http".equals(scheme) && LOOPBACK_HOSTS.contains(host.toLowerCase(Locale.ROOT));
-    if (!https && !loopbackHttp) {
+    if (uri.getRawUserInfo() != null) {
+      throw new IllegalArgumentException("Base URL must not contain user information: " + baseUrl);
+    }
+    String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
+    if (!"https".equals(scheme)) {
       throw new IllegalArgumentException("Base URL must use HTTPS: " + baseUrl);
     }
     String normalized = uri.toString();
