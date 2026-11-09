@@ -56,13 +56,14 @@ public class CfDnsClientBuilder {
    * Sets the base URL to be used by the {@code CfDnsClient}.
    * This method allows configuring the base URL for API requests, overriding any default value.
    *
-   * <p>To protect the credentials, only HTTPS URLs for {@code api.cloudflare.com} are accepted.
+   * <p>Only HTTPS URLs with a host are accepted. User information, query parameters and fragments
+   * are not permitted. Credentials are sent to the configured host, so only use trusted URLs.
    *
    * @param baseUrl the base URL to be used for API requests, {@code null} resets it to
    *                {@link #DEFAULT_BASEURL}
    * @return the current instance of {@code CfDnsClientBuilder}, enabling method chaining
-   * @throws IllegalArgumentException if the URL is invalid, doesn't use HTTPS or doesn't target
-   *                                  {@code api.cloudflare.com}
+   * @throws IllegalArgumentException if the URL is invalid, doesn't use HTTPS, has no host or
+   *                                  contains user information, a query or a fragment
    */
   public CfDnsClientBuilder withBaseUrl(@Nullable String baseUrl) {
     this.baseUrl = baseUrl == null ? null : validateBaseUrl(baseUrl);
