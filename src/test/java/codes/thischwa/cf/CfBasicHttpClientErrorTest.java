@@ -35,7 +35,6 @@ class CfBasicHttpClientErrorTest {
   private final AtomicInteger requestCount = new AtomicInteger();
   private volatile int status;
   private volatile String body;
-  private volatile String lastPath;
   private volatile long delayMillis;
 
   @BeforeEach
@@ -43,7 +42,6 @@ class CfBasicHttpClientErrorTest {
     server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     server.createContext("/", exchange -> {
       requestCount.incrementAndGet();
-      lastPath = exchange.getRequestURI().getRawPath();
       if (delayMillis > 0) {
         try {
           Thread.sleep(delayMillis);
@@ -58,10 +56,8 @@ class CfBasicHttpClientErrorTest {
       }
     });
     server.start();
-    client = new CfDnsClientBuilder()
-        .withApiTokenAuth("test-token")
-        .withBaseUrl("http://localhost:" + server.getAddress().getPort())
-        .build();
+    client = new CfDnsClient(false, "http://localhost:" + server.getAddress().getPort(),
+        new CfDnsClientBuilder.ApiTokenAuth("test-token"));
   }
 
   @AfterEach
@@ -139,26 +135,13 @@ class CfBasicHttpClientErrorTest {
   }
 
   @Test
-  void trailingSlashOfBaseUrlIsRemoved() throws Exception {
-    respond(200, ZONE_JSON);
-    try (CfDnsClient slashClient = new CfDnsClientBuilder()
-        .withApiTokenAuth("test-token")
-        .withBaseUrl("http://localhost:" + server.getAddress().getPort() + "/client/v4/")
-        .build()) {
-      slashClient.zoneList();
-    }
-    assertEquals("/client/v4/zones", lastPath);
-  }
-
-  @Test
   void responseTimeoutIsApplied() throws Exception {
     respond(200, ZONE_JSON);
     delayMillis = 2000;
-    try (CfDnsClient timeoutClient = new CfDnsClientBuilder()
-        .withApiTokenAuth("test-token")
-        .withBaseUrl("http://localhost:" + server.getAddress().getPort())
-        .withResponseTimeout(Duration.ofMillis(200))
-        .build()) {
+    try (CfDnsClient timeoutClient = new CfDnsClient(false,
+        "http://localhost:" + server.getAddress().getPort(),
+        new CfDnsClientBuilder.ApiTokenAuth("test-token"), CfDnsClient.RECORDS_PER_PAGE,
+        CfDnsClientBuilder.DEFAULT_CONNECT_TIMEOUT, Duration.ofMillis(200))) {
       long start = System.nanoTime();
       CloudflareApiException e = assertThrows(CloudflareApiException.class, timeoutClient::zoneList);
       long elapsedMillis = (System.nanoTime() - start) / 1_000_000;

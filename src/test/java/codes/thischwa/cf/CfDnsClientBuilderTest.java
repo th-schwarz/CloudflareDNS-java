@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
@@ -126,18 +127,6 @@ class CfDnsClientBuilderTest {
   }
 
   @Test
-  void testBuilderWithMultipleBaseUrls() {
-    // Test setting base URL multiple times (last one wins)
-    CfDnsClient client = new CfDnsClientBuilder()
-        .withApiTokenAuth("test-token")
-        .withBaseUrl("https://old-api.example.com")
-        .withBaseUrl("https://new-api.example.com")  // This should override
-        .build();
-
-    assertNotNull(client);
-  }
-
-  @Test
   void testEmptyResultThrowsExceptionToggle() {
     // Test toggling the flag multiple times (last one wins)
     CfDnsClient client = new CfDnsClientBuilder()
@@ -162,11 +151,19 @@ class CfDnsClientBuilderTest {
   }
 
   @Test
-  void testBaseUrlAllowsHttpForLoopbackOnly() {
-    assertNotNull(new CfDnsClientBuilder().withApiTokenAuth("t").withBaseUrl("http://localhost:8080").build());
-    assertNotNull(new CfDnsClientBuilder().withApiTokenAuth("t").withBaseUrl("http://127.0.0.1:8080/v4").build());
-    assertNotNull(new CfDnsClientBuilder().withApiTokenAuth("t").withBaseUrl("HTTPS://API.example.com/").build());
+  void testBaseUrlAllowsOnlyCloudflareHttps() {
+    assertNotNull(new CfDnsClientBuilder().withApiTokenAuth("t")
+        .withBaseUrl("HTTPS://API.CLOUDFLARE.COM/client/v4/").build());
     assertNotNull(new CfDnsClientBuilder().withApiTokenAuth("t").withBaseUrl(null).build());
+  }
+
+  @Test
+  void testBaseUrlTrailingSlashIsRemoved() throws ReflectiveOperationException {
+    Method validateBaseUrl = CfDnsClientBuilder.class.getDeclaredMethod("validateBaseUrl", String.class);
+    validateBaseUrl.setAccessible(true);
+
+    assertEquals("HTTPS://API.CLOUDFLARE.COM/client/v4",
+        validateBaseUrl.invoke(null, "HTTPS://API.CLOUDFLARE.COM/client/v4/"));
   }
 
   @Test
