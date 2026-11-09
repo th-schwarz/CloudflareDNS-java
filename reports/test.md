@@ -1,6 +1,6 @@
 # Test Report
 
-_Generated on 2026-11-07 18:49:32 UTC_
+_Generated on 2026-11-09 15:57:46 UTC_
 
 **✅ All tests passed**
 
@@ -8,13 +8,13 @@ _Generated on 2026-11-07 18:49:32 UTC_
 
 | | Tests | Passed | Failed | Skipped |
 |---|---|---|---|---|
-| **Total** | 166 | 166 | 0 | 0 |
+| **Total** | 165 | 165 | 0 | 0 |
 
 ### Details
 
 | Status | Suite | Tests | Passed | Failed | Skipped |
 |---|---|---|---|---|---|
-| ✅ | codes.thischwa.cf.CfBasicHttpClientErrorTest | 7 | 7 | 0 | 0 |
+| ✅ | codes.thischwa.cf.CfBasicHttpClientErrorTest | 6 | 6 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfBasicHttpClientTest | 9 | 9 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfClientIntegrationTest | 19 | 19 | 0 | 0 |
 | ✅ | codes.thischwa.cf.CfClientPenTest | 4 | 4 | 0 | 0 |
@@ -36,4 +36,4 @@ _Generated on 2026-11-07 18:49:32 UTC_
 |---|---|---|
 | codes.thischwa.cf.fluent | 100% (23/23) | 100% (4/4) |
 | codes.thischwa.cf.model | 100% (102/102) | 96% (23/24) |
-| codes.thischwa.cf | 97% (441/455) | 89% (195/218) |
+| codes.thischwa.cf | 97% (441/454) | 88% (189/214) |
