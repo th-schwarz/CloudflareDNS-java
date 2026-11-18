@@ -2,6 +2,8 @@
 
 [![Build and Analyse](https://git.mein-gateway.de/thischwa/CloudflareDNS-java/actions/workflows/build-and-analyse.yml/badge.svg?branch=develop)](https://git.mein-gateway.de/thischwa/CloudflareDNS-java/actions?workflow=build-and-analyse.yml)
 
+[![release](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fgit.mein-gateway.de%2Fapi%2Fpackages%2Fthischwa%2Fmaven%2Fcodes%2Fthischwa%2Fcloudflaredns%2Fmaven-metadata.xml)](https://git.mein-gateway.de/thischwa/-/packages/maven/codes.thischwa:cloudflaredns/)
+
 [Test report](reports/test.md)
 
 ## Preface
