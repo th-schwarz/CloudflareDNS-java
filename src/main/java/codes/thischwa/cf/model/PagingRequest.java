@@ -27,7 +27,13 @@ public record PagingRequest(int page, int perPage) {
   /** Maximum number of zones allowed per page by Cloudflare. */
   public static final int MAX_ZONES_PER_PAGE = 50;
 
-  /** Validates the page number and page size. */
+  /**
+   * Validates the page number and page size.
+   *
+   * @param page the 1-based page number
+   * @param perPage the number of items per page, from 1 to {@value #MAX_RECORDS_PER_PAGE}
+   * @throws IllegalArgumentException if either value is outside its allowed range
+   */
   public PagingRequest {
     if (page < 1) {
       throw new IllegalArgumentException("page must be at least 1, but was " + page);
