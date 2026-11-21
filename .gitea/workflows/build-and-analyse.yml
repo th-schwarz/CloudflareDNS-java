@@ -26,13 +26,15 @@ jobs:
         uses: ./.gitea/actions/setup-java-maven
 
       - name: Build and test
+        id: build
         env:
           # required by the live tests (CfClientTest, CfClientPenTest), they are skipped if not set
           API_TOKEN: ${{ secrets.API_TOKEN }}
-        run: mvn -B verify
+        run: mvn -B clean verify
 
       - name: Publish Test Report
         uses: ./.gitea/actions/publish-report
         if: ${{ always() }}
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          build-outcome: ${{ steps.build.outcome }}

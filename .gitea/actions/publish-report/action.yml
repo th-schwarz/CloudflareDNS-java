@@ -4,6 +4,9 @@ inputs:
   token:
     description: Gitea token with write access to the repository.
     required: true
+  build-outcome:
+    description: Outcome of the build and test step.
+    required: true
 
 runs:
   using: composite
@@ -17,6 +20,7 @@ runs:
       run: |
         mkdir -p junit-short
         shopt -s globstar nullglob
+        rm -f junit-short/*.xml
         for f in **/target/*-reports/TEST-*.xml; do
           base="$(basename "$f")"
           short="${base#TEST-}"
@@ -25,10 +29,12 @@ runs:
 
     - name: Generate Markdown Test Report
       shell: bash
+      env:
+        BUILD_OUTCOME: ${{ inputs.build-outcome }}
       run: |
         mkdir -p reports
         python3 - <<'EOF'
-        import glob, xml.etree.ElementTree as ET
+        import glob, os, xml.etree.ElementTree as ET
         from datetime import datetime, timezone
 
         generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -57,7 +63,17 @@ runs:
                 test_rows.append(f"| {status} | {name} | {tests} | {passed} | {failures + errors} | {skipped} |")
 
         total_passed = total_tests - total_failures - total_errors - total_skipped
-        overall = "✅ All tests passed" if (total_failures + total_errors) == 0 else "❌ Some tests failed"
+        build_outcome = os.environ.get("BUILD_OUTCOME", "unknown")
+        if total_failures + total_errors:
+            overall = "❌ Some tests failed"
+        elif not files:
+            overall = "⚠️ No JUnit reports found"
+        elif total_passed == 0:
+            overall = "⚠️ No tests passed"
+        elif build_outcome != "success":
+            overall = "❌ Build did not succeed"
+        else:
+            overall = "✅ All tests passed"
 
         # --- JaCoCo ---
         def counter(el, type_):
@@ -87,6 +103,7 @@ runs:
             "# Test Report\n\n"
             f"_Generated on {generated_at}_\n\n"
             f"**{overall}**\n\n"
+            f"Build outcome: **{build_outcome}**\n\n"
             "## Test Results\n\n"
             "| | Tests | Passed | Failed | Skipped |\n"
             "|---|---|---|---|---|\n"
